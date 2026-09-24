@@ -3,6 +3,9 @@ import type { PhaseId, PhaseInfo, Schedule, SessionTemplate, WeekDefinition } fr
 /** Weeks 1-12 are the block; week 0 is the short intro before the first Monday. */
 export const PROGRAM_WEEKS = 12
 
+/** After week 12, every 5th week is a deload (the spec asks for every 4-6 weeks). */
+export const EXTENSION_DELOAD_EVERY = 5
+
 export const PHASES: Record<PhaseId, PhaseInfo> = {
   intro: {
     id: 'intro',
@@ -25,7 +28,7 @@ export const PHASES: Record<PhaseId, PhaseInfo> = {
   deload: {
     id: 'deload',
     name: 'Deload',
-    weeks: 'Week 9',
+    weeks: 'Week 9 (then every 5th week after 12)',
     summary: 'About 40% fewer sets at 4 RIR. Keep the same weights. Steps and nutrition unchanged.',
   },
   peak: {
@@ -65,8 +68,11 @@ export function weekDefinition(n: number): WeekDefinition {
       notes: PHASES.peak.summary,
     }
   }
-  // Past week 12 the week-12 decision screen takes over (phase 5); until then
-  // treat later weeks as push-style extension weeks.
+  // After week 12: weeks 5-8 style progression, with a deload every 5th week
+  // (weeks 17, 22, 27...), i.e. four hard weeks then a deload.
+  if (EXTENSION_DELOAD_EVERY > 0 && (n - PROGRAM_WEEKS) % EXTENSION_DELOAD_EVERY === 0) {
+    return { number: n, phase: 'deload', targetRir: { min: 4, max: 4 }, setMultiplier: 0.6, notes: PHASES.deload.summary }
+  }
   return { number: n, phase: 'extension', targetRir: { min: 1, max: 2 }, setMultiplier: 1, notes: PHASES.extension.summary }
 }
 

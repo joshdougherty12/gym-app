@@ -179,6 +179,16 @@ export interface Settings {
   startDate: string
   pauses: ProgramPause[]
   schedule: Schedule
+  /** Cutting until the week-12 decision; 'surplus' after choosing a small surplus. */
+  goal: 'cut' | 'surplus'
+  week12Decision?: Week12Decision
+}
+
+export interface Week12Decision {
+  choice: 'continue-cut' | 'surplus'
+  decidedAt: number
+  /** Estimated maintenance when choosing the surplus. */
+  maintenanceKcal?: number
 }
 
 /** Per-week choices: extra sets, weakest lift, cardio bump. */
@@ -252,7 +262,15 @@ export interface Photo {
   blob: Blob
 }
 
-export type ReviewKind = 'insufficient-data' | 'losing-fast' | 'on-track' | 'too-slow' | 'gaining'
+export type ReviewKind =
+  | 'insufficient-data'
+  | 'losing-fast'
+  | 'on-track'
+  | 'watch'
+  | 'too-slow'
+  | 'gaining'
+  | 'surplus-too-fast'
+  | 'surplus-losing'
 
 export interface WeeklyReview {
   weekNumber: number
@@ -266,6 +284,8 @@ export interface WeeklyReview {
   suggestedCalorieDelta?: number
   suggestedStepDelta?: number
   choice?: 'calories' | 'steps' | 'dismissed'
+  /** Calorie change actually applied when accepted. */
+  appliedCalorieDelta?: number
   accepted: boolean
 }
 

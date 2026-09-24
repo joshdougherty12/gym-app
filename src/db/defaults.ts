@@ -22,6 +22,7 @@ export function defaultSettings(startDate: string = todayIso()): Settings {
     startDate,
     pauses: [],
     schedule: structuredClone(DEFAULT_SCHEDULE),
+    goal: 'cut',
   }
 }
 
