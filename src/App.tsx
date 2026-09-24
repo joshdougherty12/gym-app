@@ -3,7 +3,10 @@ import { HashRouter, Route, Routes, useLocation } from 'react-router'
 import { BottomNav } from './components/BottomNav'
 import { useSettings } from './db/repo'
 import { useTheme } from './hooks/useTheme'
+import { BodyScreen } from './screens/BodyScreen'
 import { Placeholder } from './screens/Placeholder'
+import { ProgressScreen } from './screens/ProgressScreen'
+import { Week12Screen } from './screens/Week12Screen'
 import { ProgramScreen } from './screens/ProgramScreen'
 import { SessionScreen } from './screens/SessionScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
@@ -24,8 +27,9 @@ function Shell() {
           <Route path="/workout/summary/:id" element={<SummaryScreen />} />
           <Route path="/program" element={<ProgramScreen />} />
           <Route path="/program/session/:id" element={<SessionScreen />} />
-          <Route path="/progress" element={<Placeholder title="Progress" text="Charts for lifts, volume and adherence arrive in phase 5." />} />
-          <Route path="/body" element={<Placeholder title="Body" text="Weight trend, waist and photos arrive in phase 4. Log today's weight in the Today check-in." />} />
+          <Route path="/progress" element={<ProgressScreen />} />
+          <Route path="/body" element={<BodyScreen />} />
+          <Route path="/week12" element={<Week12Screen />} />
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="*" element={<Placeholder title="Not found" text="Nothing here." />} />
         </Routes>

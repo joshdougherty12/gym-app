@@ -1,16 +1,20 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { CardioQuickLog } from '../components/CardioQuickLog'
 import { CheckIn } from '../components/CheckIn'
+import { StrengthWarning } from '../components/StrengthWarning'
+import { WeekSetupCard } from '../components/WeekSetupCard'
 import { Icon } from '../components/Icon'
 import { PHASE_TEXT } from '../components/phase'
 import { Badge, Button, Card, Loading, Screen, Sheet } from '../components/ui'
-import { PHASES, weekDefinition } from '../data/program'
+import { PHASES, PROGRAM_WEEKS, weekDefinition } from '../data/program'
 import { db } from '../db/db'
 import { useExercises, useSessions, useSettings, useWeekOverride } from '../db/repo'
 import { shortDate, todayIso, WEEKDAY_LONG, weekdayOf } from '../lib/dates'
 import { dayInfo, planLabel } from '../lib/today'
 import { formatRir, formatSlotTarget, plannedSets } from '../lib/weekPlan'
+import { useWorkouts } from '../hooks/useData'
 import { useActiveWorkout } from '../store/activeWorkout'
 
 export function TodayScreen() {
@@ -20,6 +24,8 @@ export function TodayScreen() {
   const { active, loaded, load, startNew } = useActiveWorkout()
   const navigate = useNavigate()
   const [pickOther, setPickOther] = useState(false)
+  const [cardioOpen, setCardioOpen] = useState(false)
+  const workouts = useWorkouts()
   const today = todayIso()
   const doneToday = useLiveQuery(() => db.workouts.where('date').equals(today).toArray(), [today])
   const info = settings ? dayInfo(today, settings) : null
@@ -35,11 +41,11 @@ export function TodayScreen() {
   const plannedId = info.plan.kind === 'session' ? info.plan.sessionId : undefined
   const session = sessions.find((s) => s.id === plannedId)
   const week = info.week ?? 0
-  const weekDef = weekDefinition(week)
+  const weekDef = info.weekDef ?? weekDefinition(week)
   const finishedToday = (doneToday ?? []).filter((w) => w.finishedAt !== undefined)
 
   const begin = async (sessionId: string) => {
-    await startNew(sessionId, today, week)
+    await startNew(sessionId, today, week, info?.pause?.kind === 'deload')
     navigate('/workout')
   }
 
@@ -77,10 +83,46 @@ export function TodayScreen() {
         )}
       </Card>
 
+      {week >= PROGRAM_WEEKS && (
+        <Card className="mt-3 border-accent">
+          <p className="text-xs font-bold tracking-[0.14em] text-accent uppercase">{week === PROGRAM_WEEKS ? 'Week 12 check-in' : 'After week 12'}</p>
+          <p className="mt-1 text-sm">
+            {settings.week12Decision
+              ? settings.week12Decision.choice === 'surplus'
+                ? `Small surplus: ${settings.calorieTarget.toLocaleString()} kcal.`
+                : 'Keep cutting (extension weeks, deload every 5th week).'
+              : 'Take front, side and back photos, measure your waist, and check the weight trend. Then decide what comes next.'}
+          </p>
+          <Link to="/week12" className="mt-2 flex min-h-11 items-center justify-center rounded-xl bg-accent font-bold text-accent-ink">
+            {settings.week12Decision ? 'Review decision' : 'See trend and decide'}
+          </Link>
+        </Card>
+      )}
+
+      {info.week !== null && (
+        <div className="mt-3">
+          <WeekSetupCard week={weekDef} sessions={sessions} compact />
+        </div>
+      )}
+
+      {workouts && (
+        <StrengthWarning workouts={workouts} mainSlots={sessions.flatMap((s) => s.slots.filter((x) => x.isMainLift))} settings={settings} />
+      )}
+
+      {weekdayOf(today) === 0 && (
+        <Link to="/body" className="mt-3 flex min-h-12 items-center gap-2 rounded-2xl border border-line bg-surface px-4">
+          <span className="flex-1 font-semibold">Sunday: weekly review is ready</span>
+          <Icon name="chevronRight" className="size-5 text-muted" />
+        </Link>
+      )}
+
       <Card className="mt-3">
         <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">Today</p>
         <p className="num mt-1 text-3xl font-bold uppercase">{planLabel(info.plan, sessionName)}</p>
         {info.plan.kind === 'walk' && <p className="mt-1 text-sm text-muted">Step goal {settings.stepGoal.toLocaleString()}</p>}
+        {info.plan.kind === 'walk' && weekOverride?.cardioBump === 'extra-zone2' && (weekDef.phase === 'push' || weekDef.phase === 'extension') && (
+          <p className="mt-1 text-sm font-semibold text-accent">+ 30 min zone 2 (this week's cardio bump)</p>
+        )}
         {info.plan.kind === 'zone2' && <p className="mt-1 text-sm text-muted">Conversational pace. Step goal {settings.stepGoal.toLocaleString()}</p>}
         {session && (
           <ul className="mt-3 space-y-1">
@@ -121,11 +163,18 @@ export function TodayScreen() {
             </Button>
           </div>
         )}
+        <Button variant={info.plan.kind === 'session' ? 'ghost' : 'primary'} className="mt-2 w-full" onClick={() => setCardioOpen(true)}>
+          Log cardio
+        </Button>
       </Card>
 
       <div className="mt-3">
         <CheckIn date={today} units={settings.units} targets={{ calories: settings.calorieTarget, protein: settings.proteinTargetG, steps: settings.stepGoal }} />
       </div>
+
+      <Sheet open={cardioOpen} onClose={() => setCardioOpen(false)} title="Log cardio">
+        <CardioQuickLog defaultKind={info.plan.kind === 'walk' ? 'walk' : 'zone2'} defaultMinutes={info.plan.kind === 'zone2' ? info.plan.minutes : 30} onDone={() => setCardioOpen(false)} />
+      </Sheet>
 
       <Sheet open={pickOther} onClose={() => setPickOther(false)} title="Pick a session">
         <ul className="space-y-2">

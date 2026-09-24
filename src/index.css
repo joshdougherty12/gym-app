@@ -29,6 +29,11 @@
   --phase-push: #ff6b1a;
   --phase-deload: #3dd68c;
   --phase-peak: #e25cff;
+  /* Chart series, validated (dataviz validator, dark surface #1b1e21): all checks pass. */
+  --chart-1: #f2601a;
+  --chart-2: #3a9bea;
+  --chart-grid: #2a2e33;
+  --chart-axis: #8a939c;
   color-scheme: dark;
 }
 
@@ -50,6 +55,11 @@
   --phase-push: #c2410c;
   --phase-deload: #15803d;
   --phase-peak: #9b2bb5;
+  /* Chart series, validated on white: all checks pass. */
+  --chart-1: #c2410c;
+  --chart-2: #1d6fc2;
+  --chart-grid: #ebe7e0;
+  --chart-axis: #6b737b;
   color-scheme: light;
 }
 

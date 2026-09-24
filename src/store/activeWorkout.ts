@@ -9,7 +9,7 @@ interface ActiveWorkoutState {
   load: () => Promise<void>
   start: (workout: WorkoutLog) => Promise<void>
   /** Start a new, empty workout for a session. */
-  startNew: (sessionTemplateId: string, date: string, weekNumber: number) => Promise<void>
+  startNew: (sessionTemplateId: string, date: string, weekNumber: number, deload?: boolean) => Promise<void>
   /** Apply a change and save it immediately. */
   update: (fn: (a: ActiveWorkout) => ActiveWorkout) => void
   /** Save the workout to history and clear the in-progress copy. Returns the saved log. */
@@ -37,8 +37,8 @@ export const useActiveWorkout = create<ActiveWorkoutState>((set, get) => ({
     set({ active: a, loaded: true })
   },
 
-  startNew: (sessionTemplateId, date, weekNumber) =>
-    get().start({ id: newId('workout'), date, weekNumber, sessionTemplateId, startedAt: Date.now(), notes: '', sets: [] }),
+  startNew: (sessionTemplateId, date, weekNumber, deload) =>
+    get().start({ id: newId('workout'), date, weekNumber, sessionTemplateId, ...(deload ? { deload: true } : {}), startedAt: Date.now(), notes: '', sets: [] }),
 
   update: (fn) => {
     const cur = get().active

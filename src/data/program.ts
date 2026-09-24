@@ -76,6 +76,13 @@ export function weekDefinition(n: number): WeekDefinition {
   return { number: n, phase: 'extension', targetRir: { min: 1, max: 2 }, setMultiplier: 1, notes: PHASES.extension.summary }
 }
 
+/** Week definition for a workout: its week, or a deload version of it for an inserted deload week. */
+export function effectiveWeek(n: number, deload?: boolean): WeekDefinition {
+  const def = weekDefinition(n)
+  if (!deload || def.phase === 'deload') return def
+  return { number: n, phase: 'deload', targetRir: { min: 4, max: 4 }, setMultiplier: 0.6, notes: 'Extra deload week: ' + PHASES.deload.summary }
+}
+
 export const SESSION_TEMPLATES: readonly SessionTemplate[] = [
   {
     id: 'upper-heavy',

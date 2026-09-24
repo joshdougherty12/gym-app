@@ -4,6 +4,7 @@ import { Badge, Button, Card, Loading, Screen, SectionTitle, Sheet } from '../co
 import { Icon } from '../components/Icon'
 import { PHASE_BG, PHASE_TEXT } from '../components/phase'
 import { ScheduleEditor } from '../components/ScheduleEditor'
+import { WeekSetupCard } from '../components/WeekSetupCard'
 import { PHASES, PROGRAM_WEEKS, weekDefinition } from '../data/program'
 import { updateSettings, useSessions, useSettings, useWorkoutsForWeek } from '../db/repo'
 import { datesOfWeek, hasWeekZero, programWeek } from '../lib/calendar'
@@ -90,6 +91,10 @@ export function ProgramScreen() {
         </div>
         <p className="mt-2 text-sm text-muted">{def.notes}</p>
       </Card>
+
+      <div className="mt-3">
+        <WeekSetupCard week={def} sessions={sessions} />
+      </div>
 
       <SectionTitle>Days</SectionTitle>
       <Card className="p-0">

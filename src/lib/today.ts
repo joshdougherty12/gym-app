@@ -1,4 +1,4 @@
-import { weekDefinition } from '../data/program'
+import { effectiveWeek } from '../data/program'
 import type { DayPlan, ProgramPause, Settings, WeekDefinition } from '../types'
 import { pauseOn, programWeek } from './calendar'
 import { weekdayOf, type IsoDate } from './dates'
@@ -18,7 +18,7 @@ export function dayInfo(date: IsoDate, settings: Pick<Settings, 'startDate' | 'p
   return {
     date,
     week,
-    weekDef: week === null ? null : weekDefinition(week),
+    weekDef: week === null ? null : effectiveWeek(week, pause?.kind === 'deload'),
     plan: settings.schedule[weekdayOf(date)],
     ...(pause ? { pause } : {}),
   }

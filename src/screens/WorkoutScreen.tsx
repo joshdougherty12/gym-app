@@ -6,7 +6,7 @@ import { ExercisePicker } from '../components/ExercisePicker'
 import { Icon } from '../components/Icon'
 import { RestTimerBar } from '../components/RestTimerBar'
 import { Badge, Button, Loading, Sheet } from '../components/ui'
-import { weekDefinition } from '../data/program'
+import { effectiveWeek } from '../data/program'
 import { db } from '../db/db'
 import { useExercises, useSessions, useSettings, useWeekOverride } from '../db/repo'
 import { useWakeLock } from '../hooks/useWakeLock'
@@ -52,7 +52,7 @@ export function WorkoutScreen() {
   const units = settings?.units ?? 'imperial'
   const fmtW = (lb: number) => `${formatNumber(displayWeight(lb, units))} ${weightUnit(units)}`
   const session = sessions?.find((s) => s.id === active?.workout.sessionTemplateId)
-  const week = weekDefinition(active?.workout.weekNumber ?? 0)
+  const week = effectiveWeek(active?.workout.weekNumber ?? 0, active?.workout.deload)
 
   const plans = useMemo(() => {
     if (!active || !session || !exercises || !workouts) return null

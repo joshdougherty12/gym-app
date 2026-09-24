@@ -152,6 +152,8 @@ export interface ProgramPause {
   /** Monday the shift takes effect, YYYY-MM-DD. */
   start: string
   weeks: number
+  /** off = weeks off (default); deload = an extra deload week inserted here. */
+  kind?: 'off' | 'deload'
   note?: string
 }
 
@@ -222,6 +224,8 @@ export interface WorkoutLog {
   date: string
   weekNumber: number
   sessionTemplateId: string
+  /** Logged during an inserted extra deload week. */
+  deload?: boolean
   startedAt: number
   finishedAt?: number
   notes: string

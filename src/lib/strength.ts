@@ -1,4 +1,4 @@
-import { weekDefinition } from '../data/program'
+import { effectiveWeek } from '../data/program'
 import type { Exercise, WorkoutLog } from '../types'
 import { effectiveLoad, epley } from './e1rm'
 import { countedReps } from './history'
@@ -24,7 +24,7 @@ export function weeklyLiftSeries(
   const byWeek = new Map<number, LiftPoint>()
   const bwPlus = exercise.loading === 'bodyweight-plus'
   for (const w of workouts) {
-    if (w.finishedAt === undefined || weekDefinition(w.weekNumber).phase === 'deload') continue
+    if (w.finishedAt === undefined || effectiveWeek(w.weekNumber, w.deload).phase === 'deload') continue
     for (const s of w.sets) {
       if (s.exerciseId !== exercise.id || s.isWarmup || countedReps(s) <= 0) continue
       const e1 = epley(effectiveLoad(s.weightLb, bwPlus, bodyweightLb), countedReps(s))

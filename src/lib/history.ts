@@ -1,4 +1,4 @@
-import { weekDefinition } from '../data/program'
+import { effectiveWeek } from '../data/program'
 import type { Exercise, SetLog, WorkoutLog } from '../types'
 import { effectiveLoad, epley } from './e1rm'
 import type { PastSession, PastSet } from './progression'
@@ -31,7 +31,7 @@ export function exerciseHistory(workouts: readonly WorkoutLog[], exerciseId: str
     }))
     .filter((x) => x.sets.length > 0)
     .sort((a, b) => (a.w.date === b.w.date ? b.w.startedAt - a.w.startedAt : a.w.date < b.w.date ? 1 : -1))
-    .map(({ w, sets }) => ({ date: w.date, targetRir: weekDefinition(w.weekNumber).targetRir, sets: sets.map(toPastSet) }))
+    .map(({ w, sets }) => ({ date: w.date, targetRir: effectiveWeek(w.weekNumber, w.deload).targetRir, sets: sets.map(toPastSet) }))
 }
 
 /** Total volume in lb: weight x reps over working sets (both sides for per-side sets). */

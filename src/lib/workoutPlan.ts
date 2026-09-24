@@ -27,11 +27,13 @@ export function planWorkout(args: {
   formatWeight?: (lb: number) => string
 }): SlotPlan[] {
   const out: SlotPlan[] = []
-  for (const slot of args.session.slots) {
-    const o = args.slotOverrides[slot.slotId] ?? {}
-    const exercise = args.exercises.get(o.exerciseId ?? slot.exerciseId)
+  for (const templateSlot of args.session.slots) {
+    const o = args.slotOverrides[templateSlot.slotId] ?? {}
+    const exercise = args.exercises.get(o.exerciseId ?? templateSlot.exerciseId)
     if (!exercise) continue
+    const slot = withCardioBump(templateSlot, exercise, args.week, args.weekOverride)
     const planned = plannedSets(slot, exercise, args.week, args.weekOverride)
+    if (slot !== templateSlot) planned.reasons.push('+5 min (cardio bump)')
     const workingSets = exercise.type === 'cardio' ? 1 : Math.max(1, planned.sets + (o.setDelta ?? 0))
     const history = exerciseHistory(args.workouts, exercise.id, args.activeWorkoutId)
     const targetRir = Array.from({ length: workingSets }, (_, i) => targetRirForSet(args.week, slot, i, workingSets))
@@ -48,6 +50,13 @@ export function planWorkout(args: {
     out.push({ slot, exercise, workingSets, warmups: o.warmups ?? 0, suggestion, history, targetRir, setReasons: planned.reasons })
   }
   return out
+}
+
+/** Weeks 5-8 (and extension weeks): the "longer finisher" cardio bump adds 5 minutes to conditioning. */
+export function withCardioBump(slot: ExerciseSlot, exercise: Pick<Exercise, 'type'>, week: WeekDefinition, override?: WeekOverride): ExerciseSlot {
+  if (exercise.type !== 'cardio' || override?.cardioBump !== 'longer-finisher') return slot
+  if (week.phase !== 'push' && week.phase !== 'extension') return slot
+  return { ...slot, repMin: slot.repMin + 5, repMax: slot.repMax + 5 }
 }
 
 export function rowKey(slotId: string, exerciseId: string, warmup: boolean, index: number): string {
