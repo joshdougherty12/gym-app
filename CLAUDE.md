@@ -11,8 +11,11 @@ Defense in particular:
 - Its own git repo. Never add it as a worktree, branch or subfolder of another repo, and never
   copy code, tooling, branding, names or keys between them.
 - Commit with this repo's local git identity (`git config --local user.*`), never the global one.
-- Don't push or create a GitHub repo without asking. The global `gh` login is a work account and
-  must not host this app.
+- Hosting: `joshdougherty12/gym-app` on GitHub Pages (https://joshdougherty12.github.io/gym-app/),
+  deployed by `.github/workflows/deploy.yml` on every push to `main`. Git here authenticates through
+  a repo-local `credential.helper` that runs `gh` with `GH_CONFIG_DIR=C:Usersjoshu.gh-gym` (a
+  separate personal login). For `gh` commands, set that same `GH_CONFIG_DIR`. Never `gh auth switch`
+  the global login, which is a work account used by other sessions.
 
 ## Rules from the spec
 
