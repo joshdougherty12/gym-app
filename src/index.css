@@ -1,0 +1,116 @@
+@import 'tailwindcss';
+
+/*
+ * Cutline design tokens.
+ * Near-black charcoal with a high-vis orange accent: readable under harsh gym
+ * lighting, and nothing like the default template blue. Barlow Condensed for
+ * numerals and headings (tall, narrow, tabular: big weights fit one row);
+ * Manrope for everything else.
+ */
+
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+:root,
+:root[data-theme='dark'] {
+  --bg: #121416;
+  --surface: #1b1e21;
+  --surface-2: #24282c;
+  --line: #30353a;
+  --ink: #f4f1ec;
+  --ink-muted: #9ba3ab;
+  --accent: #ff6b1a;
+  --accent-ink: #121416;
+  --accent-soft: rgb(255 107 26 / 0.14);
+  --good: #3dd68c;
+  --warn: #f5b83d;
+  --bad: #ff6464;
+  --phase-intro: #8a939c;
+  --phase-base: #4fb0ff;
+  --phase-push: #ff6b1a;
+  --phase-deload: #3dd68c;
+  --phase-peak: #e25cff;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f6f4f0;
+  --surface: #ffffff;
+  --surface-2: #eeebe5;
+  --line: #dcd7cf;
+  --ink: #15181b;
+  --ink-muted: #5a626a;
+  --accent: #c2410c;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(194 65 12 / 0.1);
+  --good: #15803d;
+  --warn: #a16207;
+  --bad: #c62828;
+  --phase-intro: #6b737b;
+  --phase-base: #1d6fc2;
+  --phase-push: #c2410c;
+  --phase-deload: #15803d;
+  --phase-peak: #9b2bb5;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--ink-muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-phase-intro: var(--phase-intro);
+  --color-phase-base: var(--phase-base);
+  --color-phase-push: var(--phase-push);
+  --color-phase-deload: var(--phase-deload);
+  --color-phase-peak: var(--phase-peak);
+  --font-sans: 'Manrope Variable', 'Manrope', system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+}
+
+.num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
