@@ -105,8 +105,15 @@ export function ProgressScreen() {
   const chrono = [...finished].sort((a, b) => (a.date === b.date ? a.startedAt - b.startedAt : a.date < b.date ? -1 : 1))
   const prs = chrono
     .flatMap((w, i) => findPRs(w, chrono.slice(0, i), exercises, bw).map((p) => ({ ...p, date: w.date })))
-    .filter((p) => p.kind === 'e1rm' || p.kind === 'weight')
     .reverse()
+  // One row per exercise per day, with whichever records it set.
+  const prRows: { date: string; exerciseId: string; weight?: number; e1rm?: number }[] = []
+  for (const p of prs) {
+    let row = prRows.find((r) => r.date === p.date && r.exerciseId === p.exerciseId)
+    if (!row) prRows.push((row = { date: p.date, exerciseId: p.exerciseId }))
+    if (p.kind === 'weight') row.weight = p.value
+    else row.e1rm = p.value
+  }
 
   return (
     <Screen title="Progress" subtitle={currentWeek !== null ? `Week ${currentWeek}` : undefined}>
@@ -253,12 +260,24 @@ export function ProgressScreen() {
           <p className="p-4 text-sm text-muted">PRs show up from your second session of each lift.</p>
         ) : (
           <ul className="divide-y divide-line">
-            {prs.slice(0, 30).map((p, i) => (
-              <li key={`${p.date}-${p.exerciseId}-${p.kind}-${i}`} className="flex items-center gap-2 px-4 py-2">
-                <span className="num w-14 text-base text-muted">{shortDate(p.date)}</span>
-                <span className="min-w-0 flex-1 truncate text-sm">{exercises.get(p.exerciseId)?.name}</span>
-                <Badge tone={p.kind === 'e1rm' ? 'accent' : 'good'}>{p.kind === 'e1rm' ? 'e1RM' : 'Weight'}</Badge>
-                <span className="num w-20 text-right text-lg">{fmtW(p.value)}</span>
+            {prRows.slice(0, 25).map((r) => (
+              <li key={`${r.date}-${r.exerciseId}`} className="flex items-start gap-3 px-4 py-2.5">
+                <span className="num w-14 shrink-0 pt-0.5 text-base text-muted">{shortDate(r.date)}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{exercises.get(r.exerciseId)?.name}</span>
+                  <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-sm">
+                    {r.weight !== undefined && (
+                      <span>
+                        <Badge tone="good">Weight</Badge> <span className="num text-lg">{fmtW(r.weight)}</span>
+                      </span>
+                    )}
+                    {r.e1rm !== undefined && (
+                      <span>
+                        <Badge tone="accent">e1RM</Badge> <span className="num text-lg">{fmtW(r.e1rm)}</span>
+                      </span>
+                    )}
+                  </span>
+                </span>
               </li>
             ))}
           </ul>

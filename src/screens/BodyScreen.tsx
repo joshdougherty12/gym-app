@@ -12,7 +12,7 @@ import { daysBetween, isIsoDate, shortDate, todayIso } from '../lib/dates'
 import { newId } from '../lib/id'
 import { compressImage } from '../lib/image'
 import { movingAverage } from '../lib/movingAverage'
-import { displayLength, displayWeight, formatNumber, inputLengthToIn, lengthUnit, weightUnit } from '../lib/units'
+import { displayBodyweight, displayLength, formatNumber, inputLengthToIn, lengthUnit, weightUnit } from '../lib/units'
 import type { Photo, PhotoAngle, Settings } from '../types'
 
 const r1 = (n: number) => Math.round(n * 10) / 10
@@ -32,7 +32,7 @@ export function BodyScreen() {
   const weekAgoAvg = latestAvg ? [...avg].reverse().find((p) => daysBetween(p.date, latestAvg.date) >= 7) : undefined
   const recent = weights.slice(-60)
   const avgByDate = new Map(avg.map((p) => [p.date, p.value]))
-  const weightRows = recent.map((w) => ({ label: shortDate(w.date), weight: displayWeight(w.value, u), avg: r1(displayWeight(avgByDate.get(w.date) ?? w.value, u)) }))
+  const weightRows = recent.map((w) => ({ label: shortDate(w.date), weight: displayBodyweight(w.value, u), avg: r1(displayBodyweight(avgByDate.get(w.date) ?? w.value, u)) }))
 
   const lastWaist = waist[waist.length - 1]
   const firstWaist = waist[0]
@@ -45,11 +45,11 @@ export function BodyScreen() {
       <SectionTitle>Weight</SectionTitle>
       <Card>
         <div className="grid grid-cols-3 gap-2 text-center">
-          <Stat label="Latest" value={latest ? formatNumber(r1(displayWeight(latest.value, u))) : '—'} unit={weightUnit(u)} />
-          <Stat label="7-day avg" value={latestAvg ? formatNumber(r1(displayWeight(latestAvg.value, u))) : '—'} unit={weightUnit(u)} />
+          <Stat label="Latest" value={latest ? formatNumber(r1(displayBodyweight(latest.value, u))) : '—'} unit={weightUnit(u)} />
+          <Stat label="7-day avg" value={latestAvg ? formatNumber(r1(displayBodyweight(latestAvg.value, u))) : '—'} unit={weightUnit(u)} />
           <Stat
             label="Avg vs 1 wk"
-            value={latestAvg && weekAgoAvg ? `${latestAvg.value - weekAgoAvg.value > 0 ? '+' : latestAvg.value < weekAgoAvg.value ? '−' : ''}${formatNumber(r1(Math.abs(displayWeight(latestAvg.value - weekAgoAvg.value, u))))}` : '—'}
+            value={latestAvg && weekAgoAvg ? `${latestAvg.value - weekAgoAvg.value > 0 ? '+' : latestAvg.value < weekAgoAvg.value ? '−' : ''}${formatNumber(r1(Math.abs(displayBodyweight(latestAvg.value - weekAgoAvg.value, u))))}` : '—'}
             unit={weightUnit(u)}
           />
         </div>

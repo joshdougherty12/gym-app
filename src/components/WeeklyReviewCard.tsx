@@ -7,7 +7,7 @@ import { shortDate, todayIso } from '../lib/dates'
 import { timestamp } from '../lib/id'
 import { lastReviewEnd } from '../lib/review'
 import { weeklyReview, type ReviewResult } from '../lib/weeklyReview'
-import { displayWeight, formatNumber, weightUnit } from '../lib/units'
+import { displayBodyweight, formatNumber, weightUnit } from '../lib/units'
 import type { ExerciseSlot, SessionTemplate, Settings, WeeklyReview } from '../types'
 import { Badge, Button, Card } from './ui'
 import { StrengthWarning } from './StrengthWarning'
@@ -49,7 +49,7 @@ export function WeeklyReviewCard({ settings, sessions }: { settings: Settings; s
   if (!logs || !reviews || !workouts) return null
 
   const u = settings.units
-  const fmt = (lb: number) => `${formatNumber(Math.round(displayWeight(lb, u) * 10) / 10)} ${weightUnit(u)}`
+  const fmt = (lb: number) => `${formatNumber(Math.round(displayBodyweight(lb, u) * 10) / 10)} ${weightUnit(u)}`
   const weighIns = logs.flatMap((d) => (d.weightLb !== undefined ? [{ date: d.date, weightLb: d.weightLb }] : []))
   const r: ReviewResult = weeklyReview({ weighIns, endDate: end, lossRateMinLb: settings.lossRateMinLb, lossRateMaxLb: settings.lossRateMaxLb, goal: settings.goal })
   const saved = week !== null ? reviews.find((x) => x.weekNumber === week) : undefined

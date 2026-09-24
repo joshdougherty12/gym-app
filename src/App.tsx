@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { HashRouter, Route, Routes, useLocation } from 'react-router'
+import { AppBanners } from './components/AppBanners'
 import { BottomNav } from './components/BottomNav'
 import { useSettings } from './db/repo'
 import { useTheme } from './hooks/useTheme'
@@ -20,6 +21,7 @@ function Shell() {
   const showNav = pathname !== '/workout'
   return (
     <>
+      <AppBanners />
       <main>
         <Routes>
           <Route path="/" element={<TodayScreen />} />

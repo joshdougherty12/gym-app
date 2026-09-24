@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ScheduleEditor } from '../components/ScheduleEditor'
 import { Button, Card, Loading, Screen, SectionTitle, Segmented, Stepper, Toggle } from '../components/ui'
-import { downloadBackup } from '../db/backup'
-import { resetAllData, resetProgram, saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
+import { DataSection } from '../components/DataSection'
+import { saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
 import { programWeek } from '../lib/calendar'
 import { newId } from '../lib/id'
 import { isIsoDate, mondayOf, nextMonday, shortDate, todayIso } from '../lib/dates'
@@ -55,6 +55,10 @@ export function SettingsScreen() {
 
   return (
     <Screen title="Settings" subtitle="Everything stays on this device.">
+      {settings.goal === 'surplus' && (
+        <p className="mb-2 rounded-xl bg-surface-2 p-3 text-sm">Goal: small surplus (chosen at week 12). The weekly review now aims for +0.25-0.5 lb/week.</p>
+      )}
+
       <SectionTitle>Display</SectionTitle>
       <Card className="space-y-3">
         <Segmented
@@ -210,30 +214,7 @@ export function SettingsScreen() {
       </Card>
 
       <SectionTitle>Data</SectionTitle>
-      <Card className="space-y-2">
-        <p className="text-sm text-muted">Stored only in this browser on this device. Nothing is ever uploaded.</p>
-        <Button className="w-full" variant="primary" onClick={() => void downloadBackup()}>
-          Download backup (JSON)
-        </Button>
-        <Button
-          className="w-full"
-          onClick={() => {
-            if (window.confirm('Put every session and exercise back to the original program? Your logs are kept.')) void resetProgram()
-          }}
-        >
-          Reset program to default
-        </Button>
-        <Button
-          variant="danger"
-          className="w-full"
-          onClick={() => {
-            const typed = window.prompt('This deletes ALL workouts, weigh-ins, photos and settings. Type RESET to confirm.')
-            if (typed === 'RESET') void resetAllData().then(() => window.location.reload())
-          }}
-        >
-          Reset all data
-        </Button>
-      </Card>
+      <DataSection />
     </Screen>
   )
 }

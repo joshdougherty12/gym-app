@@ -6,7 +6,7 @@ import { todayIso } from '../lib/dates'
 import { timestamp } from '../lib/id'
 import { movingAverage } from '../lib/movingAverage'
 import { weeklyLiftSeries } from '../lib/strength'
-import { displayLength, displayWeight, formatNumber, lengthUnit, weightUnit } from '../lib/units'
+import { displayBodyweight, displayLength, formatNumber, lengthUnit, weightUnit } from '../lib/units'
 import { estimateMaintenance } from '../lib/weeklyReview'
 
 const SURPLUS_KCAL = 200
@@ -23,7 +23,8 @@ export function Week12Screen() {
   if (!settings || !sessions || !exercises || !logs || !waist || !workouts) return <Loading />
 
   const u = settings.units
-  const fw = (lb: number) => `${formatNumber(Math.round(displayWeight(lb, u) * 10) / 10)} ${weightUnit(u)}`
+  const fw = (lb: number) => `${formatNumber(Math.round(displayBodyweight(lb, u) * 10) / 10)} ${weightUnit(u)}`
+  const fwWhole = (lb: number) => `${Math.round(displayBodyweight(lb, u))} ${weightUnit(u)}`
   const today = todayIso()
   const weights = logs.flatMap((d) => (d.weightLb !== undefined ? [{ date: d.date, value: d.weightLb }] : []))
   const avg = movingAverage(weights, 7)
@@ -74,7 +75,7 @@ export function Week12Screen() {
         {lifts.length === 0 ? (
           <Row label="Strength" value="Not enough lift history" />
         ) : (
-          lifts.map((l) => <Row key={l.name} label={l.name} value={`e1RM ${fw(l.from)} → ${fw(l.to)} (${l.to >= l.from ? '+' : '−'}${Math.round((Math.abs(l.to - l.from) / l.from) * 100)}%)`} />)
+          lifts.map((l) => <Row key={l.name} label={l.name} value={`e1RM ${fwWhole(l.from)} → ${fwWhole(l.to)} (${l.to >= l.from ? '+' : '−'}${Math.round((Math.abs(l.to - l.from) / l.from) * 100)}%)`} />)
         )}
         <Row label="Workouts logged" value={String(finished.length)} />
       </Card>

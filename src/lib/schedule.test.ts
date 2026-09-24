@@ -45,3 +45,12 @@ describe('units', () => {
     expect(formatNumber(225)).toBe('225')
   })
 })
+
+describe('bodyweight display', () => {
+  it('keeps 0.1 precision (barbell display rounds to 0.5)', async () => {
+    const { displayBodyweight, displayWeight } = await import('./units')
+    expect(displayBodyweight(195.4, 'imperial')).toBe(195.4)
+    expect(displayWeight(195.4, 'imperial')).toBe(195.5)
+    expect(displayBodyweight(195.4, 'metric')).toBe(88.6)
+  })
+})

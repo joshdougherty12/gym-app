@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId } from 'react'
 import { db } from '../db/db'
-import { displayWeight, formatNumber, inputWeightToLb, weightUnit } from '../lib/units'
+import { displayBodyweight, formatNumber, inputWeightToLb, weightUnit } from '../lib/units'
 import type { DailyLog, Units } from '../types'
 import { Card } from './ui'
 
@@ -22,7 +22,7 @@ export function CheckIn({ date, units, targets }: { date: string; units: Units; 
   const base = useId()
 
   const fields: { key: NumField; label: string; suffix: string; target?: number; toStored: (v: number) => number; toShown: (v: number) => number }[] = [
-    { key: 'weightLb', label: 'Weight', suffix: weightUnit(units), toStored: (v) => inputWeightToLb(v, units), toShown: (v) => displayWeight(v, units) },
+    { key: 'weightLb', label: 'Weight', suffix: weightUnit(units), toStored: (v) => inputWeightToLb(v, units), toShown: (v) => displayBodyweight(v, units) },
     { key: 'steps', label: 'Steps', suffix: '', target: targets.steps, toStored: (v) => v, toShown: (v) => v },
     { key: 'calories', label: 'Calories', suffix: 'kcal', target: targets.calories, toStored: (v) => v, toShown: (v) => v },
     { key: 'proteinG', label: 'Protein', suffix: 'g', target: targets.protein, toStored: (v) => v, toShown: (v) => v },
@@ -50,6 +50,8 @@ export function CheckIn({ date, units, targets }: { date: string; units: Units; 
                   placeholder="—"
                   onBlur={(e) => {
                     const t = e.target.value.trim()
+                    // Unchanged: don't re-save the rounded display value over the stored one.
+                    if (t === e.target.defaultValue.trim()) return
                     const n = Number(t)
                     if (t === '') void save(date, { [f.key]: undefined })
                     else if (Number.isFinite(n) && n >= 0) void save(date, { [f.key]: f.toStored(n) })

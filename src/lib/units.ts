@@ -48,3 +48,8 @@ export function formatNumber(n: number): string {
   if (Number.isInteger(n)) return String(n)
   return String(Math.round(n * 100) / 100)
 }
+
+/** Bodyweight and weight changes for display: 0.1 precision (barbell loads use displayWeight's 0.5). */
+export function displayBodyweight(lb: number, units: Units): number {
+  return units === 'metric' ? roundTo(lbToKg(lb), 0.1) : roundTo(lb, 0.1)
+}

@@ -70,4 +70,31 @@ export class CutlineDB extends Dexie {
   }
 }
 
-export const db = new CutlineDB()
+/**
+ * Demo mode uses a completely separate database, so previewing demo data can
+ * never touch real logs. The flag is a per-browser convenience.
+ */
+export const DEMO_DB_NAME = 'cutline-demo'
+const DEMO_KEY = 'cutline-demo-mode'
+
+export function isDemoMode(): boolean {
+  try {
+    return localStorage.getItem(DEMO_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setDemoFlag(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(DEMO_KEY, '1')
+    else localStorage.removeItem(DEMO_KEY)
+  } catch {
+    /* storage unavailable: demo mode cannot be entered */
+  }
+}
+
+export const db = new CutlineDB(isDemoMode() ? DEMO_DB_NAME : DB_NAME)
+
+// Outside demo mode, throw away any leftover demo database (left by "Exit demo").
+if (!isDemoMode() && typeof indexedDB !== 'undefined') void Dexie.delete(DEMO_DB_NAME).catch(() => undefined)
