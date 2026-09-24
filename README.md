@@ -4,8 +4,26 @@ A personal workout and fat-loss tracker: a 12-week program engine, workout loggi
 nutrition tracking. Phone-first, installable as a PWA, fully offline. **All data stays in this
 browser (IndexedDB). No accounts, no backend, no network calls.**
 
-The spec is `../gym prompt.md`. The app is built in six phases; this README is completed in phase 6
-(deployment and install steps).
+The spec is `../gym prompt.md`. The app is built in six phases.
+
+**Live:** https://joshdougherty12.github.io/gym-app/
+
+## Deploy
+
+Every push to `main` runs the tests, lint and build in GitHub Actions and publishes `dist/` to
+GitHub Pages (`.github/workflows/deploy.yml`). The repo uses its own credentials: a separate `gh`
+login in `C:\Users\joshu\.gh-gym` wired in through the repo-local `credential.helper`, so
+`git push` here never uses any other account.
+
+## Install on Android
+
+1. Open the live URL in **Chrome** on the phone.
+2. Menu (⋮) → **Add to Home screen** → **Install**.
+3. Open it from the home-screen icon. It runs full-screen and works offline; updates arrive the
+   next time it's opened with a connection.
+
+Your data lives in that installed app on the phone (IndexedDB), tied to this URL. It is never
+uploaded. Use **Settings → Download backup** now and then.
 
 ## Run
 
@@ -25,10 +43,11 @@ npm run preview    # serve dist/ at http://localhost:4173
 src/
   types.ts      domain types (everything stored in lb / inches)
   data/         exercise library and the 12-week program, as data
-  lib/          pure, unit-tested logic (calendar, week plan, schedule, units, rest)
+  lib/          pure, unit-tested logic (progression, e1RM, moving average, calendar, week plan, history)
   db/           Dexie schema (versioned), seed, repository + hooks
   components/   shared UI
-  screens/      Today, Program, Session, Settings (Progress/Body in later phases)
+  store/        in-progress workout (autosaved to IndexedDB) and rest timer
+  screens/      Today, Workout, Summary, Program, Session, Settings (Progress/Body in later phases)
 ```
 
 ## Program calendar

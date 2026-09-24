@@ -273,7 +273,25 @@ export interface WeeklyReview {
 export interface ActiveWorkout {
   id: 'current'
   workout: WorkoutLog
-  /** Slot edits made during this session only (swaps, added sets). */
-  slotOverrides: Record<string, { exerciseId?: string; sets?: number }>
+  /** Slot edits made during this session only (swaps, added/removed sets, warm-ups). */
+  slotOverrides: Record<string, SlotOverride>
+  /** Unlogged values typed into set rows, keyed by row key. Saved so a refresh keeps them. */
+  drafts: Record<string, DraftSet>
   updatedAt: number
+}
+
+export interface SlotOverride {
+  exerciseId?: string
+  /** Change to the planned working sets for this workout only. */
+  setDelta?: number
+  warmups?: number
+}
+
+export interface DraftSet {
+  weightLb: number
+  reps: number
+  repsLeft?: number
+  repsRight?: number
+  rir: number
+  durationSec?: number
 }

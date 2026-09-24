@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ScheduleEditor } from '../components/ScheduleEditor'
 import { Button, Card, Loading, Screen, SectionTitle, Segmented, Stepper, Toggle } from '../components/ui'
+import { downloadBackup } from '../db/backup'
 import { resetAllData, resetProgram, saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
 import { programWeek } from '../lib/calendar'
 import { newId } from '../lib/id'
@@ -211,6 +212,9 @@ export function SettingsScreen() {
       <SectionTitle>Data</SectionTitle>
       <Card className="space-y-2">
         <p className="text-sm text-muted">Stored only in this browser on this device. Nothing is ever uploaded.</p>
+        <Button className="w-full" variant="primary" onClick={() => void downloadBackup()}>
+          Download backup (JSON)
+        </Button>
         <Button
           className="w-full"
           onClick={() => {
