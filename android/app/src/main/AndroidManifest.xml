@@ -29,6 +29,14 @@
         </provider>
     </application>
 
+    <!-- Android 11+ hides other apps unless declared: without this the WebView cannot see the
+         camera app and "Snap a meal" falls back to the photo picker. -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />

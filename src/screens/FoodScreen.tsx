@@ -53,6 +53,7 @@ export function FoodScreen() {
   const [analyzing, setAnalyzing] = useState<{ thumb: Blob; big: Blob; note: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileId = useId()
+  const galleryId = useId()
   const today = todayIso()
 
   if (!settings || !meals || hasKey === undefined) return <Loading />
@@ -129,17 +130,23 @@ export function FoodScreen() {
           Add by hand
         </Button>
       </div>
-      <input
-        id={fileId}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="sr-only"
-        onChange={(e) => {
-          void onPhoto(e.target.files?.[0])
-          e.target.value = ''
-        }}
-      />
+      <label htmlFor={galleryId} className={`mt-1 flex min-h-11 cursor-pointer items-center justify-center text-sm font-semibold text-accent ${!hasKey || analyzing ? 'pointer-events-none opacity-40' : ''}`}>
+        or choose a photo you already took
+      </label>
+      {[fileId, galleryId].map((id) => (
+        <input
+          key={id}
+          id={id}
+          type="file"
+          accept="image/*"
+          capture={id === fileId ? 'environment' : undefined}
+          className="sr-only"
+          onChange={(e) => {
+            void onPhoto(e.target.files?.[0])
+            e.target.value = ''
+          }}
+        />
+      ))}
 
       {analyzing && <AnalyzingCard thumb={analyzing.thumb} />}
       {error && (
