@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ScheduleEditor } from '../components/ScheduleEditor'
 import { Button, Card, Loading, Screen, SectionTitle, Segmented, Stepper, Toggle } from '../components/ui'
 import { DataSection } from '../components/DataSection'
+import { MealAiSettings } from '../components/MealAiSettings'
 import { saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
 import { programWeek } from '../lib/calendar'
 import { newId } from '../lib/id'
@@ -102,6 +103,9 @@ export function SettingsScreen() {
         <WeightStepper label="Loss rate, min / week" lb={settings.lossRateMinLb} units={settings.units} stepLb={0.25} onChange={(lossRateMinLb) => set({ lossRateMinLb, lossRateMaxLb: Math.max(lossRateMinLb, settings.lossRateMaxLb) })} />
         <WeightStepper label="Loss rate, max / week" lb={settings.lossRateMaxLb} units={settings.units} stepLb={0.25} onChange={(lossRateMaxLb) => set({ lossRateMaxLb, lossRateMinLb: Math.min(lossRateMaxLb, settings.lossRateMinLb) })} />
       </Card>
+
+      <SectionTitle>Meal AI (Claude)</SectionTitle>
+      <MealAiSettings settings={settings} />
 
       <SectionTitle>Rest timer</SectionTitle>
       <Card className="space-y-2">

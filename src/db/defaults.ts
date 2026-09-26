@@ -3,6 +3,10 @@ import { DEFAULT_SCHEDULE } from '../data/program'
 import { todayIso } from '../lib/dates'
 import type { Settings } from '../types'
 
+/** Starting dietary notes (editable in Settings). */
+export const DEFAULT_FOOD_NOTES =
+  'High cholesterol on recent bloodwork: keep saturated fat low, limit fried food, processed and fatty red meat, butter and full-fat dairy. Favor fiber (oats, beans, lentils, vegetables, fruit, whole grains), fish, skinless poultry, olive oil and nuts in moderation. Budget-friendly, easy to cook.'
+
 export function defaultSettings(startDate: string = todayIso()): Settings {
   return {
     units: 'imperial',
@@ -23,6 +27,10 @@ export function defaultSettings(startDate: string = todayIso()): Settings {
     pauses: [],
     schedule: structuredClone(DEFAULT_SCHEDULE),
     goal: 'cut',
+    foodNotes: DEFAULT_FOOD_NOTES,
+    householdSize: 2,
+    satFatLimitG: 15,
+    fiberTargetG: 30,
   }
 }
 

@@ -16,6 +16,7 @@
     "apk": "npm run build:android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@capacitor-community/keep-awake": "^8.0.1",
     "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
@@ -30,6 +31,7 @@
     "react-dom": "^19.2.8",
     "react-router": "^8.4.0",
     "recharts": "^3.10.1",
+    "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

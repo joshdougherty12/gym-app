@@ -19,6 +19,8 @@ async function save(date: string, patch: Partial<DailyLog>) {
 /** Daily check-in: weight, steps, calories, protein, fatigue. Saves as you leave each field. */
 export function CheckIn({ date, units, targets }: { date: string; units: Units; targets: { calories: number; protein: number; steps: number } }) {
   const log = useLiveQuery(() => db.dailyLogs.get(date), [date])
+  // With meals logged, calories and protein come from the meals (Food tab).
+  const mealCount = useLiveQuery(() => db.meals.where('date').equals(date).count(), [date]) ?? 0
   const base = useId()
 
   const fields: { key: NumField; label: string; suffix: string; target?: number; toStored: (v: number) => number; toShown: (v: number) => number }[] = [
@@ -41,6 +43,12 @@ export function CheckIn({ date, units, targets }: { date: string; units: Units; 
                 {f.label}
                 {f.target ? <span className="font-normal normal-case"> / {f.target.toLocaleString()}</span> : null}
               </label>
+              {mealCount > 0 && (f.key === 'calories' || f.key === 'proteinG') ? (
+                <div className="flex min-h-11 items-baseline gap-1">
+                  <span id={id} className="num text-3xl font-bold">{v === undefined ? '—' : formatNumber(f.toShown(v))}</span>
+                  <span className="text-xs text-muted">{f.suffix} · from {mealCount} meal{mealCount === 1 ? '' : 's'}</span>
+                </div>
+              ) : (
               <div className="flex items-baseline gap-1">
                 <input
                   id={id}
@@ -60,6 +68,7 @@ export function CheckIn({ date, units, targets }: { date: string; units: Units; 
                 />
                 <span className="text-xs text-muted">{f.suffix}</span>
               </div>
+              )}
             </div>
           )
         })}

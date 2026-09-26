@@ -55,3 +55,20 @@ describe('backup', () => {
     expect(() => parseBackup(null)).toThrow()
   })
 })
+
+describe('backup with meals', () => {
+  it('round-trips meals, with their photo only when photos are included', async () => {
+    const a = fresh()
+    await a.open()
+    await a.meals.put({ id: 'm1', date: '2026-09-25', loggedAt: 1, mealType: 'dinner', name: 'Salmon bowl', items: [], calories: 650, proteinG: 45, source: 'photo', photo: new Blob([new Uint8Array([9, 8, 7])], { type: 'image/jpeg' }) })
+    const withPhotos = JSON.parse(JSON.stringify(await buildBackup(true, a)))
+    const without = JSON.parse(JSON.stringify(await buildBackup(false, a)))
+    expect(without.meals[0].photoBase64).toBeUndefined()
+    const b = fresh()
+    await b.open()
+    await restoreBackup(parseBackup(withPhotos), b)
+    const m = await b.meals.get('m1')
+    expect(m?.calories).toBe(650)
+    expect([...new Uint8Array(await m!.photo!.arrayBuffer())]).toEqual([9, 8, 7])
+  })
+})

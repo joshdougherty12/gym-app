@@ -5,6 +5,8 @@ import { BottomNav } from './components/BottomNav'
 import { useSettings } from './db/repo'
 import { useTheme } from './hooks/useTheme'
 import { BodyScreen } from './screens/BodyScreen'
+import { FoodScreen } from './screens/FoodScreen'
+import { PlanScreen } from './screens/PlanScreen'
 import { Placeholder } from './screens/Placeholder'
 import { ProgressScreen } from './screens/ProgressScreen'
 import { Week12Screen } from './screens/Week12Screen'
@@ -29,6 +31,8 @@ function Shell() {
           <Route path="/workout/summary/:id" element={<SummaryScreen />} />
           <Route path="/program" element={<ProgramScreen />} />
           <Route path="/program/session/:id" element={<SessionScreen />} />
+          <Route path="/food" element={<FoodScreen />} />
+          <Route path="/food/plan" element={<PlanScreen />} />
           <Route path="/progress" element={<ProgressScreen />} />
           <Route path="/body" element={<BodyScreen />} />
           <Route path="/week12" element={<Week12Screen />} />

@@ -186,6 +186,12 @@ export interface Settings {
   /** Cutting until the week-12 decision; 'surplus' after choosing a small surplus. */
   goal: 'cut' | 'surplus'
   week12Decision?: Week12Decision
+  /** Dietary notes sent with every meal request (health, dislikes, allergies). */
+  foodNotes: string
+  /** People eating the planned dinners (for grocery quantities). */
+  householdSize: number
+  satFatLimitG: number
+  fiberTargetG: number
 }
 
 export interface Week12Decision {
@@ -320,4 +326,49 @@ export interface DraftSet {
   repsRight?: number
   rir: number
   durationSec?: number
+}
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+export interface MealItem {
+  name: string
+  portion: string
+  calories: number
+  proteinG: number
+  satFatG?: number
+  fiberG?: number
+}
+
+/** A logged meal. Photo meals carry Claude's estimate, which the user can adjust. */
+export interface Meal {
+  id: string
+  date: string
+  loggedAt: number
+  mealType: MealType
+  name: string
+  items: MealItem[]
+  calories: number
+  proteinG: number
+  carbsG?: number
+  fatG?: number
+  satFatG?: number
+  fiberG?: number
+  confidence?: 'low' | 'medium' | 'high'
+  notes?: string
+  /** Small thumbnail of the meal photo (local only). */
+  photo?: Blob
+  source: 'photo' | 'manual' | 'suggestion'
+}
+
+/** Cached AI results: meal ideas per day/meal, and the current week plan. */
+export interface AiCacheRow {
+  id: string
+  createdAt: number
+  data: unknown
+}
+
+/** Secrets stay on the device and are never included in backups. */
+export interface SecretRow {
+  id: 'anthropic'
+  apiKey: string
 }

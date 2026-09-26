@@ -3,11 +3,14 @@ import { EXERCISE_LIBRARY } from '../data/exercises'
 import { SESSION_TEMPLATES } from '../data/program'
 import type {
   ActiveWorkout,
+  AiCacheRow,
   CardioLog,
   DailyLog,
   Exercise,
+  Meal,
   Measurement,
   Photo,
+  SecretRow,
   SessionTemplate,
   Settings,
   WeekOverride,
@@ -32,6 +35,9 @@ export class CutlineDB extends Dexie {
   measurements!: EntityTable<Measurement, 'date'>
   photos!: EntityTable<Photo, 'id'>
   weeklyReviews!: EntityTable<WeeklyReview, 'weekNumber'>
+  meals!: EntityTable<Meal, 'id'>
+  aiCache!: EntityTable<AiCacheRow, 'id'>
+  secrets!: EntityTable<SecretRow, 'id'>
 
   constructor(name = DB_NAME) {
     super(name)
@@ -51,6 +57,14 @@ export class CutlineDB extends Dexie {
       measurements: 'date',
       photos: 'id, date, angle',
       weeklyReviews: 'weekNumber',
+    })
+
+    // v2: meal logging (photo estimates), cached AI ideas and plans, and a
+    // secrets table for the API key. Adds tables only; existing data untouched.
+    this.version(2).stores({
+      meals: 'id, date, mealType',
+      aiCache: 'id',
+      secrets: 'id',
     })
 
     this.on('populate', (tx) => {

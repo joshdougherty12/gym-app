@@ -4,6 +4,7 @@ import { Icon, type IconName } from './Icon'
 const TABS: { to: string; label: string; icon: IconName }[] = [
   { to: '/', label: 'Today', icon: 'today' },
   { to: '/program', label: 'Program', icon: 'program' },
+  { to: '/food', label: 'Food', icon: 'food' },
   { to: '/progress', label: 'Progress', icon: 'progress' },
   { to: '/body', label: 'Body', icon: 'body' },
   { to: '/settings', label: 'Settings', icon: 'settings' },
@@ -22,7 +23,7 @@ export function BottomNav() {
               to={t.to}
               end={t.to === '/'}
               className={({ isActive }) =>
-                `flex min-h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold tracking-wide uppercase ${
+                `flex min-h-16 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold tracking-wide uppercase ${
                   isActive ? 'text-accent' : 'text-muted'
                 }`
               }
