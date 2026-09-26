@@ -4,7 +4,8 @@ import type { z } from 'zod'
 import type { MealType, Settings } from '../../types'
 import { GroceryPlanSchema, MealEstimateSchema, MealIdeasSchema, WeekIdeasSchema, type GroceryPlan, type MealEstimate, type MealIdea, type WeekIdea } from './schemas'
 
-export const MODEL = 'claude-opus-5'
+/** Sonnet 5: about 60% cheaper than Opus 5 and good at food photos (the user chose it). */
+export const MODEL = 'claude-sonnet-5'
 
 /** Raised with a message that can be shown to the user as-is. */
 export class AiError extends Error {}
@@ -26,18 +27,13 @@ function systemPrompt(p: Profile): string {
   ].join('\n')
 }
 
-/**
- * One structured request. Uses Claude Opus 5 with server-side fallbacks, so a
- * declined request is retried on Anthropic's recommended fallback model.
- */
+/** One structured request; the reply is validated against the schema. */
 async function ask<S extends z.ZodType>(apiKey: string, p: Profile, schema: S, content: Anthropic.Beta.BetaContentBlockParam[], effort: 'medium' | 'high'): Promise<z.infer<S>> {
   let res
   try {
     res = await client(apiKey).beta.messages.parse({
       model: MODEL,
       max_tokens: 16000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
       output_config: { effort, format: betaZodOutputFormat(schema) },
       system: systemPrompt(p),
       messages: [{ role: 'user', content }],
