@@ -122,17 +122,17 @@ export function FoodScreen() {
         <p className="text-xs text-muted">Photo numbers are Claude’s estimates. Saturated fat limit {settings.satFatLimitG} g/day (heart-healthy guideline; follow your doctor’s advice).</p>
       </Card>
 
-      <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
-        <label htmlFor={fileId} className={`flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-accent text-lg font-bold tracking-wide text-accent-ink uppercase ${!hasKey || analyzing ? 'pointer-events-none opacity-40' : ''}`}>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <label htmlFor={fileId} className={`col-span-2 flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-accent text-lg font-bold tracking-wide text-accent-ink uppercase ${!hasKey || analyzing ? 'pointer-events-none opacity-40' : ''}`}>
           <Icon name="camera" /> Snap a meal
         </label>
-        <Button className="min-h-16" onClick={manual}>
-          Add by hand
+        <label htmlFor={galleryId} className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl bg-surface-2 px-3 font-semibold text-ink ${!hasKey || analyzing ? 'pointer-events-none opacity-40' : ''}`}>
+          <Icon name="photo" className="size-5" /> Pick from gallery
+        </label>
+        <Button className="flex min-h-12 items-center justify-center gap-2" onClick={manual}>
+          <Icon name="plus" className="size-5" /> Add by hand
         </Button>
       </div>
-      <label htmlFor={galleryId} className={`mt-1 flex min-h-11 cursor-pointer items-center justify-center text-sm font-semibold text-accent ${!hasKey || analyzing ? 'pointer-events-none opacity-40' : ''}`}>
-        or choose a photo you already took
-      </label>
       {[fileId, galleryId].map((id) => (
         <input
           key={id}
