@@ -3,6 +3,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 import { isNative } from '../lib/native'
 import { db as defaultDb, type CutlineDB, type SettingsRow } from './db'
+import { syncDayFromMeals } from './meals'
 
 export interface BackupPhoto {
   id: string
@@ -119,6 +120,49 @@ export async function restoreBackup(b: Backup, d: CutlineDB = defaultDb): Promis
       b.aiCache ? d.aiCache.clear().then(() => d.aiCache.bulkPut(b.aiCache ?? [])) : Promise.resolve(),
     ])
   })
+}
+
+/**
+ * Add a backup's contents without deleting anything here (moving from the web
+ * version to the app, or combining two phones). Records with the same id are
+ * updated from the file; everything else is kept. Settings and the program
+ * come from the file. For a day logged in both, fields already here win.
+ * An in-progress workout here is kept.
+ */
+export async function mergeBackup(b: Backup, d: CutlineDB = defaultDb): Promise<void> {
+  const photos = b.photos?.map((p) => ({ id: p.id, date: p.date, angle: p.angle, blob: new Blob([fromBase64(p.base64)], { type: p.type }) }))
+  const meals: Meal[] | undefined = b.meals?.map(({ photoBase64, photoType, ...m }) => (photoBase64 ? { ...m, photo: new Blob([fromBase64(photoBase64)], { type: photoType ?? 'image/jpeg' }) } : m))
+  const tables = [d.settings, d.exercises, d.sessions, d.weekOverrides, d.workouts, d.activeWorkout, d.dailyLogs, d.cardio, d.measurements, d.weeklyReviews, d.photos, d.meals]
+  await d.transaction('rw', tables, async () => {
+    if (b.settings.length) await d.settings.bulkPut(b.settings)
+    await d.exercises.bulkPut(b.exercises)
+    await d.sessions.bulkPut(b.sessions)
+    await d.weekOverrides.bulkPut(b.weekOverrides)
+    await d.workouts.bulkPut(b.workouts)
+    await d.cardio.bulkPut(b.cardio)
+    await d.measurements.bulkPut(b.measurements)
+    await d.weeklyReviews.bulkPut(b.weeklyReviews)
+    if (photos) await d.photos.bulkPut(photos)
+    if (meals) await d.meals.bulkPut(meals)
+    for (const log of b.dailyLogs) {
+      const cur = await d.dailyLogs.get(log.date)
+      await d.dailyLogs.put({ ...log, ...cur })
+    }
+    const incoming = b.activeWorkout[0]
+    if (incoming && !(await d.activeWorkout.get('current'))) await d.activeWorkout.put(incoming)
+  })
+  // Days with meals keep meal-derived calorie and protein totals.
+  for (const date of new Set((await d.meals.toArray()).map((m) => m.date))) await syncDayFromMeals(date, d)
+}
+
+export async function mergeBackupFile(file: File): Promise<void> {
+  let json: unknown
+  try {
+    json = JSON.parse(await file.text())
+  } catch {
+    throw new Error('That file is not valid JSON.')
+  }
+  await mergeBackup(parseBackup(json))
 }
 
 export async function downloadBackup(includePhotos: boolean): Promise<void> {
