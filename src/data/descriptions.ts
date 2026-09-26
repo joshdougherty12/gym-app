@@ -36,7 +36,7 @@ export const EXERCISE_DESCRIPTIONS: Record<string, string> = {
   'back-squat': 'Bar on your upper back, feet about shoulder width. Sit down and back until thighs are at least parallel, knees tracking over toes, then stand up.',
   'front-squat': 'Bar resting on the front of your shoulders, elbows high. Squat down with an upright torso and stand back up. More quads, less back.',
   'hack-squat': 'Machine squat: back against the pad, shoulders under the pads, feet mid-platform. Lower deep, drive back up.',
-  'leg-press': 'Sit in the leg press, feet shoulder width in the middle of the platform. Lower until knees are near your chest without your lower back lifting, press back up.',
+  'leg-press': 'Sit in the leg press, feet shoulder width on the platform (higher on the platform = less stress on the knees). Lower under control, stopping before your lower back lifts off the pad, press back up.',
   'pendulum-squat': 'Pendulum squat machine: a swinging squat with your back on the pad. Go deep and keep tension on the quads.',
 
   // Hinge
@@ -107,6 +107,10 @@ export const EXERCISE_DESCRIPTIONS: Record<string, string> = {
   'ab-wheel':
     'Kneel holding the ab wheel. Roll it forward as far as you can while keeping your back flat and abs braced, then pull it back to your knees with your abs. Bodyweight only.',
   'decline-crunch': 'Crunch on a decline bench holding a dumbbell or plate on your chest.',
+  'dead-bug':
+    'Lie on your back, arms up, knees bent at 90° over your hips. Press your low back into the floor, then slowly lower one arm and the opposite leg toward the floor and return. Back-friendly core work. Reps per side.',
+  'bird-dog':
+    'On hands and knees, back flat. Reach one arm forward and the opposite leg back until level, hold a second, return. Keep the hips square. Back-friendly core work. Reps per side.',
   plank: 'Forearms and toes on the floor, body in a straight line from head to heels. Squeeze glutes and abs and hold. Timed.',
   'rkc-plank': 'A harder plank: elbows closer to your head, squeeze glutes, quads and abs as hard as you can. Much harder than a regular plank. Timed.',
   'side-plank': 'On one forearm and the side of your feet, body straight, hips up. Timed, per side.',

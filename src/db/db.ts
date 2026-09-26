@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import { EXERCISE_LIBRARY } from '../data/exercises'
-import { SESSION_TEMPLATES } from '../data/program'
+import { applySwaps, SESSION_TEMPLATES } from '../data/program'
 import type {
   ActiveWorkout,
   AiCacheRow,
@@ -66,6 +66,16 @@ export class CutlineDB extends Dexie {
       aiCache: 'id',
       secrets: 'id',
     })
+
+    // v3: joint-friendly program (bad low back, patellar tendonitis). Only
+    // slots that still hold the original exercise change; logs are untouched.
+    this.version(3)
+      .stores({})
+      .upgrade(async (tx) => {
+        const table = tx.table<SessionTemplate, string>('sessions')
+        const updated = applySwaps(await table.toArray())
+        await table.bulkPut(updated)
+      })
 
     this.on('populate', (tx) => {
       void tx.table('settings').add({ id: 'app', ...defaultSettings() } satisfies SettingsRow)

@@ -3,7 +3,7 @@ import { setApiKey, useHasApiKey } from '../db/meals'
 import { DEFAULT_FOOD_NOTES } from '../db/defaults'
 import { updateSettings } from '../db/repo'
 import type { Settings } from '../types'
-import { Button, Card, Stepper } from './ui'
+import { Button, Stepper } from './ui'
 
 export function MealAiSettings({ settings }: { settings: Settings }) {
   const hasKey = useHasApiKey()
@@ -13,7 +13,7 @@ export function MealAiSettings({ settings }: { settings: Settings }) {
   const notesId = useId()
 
   return (
-    <Card className="space-y-3" >
+    <div className="space-y-3">
       <div>
         <p className="text-sm font-medium">Claude API key</p>
         {hasKey ? (
@@ -88,6 +88,6 @@ export function MealAiSettings({ settings }: { settings: Settings }) {
       <Stepper label="People eating dinner" value={settings.householdSize} min={1} max={10} onChange={(householdSize) => void updateSettings({ householdSize })} />
       <Stepper label="Saturated fat limit" suffix="g" value={settings.satFatLimitG} min={5} max={40} onChange={(satFatLimitG) => void updateSettings({ satFatLimitG })} />
       <Stepper label="Fiber target" suffix="g" value={settings.fiberTargetG} min={10} max={60} onChange={(fiberTargetG) => void updateSettings({ fiberTargetG })} />
-    </Card>
+    </div>
   )
 }

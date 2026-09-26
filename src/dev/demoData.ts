@@ -46,6 +46,14 @@ const START: Record<string, number> = {
   'bulgarian-split-squat': 35,
   'hip-thrust': 185,
   'seated-calf-raise': 90,
+  'incline-db-row': 45,
+  'reverse-lunge': 30,
+  'leg-press-calf-raise': 180,
+  'captains-chair-raise': 0,
+  'dead-bug': 0,
+  'side-plank': 0,
+  'seated-leg-curl': 80,
+  'machine-hip-thrust': 140,
 }
 
 export interface DemoData {

@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { describe, EXERCISE_LIBRARY } from '../data/exercises'
+import { cautionsFor, describe, EXERCISE_LIBRARY } from '../data/exercises'
 import { SESSION_TEMPLATES } from '../data/program'
 import type { Exercise, SessionTemplate, Settings, WeekOverride } from '../types'
 import { db, type CutlineDB } from './db'
@@ -57,7 +57,8 @@ export function useSettings(): Settings | undefined {
 
 function withDescription(e: Exercise): Exercise {
   const d = describe(e)
-  return d && !e.description ? { ...e, description: d } : e
+  const c = cautionsFor(e)
+  return { ...e, ...(d && !e.description ? { description: d } : {}), ...(c.length && !e.cautions ? { cautions: c } : {}) }
 }
 
 export function useExercises(): Map<string, Exercise> | undefined {

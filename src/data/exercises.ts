@@ -1,5 +1,5 @@
 import { EXERCISE_DESCRIPTIONS } from './descriptions'
-import type { Equipment, Exercise, ExerciseType, Loading, MovementPattern, Muscle } from '../types'
+import type { Caution, Equipment, Exercise, ExerciseType, Loading, MovementPattern, Muscle } from '../types'
 
 /**
  * Increment defaults match the gym: plates come in 2.5 lb, so a barbell (or a
@@ -37,6 +37,33 @@ interface Def {
   timedProgression?: Exercise['timedProgression']
 }
 
+/**
+ * Exercises that load the low back or stress the knee (patellar tendon) hard.
+ * Shown as warnings when picking or swapping, never hidden.
+ */
+export const CAUTIONS: Record<string, Caution[]> = {
+  'back-squat': ['low-back', 'knees'],
+  'front-squat': ['low-back', 'knees'],
+  'hack-squat': ['knees'],
+  'pendulum-squat': ['knees'],
+  'romanian-deadlift': ['low-back'],
+  'db-romanian-deadlift': ['low-back'],
+  'back-extension': ['low-back'],
+  'barbell-row': ['low-back'],
+  'one-arm-db-row': ['low-back'],
+  'standing-barbell-ohp': ['low-back'],
+  'standing-calf-raise': ['low-back'],
+  'walking-lunge': ['knees'],
+  'step-up': ['knees'],
+  'bulgarian-split-squat': ['knees'],
+  'ab-wheel': ['low-back'],
+  'cable-crunch': ['low-back'],
+  'decline-crunch': ['low-back'],
+  'hanging-leg-raise': ['low-back'],
+}
+
+export const CAUTION_LABEL: Record<Caution, string> = { 'low-back': 'Low back', knees: 'Knees' }
+
 function ex(d: Def): Exercise {
   const loading: Loading =
     d.loading ?? (d.type === 'timed' ? 'timed' : d.type === 'cardio' ? 'cardio' : 'external')
@@ -54,6 +81,7 @@ function ex(d: Def): Exercise {
     incrementLb: d.incrementLb ?? DEFAULT_INCREMENTS[d.equipment],
     alternates: [],
     ...(d.timedProgression ? { timedProgression: d.timedProgression } : {}),
+    ...(CAUTIONS[d.id] ? { cautions: CAUTIONS[d.id] } : {}),
   }
 }
 
@@ -151,6 +179,8 @@ const defs: Def[] = [
   { id: 'decline-crunch', name: 'Weighted decline crunch', type: 'isolation', equipment: 'dumbbell', pattern: 'core', primary: ['core'] },
   { id: 'plank', name: 'Plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'add-weight', incrementLb: 10 },
   { id: 'rkc-plank', name: 'RKC plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'harder-variation', incrementLb: 0 },
+  { id: 'dead-bug', name: 'Dead bug', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], perSide: true, incrementLb: 0 },
+  { id: 'bird-dog', name: 'Bird dog', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], perSide: true, incrementLb: 0 },
   { id: 'side-plank', name: 'Side plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], perSide: true, timedProgression: 'add-weight', incrementLb: 5 },
 
   // Conditioning
@@ -170,6 +200,11 @@ function withAlternates(list: Exercise[]): Exercise[] {
 export const EXERCISE_LIBRARY: readonly Exercise[] = withAlternates(defs.map(ex))
 
 /** Library description for an exercise, used when a stored copy predates descriptions. */
+/** Library cautions for an exercise, used when a stored copy predates them. */
+export function cautionsFor(e: Pick<Exercise, 'id' | 'cautions'>): Caution[] {
+  return e.cautions ?? CAUTIONS[e.id] ?? []
+}
+
 export function describe(e: Pick<Exercise, 'id' | 'description'>): string | undefined {
   return e.description ?? EXERCISE_DESCRIPTIONS[e.id]
 }

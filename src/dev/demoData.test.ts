@@ -21,8 +21,8 @@ describe('demo data', () => {
     expect(last).toBeLessThan(first - 4)
   })
 
-  it('progresses the squat over the block', () => {
-    const h = exerciseHistory(d.workouts, 'back-squat')
+  it('progresses the main lower-body lift over the block', () => {
+    const h = exerciseHistory(d.workouts, 'hip-thrust')
     const newest = Math.max(...(h[0]?.sets.map((s) => s.weightLb) ?? [0]))
     const oldest = Math.max(...(h[h.length - 1]?.sets.map((s) => s.weightLb) ?? [0]))
     expect(newest).toBeGreaterThan(oldest)

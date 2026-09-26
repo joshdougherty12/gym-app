@@ -64,6 +64,8 @@ export const MUSCLES: readonly Muscle[] = [
 /** What a timed exercise does once it reaches the top of its time range. */
 export type TimedProgression = 'add-weight' | 'harder-variation'
 
+export type Caution = 'low-back' | 'knees'
+
 export interface Exercise {
   id: string
   name: string
@@ -85,6 +87,8 @@ export interface Exercise {
   timedProgression?: TimedProgression
   /** Created by the user rather than shipped in the library. */
   custom?: boolean
+  /** Joints this exercise loads hard, shown as warnings when picking or swapping. */
+  cautions?: Caution[]
 }
 
 export interface ExerciseSlot {

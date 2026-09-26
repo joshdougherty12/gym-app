@@ -1,4 +1,4 @@
-import type { PhaseId, PhaseInfo, Schedule, SessionTemplate, WeekDefinition } from '../types'
+import type { ExerciseSlot, PhaseId, PhaseInfo, Schedule, SessionTemplate, WeekDefinition } from '../types'
 
 /** Weeks 1-12 are the block; week 0 is the short intro before the first Monday. */
 export const PROGRAM_WEEKS = 12
@@ -83,7 +83,7 @@ export function effectiveWeek(n: number, deload?: boolean): WeekDefinition {
   return { number: n, phase: 'deload', targetRir: { min: 4, max: 4 }, setMultiplier: 0.6, notes: 'Extra deload week: ' + PHASES.deload.summary }
 }
 
-export const SESSION_TEMPLATES: readonly SessionTemplate[] = [
+const ORIGINAL_SESSIONS: readonly SessionTemplate[] = [
   {
     id: 'upper-heavy',
     name: 'Upper (heavy)',
@@ -148,6 +148,46 @@ export const SESSION_TEMPLATES: readonly SessionTemplate[] = [
     ],
   },
 ]
+
+/**
+ * Joint-friendly swaps (bad low back, patellar tendonitis): bent-over,
+ * spine-loaded and knee-heavy moves replaced with supported, hip-driven ones.
+ * Applied to the shipped program and, by the v3 database upgrade, to stored
+ * programs where the slot still holds the original exercise.
+ */
+export interface SlotSwap {
+  sessionId: string
+  slotId: string
+  from: string
+  to: Omit<ExerciseSlot, 'slotId'>
+}
+
+export const JOINT_FRIENDLY_SWAPS: readonly SlotSwap[] = [
+  { sessionId: 'upper-heavy', slotId: 'uh-5', from: 'cable-crunch', to: { exerciseId: 'side-plank', sets: 3, repMin: 20, repMax: 30, isMainLift: false } },
+  { sessionId: 'lower-heavy', slotId: 'lh-1', from: 'back-squat', to: { exerciseId: 'leg-press', sets: 4, repMin: 8, repMax: 10, isMainLift: true, note: 'Feet high on the platform; stop short of any knee pain.' } },
+  { sessionId: 'lower-heavy', slotId: 'lh-2', from: 'romanian-deadlift', to: { exerciseId: 'hip-thrust', sets: 3, repMin: 8, repMax: 10, isMainLift: true } },
+  { sessionId: 'lower-heavy', slotId: 'lh-3', from: 'walking-lunge', to: { exerciseId: 'reverse-lunge', sets: 3, repMin: 8, repMax: 10, isMainLift: false, note: 'Short step; skip it if the knee tendon flares up.' } },
+  { sessionId: 'lower-heavy', slotId: 'lh-5', from: 'standing-calf-raise', to: { exerciseId: 'leg-press-calf-raise', sets: 4, repMin: 10, repMax: 12, isMainLift: false } },
+  { sessionId: 'lower-heavy', slotId: 'lh-6', from: 'hanging-leg-raise', to: { exerciseId: 'captains-chair-raise', sets: 3, repMin: 10, repMax: 12, isMainLift: false } },
+  { sessionId: 'pull', slotId: 'pl-1', from: 'barbell-row', to: { exerciseId: 'incline-db-row', sets: 4, repMin: 8, repMax: 10, isMainLift: true } },
+  { sessionId: 'pull', slotId: 'pl-6', from: 'ab-wheel', to: { exerciseId: 'dead-bug', sets: 3, repMin: 8, repMax: 10, isMainLift: false } },
+  { sessionId: 'legs-conditioning', slotId: 'lc-2', from: 'bulgarian-split-squat', to: { exerciseId: 'seated-leg-curl', sets: 3, repMin: 10, repMax: 12, isMainLift: false } },
+  { sessionId: 'legs-conditioning', slotId: 'lc-3', from: 'hip-thrust', to: { exerciseId: 'machine-hip-thrust', sets: 3, repMin: 10, repMax: 12, isMainLift: false } },
+  { sessionId: 'legs-conditioning', slotId: 'lc-1', from: 'leg-press', to: { exerciseId: 'leg-press', sets: 4, repMin: 10, repMax: 12, isMainLift: false, note: 'Feet high on the platform; stop short of any knee pain.' } },
+]
+
+/** Apply the swaps to sessions, only where a slot still holds the original exercise. */
+export function applySwaps(sessions: readonly SessionTemplate[], swaps: readonly SlotSwap[] = JOINT_FRIENDLY_SWAPS): SessionTemplate[] {
+  return sessions.map((s) => ({
+    ...s,
+    slots: s.slots.map((slot) => {
+      const sw = swaps.find((x) => x.sessionId === s.id && x.slotId === slot.slotId && x.from === slot.exerciseId)
+      return sw ? { ...slot, ...sw.to, slotId: slot.slotId } : slot
+    }),
+  }))
+}
+
+export const SESSION_TEMPLATES: readonly SessionTemplate[] = applySwaps(ORIGINAL_SESSIONS)
 
 export const DEFAULT_SCHEDULE: Schedule = {
   1: { kind: 'session', sessionId: 'upper-heavy' },

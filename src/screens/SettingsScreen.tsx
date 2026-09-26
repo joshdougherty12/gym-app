@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { ScheduleEditor } from '../components/ScheduleEditor'
-import { Button, Card, Loading, Screen, SectionTitle, Segmented, Stepper, Toggle } from '../components/ui'
+import { Section, useAccordion } from '../components/Accordion'
+import { Button, Loading, Screen, Segmented, Stepper, Toggle } from '../components/ui'
 import { DataSection } from '../components/DataSection'
 import { MealAiSettings } from '../components/MealAiSettings'
+import { useHasApiKey } from '../db/meals'
 import { saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
 import { programWeek } from '../lib/calendar'
 import { newId } from '../lib/id'
 import { isIsoDate, mondayOf, nextMonday, shortDate, todayIso } from '../lib/dates'
-import { displayWeight, inputWeightToLb, roundTo, weightUnit } from '../lib/units'
+import { formatRest } from '../lib/rest'
+import { displayWeight, formatNumber, inputWeightToLb, roundTo, weightUnit } from '../lib/units'
 import type { Equipment, Settings, Units } from '../types'
 
 const EQUIPMENT: { key: Equipment; label: string }[] = [
@@ -42,6 +45,8 @@ export function SettingsScreen() {
   const [shiftFrom, setShiftFrom] = useState<'this' | 'next'>('this')
   // Equipment defaults changed during this visit; only those offer "apply to all".
   const [edited, setEdited] = useState<Set<Equipment>>(new Set())
+  const { open, toggle } = useAccordion()
+  const hasKey = useHasApiKey()
 
   if (!settings || !sessions || !exercises) return <Loading />
   const set = (patch: Partial<Settings>) => void updateSettings(patch)
@@ -49,6 +54,17 @@ export function SettingsScreen() {
   const week = programWeek(today, settings.startDate, settings.pauses)
   const thisMonday = mondayOf(today)
   const shiftStart = shiftFrom === 'this' ? thisMonday : nextMonday(today)
+  const u = settings.units
+  const inc = (e: Equipment) => `+${formatNumber(roundTo(displayWeight(settings.incrementDefaults[e], u), 0.25))}`
+  const summaries = {
+    display: `${u === 'imperial' ? 'lb / in' : 'kg / cm'} · ${settings.theme} theme · ${settings.workoutView === 'single' ? 'one exercise at a time' : 'scroll list'}`,
+    targets: `${settings.calorieTarget.toLocaleString()} kcal · ${settings.proteinTargetG} g protein · ${settings.stepGoal.toLocaleString()} steps`,
+    mealai: hasKey ? 'Connected · Claude Sonnet 5' : 'Not connected: add your API key',
+    rest: `${formatRest(settings.restCompoundSec)} compound · ${formatRest(settings.restIsolationSec)} isolation${settings.timerSound || settings.timerVibrate ? '' : ' · silent'}`,
+    increments: `Barbell ${inc('barbell')} · Dumbbell ${inc('dumbbell')} · Machine ${inc('machine')} ${weightUnit(u)}`,
+    program: `Started ${shortDate(settings.startDate)}${week === null ? '' : ` · week ${week}`}${settings.pauses.length ? ` · ${settings.pauses.length} shift${settings.pauses.length === 1 ? '' : 's'}` : ''}`,
+    data: 'Backup, restore, demo, reset',
+  }
   function addPause() {
     if (!settings) return
     set({ pauses: [...settings.pauses, { id: newId('pause'), start: shiftStart, weeks: shiftWeeks }] })
@@ -60,8 +76,9 @@ export function SettingsScreen() {
         <p className="mb-2 rounded-xl bg-surface-2 p-3 text-sm">Goal: small surplus (chosen at week 12). The weekly review now aims for +0.25-0.5 lb/week.</p>
       )}
 
-      <SectionTitle>Display</SectionTitle>
-      <Card className="space-y-3">
+      <div className="space-y-2">
+      <Section id="display" title="Display" summary={summaries.display} open={open === 'display'} onToggle={toggle}>
+        <div className="space-y-3">
         <Segmented
           label="Units"
           value={settings.units}
@@ -93,31 +110,35 @@ export function SettingsScreen() {
             ]}
           />
         </div>
-      </Card>
+        </div>
+      </Section>
 
-      <SectionTitle>Targets</SectionTitle>
-      <Card className="space-y-2">
+      <Section id="targets" title="Targets" summary={summaries.targets} open={open === 'targets'} onToggle={toggle}>
+        <div className="space-y-2">
         <Stepper label="Calories" suffix="kcal" value={settings.calorieTarget} step={25} min={1200} max={5000} onChange={(calorieTarget) => set({ calorieTarget })} />
         <Stepper label="Protein" suffix="g" value={settings.proteinTargetG} step={5} min={50} max={400} onChange={(proteinTargetG) => set({ proteinTargetG })} />
         <Stepper label="Steps" value={settings.stepGoal} step={500} min={1000} max={30000} onChange={(stepGoal) => set({ stepGoal })} />
         <WeightStepper label="Loss rate, min / week" lb={settings.lossRateMinLb} units={settings.units} stepLb={0.25} onChange={(lossRateMinLb) => set({ lossRateMinLb, lossRateMaxLb: Math.max(lossRateMinLb, settings.lossRateMaxLb) })} />
         <WeightStepper label="Loss rate, max / week" lb={settings.lossRateMaxLb} units={settings.units} stepLb={0.25} onChange={(lossRateMaxLb) => set({ lossRateMaxLb, lossRateMinLb: Math.min(lossRateMaxLb, settings.lossRateMinLb) })} />
-      </Card>
+        </div>
+      </Section>
 
-      <SectionTitle>Meal AI (Claude)</SectionTitle>
-      <MealAiSettings settings={settings} />
+      <Section id="mealai" title="Meal AI" summary={summaries.mealai} open={open === 'mealai'} onToggle={toggle}>
+        <MealAiSettings settings={settings} />
+      </Section>
 
-      <SectionTitle>Rest timer</SectionTitle>
-      <Card className="space-y-2">
+      <Section id="rest" title="Rest timer" summary={summaries.rest} open={open === 'rest'} onToggle={toggle}>
+        <div className="space-y-2">
         <Stepper label="Compound" suffix="s" value={settings.restCompoundSec} step={15} min={0} max={600} onChange={(restCompoundSec) => set({ restCompoundSec })} />
         <Stepper label="Isolation" suffix="s" value={settings.restIsolationSec} step={15} min={0} max={600} onChange={(restIsolationSec) => set({ restIsolationSec })} />
         <Stepper label="Timed (plank)" suffix="s" value={settings.restTimedSec} step={15} min={0} max={600} onChange={(restTimedSec) => set({ restTimedSec })} />
         <Toggle label="Sound when rest ends" checked={settings.timerSound} onChange={(timerSound) => set({ timerSound })} />
         <Toggle label="Vibrate when rest ends" checked={settings.timerVibrate} onChange={(timerVibrate) => set({ timerVibrate })} />
-      </Card>
+        </div>
+      </Section>
 
-      <SectionTitle>Weight increments</SectionTitle>
-      <Card className="space-y-3">
+      <Section id="increments" title="Weight increments" summary={summaries.increments} open={open === 'increments'} onToggle={toggle}>
+        <div className="space-y-3">
         <p className="text-sm text-muted">
           Default jump per equipment type. Each exercise keeps its own increment (Program → session → exercise), e.g. plate-loaded
           leg press and hack squat move 5 lb. After changing a default you can copy it onto that equipment's exercises.
@@ -153,10 +174,11 @@ export function SettingsScreen() {
             </div>
           )
         })}
-      </Card>
+        </div>
+      </Section>
 
-      <SectionTitle>Program</SectionTitle>
-      <Card className="space-y-3">
+      <Section id="program" title="Program & schedule" summary={summaries.program} open={open === 'program'} onToggle={toggle}>
+        <div className="space-y-3">
         <div className="flex items-center gap-3">
           <label htmlFor="start-date" className="flex-1 text-sm font-medium">
             Start date <span className="block text-xs text-muted">{week === null ? 'Not started yet' : `Today is week ${week}`}</span>
@@ -210,15 +232,18 @@ export function SettingsScreen() {
             </ul>
           )}
         </div>
-      </Card>
+        </div>
 
-      <SectionTitle>Weekly schedule</SectionTitle>
-      <Card className="py-1">
-        <ScheduleEditor schedule={settings.schedule} sessions={sessions} onChange={(schedule) => set({ schedule })} />
-      </Card>
+        <div className="mt-4 border-t border-line pt-3">
+          <p className="text-sm font-medium">Weekly schedule</p>
+          <ScheduleEditor schedule={settings.schedule} sessions={sessions} onChange={(schedule) => set({ schedule })} />
+        </div>
+      </Section>
 
-      <SectionTitle>Data</SectionTitle>
-      <DataSection />
+      <Section id="data" title="Data" summary={summaries.data} open={open === 'data'} onToggle={toggle}>
+        <DataSection />
+      </Section>
+      </div>
     </Screen>
   )
 }

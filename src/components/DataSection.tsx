@@ -3,7 +3,7 @@ import { downloadBackup, importBackupFile } from '../db/backup'
 import { isDemoMode } from '../db/db'
 import { resetAllData, resetProgram } from '../db/repo'
 import { enterDemoMode, exitDemoMode } from '../dev/demoMode'
-import { Button, Card } from './ui'
+import { Button } from './ui'
 
 export function DataSection() {
   const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null)
@@ -25,7 +25,7 @@ export function DataSection() {
   }
 
   return (
-    <Card className="space-y-2">
+    <div className="space-y-2">
       <p className="text-sm text-muted">Stored only in this browser on this device. Nothing is ever uploaded. Download a backup now and then and keep it somewhere safe.</p>
       <Button className="w-full" variant="primary" disabled={busy} onClick={() => void run(() => downloadBackup(false), 'Backup downloaded.')}>
         Download backup (JSON)
@@ -90,6 +90,6 @@ export function DataSection() {
           Reset all data
         </Button>
       </div>
-    </Card>
+    </div>
   )
 }
