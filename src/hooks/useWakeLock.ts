@@ -1,8 +1,14 @@
+import { KeepAwake } from '@capacitor-community/keep-awake'
 import { useEffect } from 'react'
+import { isNative } from '../lib/native'
 
 /** Keep the screen on while mounted (re-acquired when the page becomes visible again). */
 export function useWakeLock(enabled: boolean) {
   useEffect(() => {
+    if (enabled && isNative()) {
+      void KeepAwake.keepAwake().catch(() => undefined)
+      return () => void KeepAwake.allowSleep().catch(() => undefined)
+    }
     if (!enabled || !('wakeLock' in navigator)) return
     let lock: WakeLockSentinel | null = null
     let cancelled = false

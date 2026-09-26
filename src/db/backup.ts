@@ -1,4 +1,7 @@
 import type { ActiveWorkout, CardioLog, DailyLog, Exercise, Measurement, PhotoAngle, SessionTemplate, WeekOverride, WeeklyReview, WorkoutLog } from '../types'
+import { Directory, Encoding, Filesystem } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
+import { isNative } from '../lib/native'
 import { db as defaultDb, type CutlineDB, type SettingsRow } from './db'
 
 export interface BackupPhoto {
@@ -104,11 +107,18 @@ export async function restoreBackup(b: Backup, d: CutlineDB = defaultDb): Promis
 
 export async function downloadBackup(includePhotos: boolean): Promise<void> {
   const b = await buildBackup(includePhotos)
+  const name = `cutline-backup-${new Date().toISOString().slice(0, 10)}${includePhotos ? '-with-photos' : ''}.json`
+  if (isNative()) {
+    // Android app: write the file, then open the share sheet (save to Drive, Files, email...).
+    const res = await Filesystem.writeFile({ path: name, data: JSON.stringify(b), directory: Directory.Cache, encoding: Encoding.UTF8 })
+    await Share.share({ title: 'Cutline backup', files: [res.uri] })
+    return
+  }
   const blob = new Blob([JSON.stringify(b)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `cutline-backup-${new Date().toISOString().slice(0, 10)}${includePhotos ? '-with-photos' : ''}.json`
+  a.download = name
   document.body.append(a)
   a.click()
   a.remove()

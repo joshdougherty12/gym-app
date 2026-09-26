@@ -20,7 +20,7 @@ export function AppBanners() {
   return (
     <div className="sticky top-0 z-40 space-y-px">
       {demo && (
-        <div className="flex items-center gap-2 bg-warn px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] text-sm font-bold text-bg">
+        <div className="flex items-center gap-2 bg-warn px-4 py-2 pt-[max(0.5rem,var(--sat))] text-sm font-bold text-bg">
           <span className="flex-1">DEMO DATA: your real logs are untouched</span>
           <button type="button" onClick={() => exitDemoMode()} className="min-h-11 rounded-lg bg-bg px-3 text-warn">
             Exit demo
@@ -28,7 +28,7 @@ export function AppBanners() {
         </div>
       )}
       {showUpdate && (
-        <div className="flex items-center gap-2 bg-accent px-4 py-2 pt-[max(0.5rem,env(safe-area-inset-top))] text-sm font-bold text-accent-ink" role="status">
+        <div className="flex items-center gap-2 bg-accent px-4 py-2 pt-[max(0.5rem,var(--sat))] text-sm font-bold text-accent-ink" role="status">
           <span className="flex-1">A new version is ready.</span>
           <button type="button" onClick={() => void updateServiceWorker(true)} className="min-h-11 rounded-lg bg-accent-ink px-3 text-accent">
             Reload

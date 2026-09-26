@@ -16,7 +16,7 @@ export function Screen({
   children: ReactNode
 }) {
   return (
-    <div className="mx-auto max-w-xl px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-28">
+    <div className="mx-auto max-w-xl px-4 pt-[max(1rem,var(--sat))] pb-28">
       <header className="mb-4 flex items-end gap-2">
         {back && (
           <Link to={back} aria-label="Back" className="-ml-2 grid size-11 place-items-center rounded-full text-muted">
@@ -123,7 +123,7 @@ export function Sheet({
               <Icon name="close" />
             </button>
           </div>
-          <div className="overflow-y-auto px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]">{children}</div>
+          <div className="overflow-y-auto px-4 pt-3 pb-[max(1.5rem,var(--sab))]">{children}</div>
         </div>
       )}
     </dialog>

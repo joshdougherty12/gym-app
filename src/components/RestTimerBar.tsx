@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { beep, vibrate } from '../lib/alarm'
+import { isNative } from '../lib/native'
 import { formatRest } from '../lib/rest'
 import { useRestTimer } from '../store/restTimer'
 
@@ -20,8 +21,11 @@ export function RestTimerBar({ sound, vibration }: { sound: boolean; vibration: 
   useEffect(() => {
     if (endsAt === null || left > 0 || rang.current === endsAt) return
     rang.current = endsAt
-    if (sound) beep()
-    if (vibration) vibrate()
+    // In the Android app the scheduled system notification rings instead (also in the background).
+    if (!isNative()) {
+      if (sound) beep()
+      if (vibration) vibrate()
+    }
     const id = window.setTimeout(skip, 4000)
     return () => window.clearTimeout(id)
   }, [endsAt, left, sound, vibration, skip])
@@ -35,7 +39,7 @@ export function RestTimerBar({ sound, vibration }: { sound: boolean; vibration: 
       role="timer"
       aria-live="off"
       aria-label={`Rest ${formatRest(left)} remaining`}
-      className={`fixed inset-x-0 bottom-0 z-30 border-t pb-[env(safe-area-inset-bottom)] ${done ? 'border-good bg-good text-bg' : 'border-line bg-surface'}`}
+      className={`fixed inset-x-0 bottom-0 z-30 border-t pb-[var(--sab)] ${done ? 'border-good bg-good text-bg' : 'border-line bg-surface'}`}
     >
       {!done && <div className="h-1 bg-accent" style={{ width: `${pct}%` }} />}
       <div className="mx-auto flex max-w-xl items-center gap-2 px-4 py-2">

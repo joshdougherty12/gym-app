@@ -11,6 +11,8 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // The Android app ships its files in the APK; no service worker there.
+      disable: process.env.NATIVE === '1',
       // 'prompt': a new version waits for the user to tap Reload (never mid-workout).
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],

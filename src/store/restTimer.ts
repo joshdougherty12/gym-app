@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { cancelRestAlarm, scheduleRestAlarm } from '../lib/native'
 
 interface RestTimerState {
   /** Epoch ms when rest ends; null when no timer is running. */
@@ -44,6 +45,7 @@ export const useRestTimer = create<RestTimerState>((set, get) => ({
     const v = { endsAt: Date.now() + sec * 1000, totalSec: sec, label }
     persist(v)
     set(v)
+    void scheduleRestAlarm(v.endsAt, label)
   },
   adjust: (d) => {
     const { endsAt, totalSec, label } = get()
@@ -51,8 +53,10 @@ export const useRestTimer = create<RestTimerState>((set, get) => ({
     const v = { endsAt: Math.max(Date.now(), endsAt + d * 1000), totalSec: Math.max(0, totalSec + d), label }
     persist(v)
     set(v)
+    void scheduleRestAlarm(v.endsAt, label)
   },
   skip: () => {
+    void cancelRestAlarm()
     persist({ endsAt: null, totalSec: 0, label: '' })
     set({ endsAt: null, totalSec: 0, label: '' })
   },

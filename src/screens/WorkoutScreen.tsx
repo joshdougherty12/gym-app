@@ -11,6 +11,7 @@ import { db } from '../db/db'
 import { useExercises, useSessions, useSettings, useWeekOverride } from '../db/repo'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { primeAudio } from '../lib/alarm'
+import { initRestAlarm } from '../lib/native'
 import { formatRest, restFor } from '../lib/rest'
 import { displayWeight, formatNumber, inputWeightToLb, weightUnit } from '../lib/units'
 import { formatRir } from '../lib/weekPlan'
@@ -48,6 +49,8 @@ export function WorkoutScreen() {
 
   useEffect(() => {
     void load()
+    // Android app: ask for notification permission now, before the first rest.
+    void initRestAlarm()
   }, [load])
 
   const units = settings?.units ?? 'imperial'
@@ -174,7 +177,7 @@ export function WorkoutScreen() {
   const swapPlan = plans.find((p) => p.slot.slotId === swapSlot)
 
   return (
-    <div className={`mx-auto max-w-xl px-4 pt-[max(0.75rem,env(safe-area-inset-top))] ${timerRunning ? 'pb-40' : 'pb-16'}`}>
+    <div className={`mx-auto max-w-xl px-4 pt-[max(0.75rem,var(--sat))] ${timerRunning ? 'pb-40' : 'pb-16'}`}>
       <header className="mb-3 flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <h1 className="num truncate text-3xl leading-none font-bold uppercase">{session.short}</h1>
