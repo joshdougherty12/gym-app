@@ -1,3 +1,4 @@
+import { EXERCISE_DESCRIPTIONS } from './descriptions'
 import type { Equipment, Exercise, ExerciseType, Loading, MovementPattern, Muscle } from '../types'
 
 /**
@@ -42,6 +43,7 @@ function ex(d: Def): Exercise {
   return {
     id: d.id,
     name: d.name,
+    ...(EXERCISE_DESCRIPTIONS[d.id] ? { description: EXERCISE_DESCRIPTIONS[d.id] } : {}),
     type: d.type,
     equipment: d.equipment,
     loading,
@@ -166,6 +168,11 @@ function withAlternates(list: Exercise[]): Exercise[] {
 }
 
 export const EXERCISE_LIBRARY: readonly Exercise[] = withAlternates(defs.map(ex))
+
+/** Library description for an exercise, used when a stored copy predates descriptions. */
+export function describe(e: Pick<Exercise, 'id' | 'description'>): string | undefined {
+  return e.description ?? EXERCISE_DESCRIPTIONS[e.id]
+}
 
 export function exerciseMap(list: readonly Exercise[]): Map<string, Exercise> {
   return new Map(list.map((e) => [e.id, e]))

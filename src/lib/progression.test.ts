@@ -169,12 +169,27 @@ describe('timed exercises', () => {
 
   it('starts at the bottom of the range with no history', () => {
     const s = suggest(input({ exercise: plank, repMin: 45, repMax: 60 }))
-    expect(s.sets[0]).toEqual({ weightLb: null, reps: 45 })
+    expect(s.sets[0]).toEqual({ weightLb: 0, reps: 45 })
     expect(s.reason).toContain('45s')
   })
 })
 
 describe('bodyweight exercises with no increment', () => {
+  it('never asks for a weight the first time (ab wheel)', () => {
+    const wheel = { type: 'isolation', incrementLb: 0, perSide: false, loading: 'bodyweight-plus' } as const
+    const s = suggest(input({ exercise: wheel, repMin: 8, repMax: 12 }))
+    expect(s.sets[0]).toEqual({ weightLb: 0, reps: 8 })
+    expect(s.reason).toContain('bodyweight only')
+    expect(s.reason).not.toContain('pick a weight')
+  })
+
+  it('starts weighted pull-ups at bodyweight (0 added)', () => {
+    const pullup = { type: 'compound', incrementLb: 2.5, perSide: false, loading: 'bodyweight-plus' } as const
+    const s = suggest(input({ exercise: pullup, repMin: 6, repMax: 8 }))
+    expect(s.sets[0]).toEqual({ weightLb: 0, reps: 6 })
+    expect(s.reason).toContain('0 added')
+  })
+
   it('suggests adding load or a harder variation at the top', () => {
     const hlr = { type: 'isolation', incrementLb: 0, perSide: false, loading: 'bodyweight-plus' } as const
     const s = suggest(input({ exercise: hlr, repMin: 10, repMax: 12, history: [session(0, [12, 12, 12])] }))

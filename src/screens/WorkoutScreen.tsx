@@ -14,6 +14,7 @@ import { primeAudio } from '../lib/alarm'
 import { formatRest, restFor } from '../lib/rest'
 import { displayWeight, formatNumber, inputWeightToLb, weightUnit } from '../lib/units'
 import { formatRir } from '../lib/weekPlan'
+import { isBodyweightOnly } from '../lib/progression'
 import { bestSetInWeek, defaultDraft, findLogged, planWorkout, rowKey, type SlotPlan } from '../lib/workoutPlan'
 import { useActiveWorkout } from '../store/activeWorkout'
 import { useRestTimer } from '../store/restTimer'
@@ -333,6 +334,16 @@ function SlotCard({
   const openKey = expanded ?? (firstOpen !== undefined ? rowKey(slot.slotId, e.id, false, firstOpen) : null)
   const lastSets = last?.sets ?? []
   const unitLabel = timed ? 's' : ''
+  const bwOnly = isBodyweightOnly(e)
+  const bwPlus = e.loading === 'bodyweight-plus'
+  const [howOpen, setHowOpen] = useState(false)
+  /** "60", or "BW" / "BW+25" for bodyweight exercises. */
+  const load = (lb: number) => {
+    const n = formatNumber(displayWeight(lb, settings.units))
+    if (bwOnly) return 'BW'
+    if (bwPlus) return lb > 0 ? `BW+${n}` : 'BW'
+    return n
+  }
 
   const rows: { warmup: boolean; i: number }[] = [
     ...Array.from({ length: warmups }, (_, i) => ({ warmup: true, i })),
@@ -348,6 +359,16 @@ function SlotCard({
             {cardio ? `${slot.repMin} min` : `${workingSets} × ${slot.repMin === slot.repMax ? slot.repMin : `${slot.repMin}-${slot.repMax}`}${unitLabel}${e.perSide ? ' / side' : ''}`}
             {!cardio && ` · rest ${formatRest(restFor(slot, e, settings))}`}
           </p>
+          {e.description && (
+            <button
+              type="button"
+              onClick={() => setHowOpen((v) => !v)}
+              aria-expanded={howOpen}
+              className={`mt-1 block text-left text-sm text-muted ${howOpen ? '' : 'line-clamp-2'}`}
+            >
+              {e.description}
+            </button>
+          )}
         </div>
         <button type="button" onClick={onSwap} aria-label={`Swap ${e.name}`} className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface-2 text-muted">
           <Icon name="swap" className="size-5" />
@@ -358,11 +379,11 @@ function SlotCard({
         <div className="mt-3 rounded-xl bg-surface-2 p-3 text-sm">
           <p className="text-[11px] font-bold tracking-[0.14em] text-muted uppercase">Last time{last ? ` · ${last.date.slice(5).replace('-', '/')}` : ''}</p>
           <p className="num text-xl">
-            {last ? lastSets.map((s) => (timed ? `${s.durationSec ?? s.reps}s${s.weightLb ? ` +${formatNumber(displayWeight(s.weightLb, settings.units))}` : ''}` : `${formatNumber(displayWeight(s.weightLb, settings.units))}×${s.reps}`)).join('  ') : '—'}
+            {last ? lastSets.map((s) => (timed ? `${s.durationSec ?? s.reps}s${s.weightLb ? ` +${formatNumber(displayWeight(s.weightLb, settings.units))}` : ''}` : `${load(s.weightLb)}×${s.reps}`)).join('  ') : '—'}
           </p>
           {week8Best && (
             <p className="num text-lg text-warn">
-              Week 8 best: {formatNumber(displayWeight(week8Best.weightLb, settings.units))}×{week8Best.reps}. Beat it.
+              Week 8 best: {load(week8Best.weightLb)}×{week8Best.reps}. Beat it.
             </p>
           )}
           <p className={`mt-1 ${suggestion.flag === 'missed-bottom-twice' || suggestion.flag === 'rir-too-low' ? 'text-warn' : 'text-ink'}`}>
@@ -395,7 +416,7 @@ function SlotCard({
                       ? `${Math.round((logged.durationSec ?? 0) / 60)} min`
                       : timed
                         ? `${logged.durationSec ?? 0}s${logged.weightLb ? ` +${fmtW(logged.weightLb)}` : ''}`
-                        : `${formatNumber(displayWeight(logged.weightLb, settings.units))} × ${logged.repsLeft !== undefined ? `${logged.repsLeft}/${logged.repsRight}` : logged.reps}`}
+                        : `${load(logged.weightLb)} × ${logged.repsLeft !== undefined ? `${logged.repsLeft}/${logged.repsRight}` : logged.reps}`}
                     {!cardio && !warmup && <span className="text-base text-muted"> @{logged.rir}</span>}
                   </span>
                   <span className="text-xs text-muted">edit</span>
@@ -412,7 +433,7 @@ function SlotCard({
                   <span className="w-5" />
                   <span className="w-20 text-xs font-bold tracking-wide uppercase">{label}</span>
                   <span className="num flex-1 text-xl">
-                    {cardio ? `${slot.repMin} min` : timed ? `${d.durationSec ?? target?.reps ?? slot.repMin}s` : `${formatNumber(displayWeight(d.weightLb, settings.units))} × ${d.reps}`}
+                    {cardio ? `${slot.repMin} min` : timed ? `${d.durationSec ?? target?.reps ?? slot.repMin}s` : `${load(d.weightLb)} × ${d.reps}`}
                   </span>
                   {!warmup && !cardio && rir && <span className="text-xs">{formatRir(rir)}</span>}
                 </button>
@@ -433,9 +454,15 @@ function SlotCard({
                   <BigStepper label="minutes" value={Math.round((d.durationSec ?? 0) / 60)} step={1} min={0} max={180} onChange={(v) => set({ durationSec: v * 60 })} />
                 ) : (
                   <>
-                    {(!timed || e.timedProgression === 'add-weight') && (
+                    {bwOnly && (
+                      <div className="flex min-w-0 flex-1 flex-col items-center justify-center rounded-2xl bg-surface-2 px-2 text-center">
+                        <span className="num text-2xl font-bold">BW</span>
+                        <span className="text-[11px] font-bold tracking-[0.12em] text-muted uppercase">bodyweight</span>
+                      </div>
+                    )}
+                    {!bwOnly && (!timed || e.timedProgression === 'add-weight') && (
                       <BigStepper
-                        label={timed || e.loading === 'bodyweight-plus' ? `+${weightUnit(settings.units)}` : weightUnit(settings.units)}
+                        label={timed || bwPlus ? `added ${weightUnit(settings.units)}` : weightUnit(settings.units)}
                         value={displayWeight(d.weightLb, settings.units)}
                         step={wStep}
                         decimals

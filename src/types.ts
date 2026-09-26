@@ -67,6 +67,8 @@ export type TimedProgression = 'add-weight' | 'harder-variation'
 export interface Exercise {
   id: string
   name: string
+  /** Short how-to shown in the app. */
+  description?: string
   type: ExerciseType
   equipment: Equipment
   loading: Loading

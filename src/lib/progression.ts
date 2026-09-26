@@ -60,6 +60,11 @@ export interface ProgressionInput {
 
 const defaultFormat = (lb: number) => `${Number.isInteger(lb) ? lb : Math.round(lb * 100) / 100} lb`
 
+/** Moves only your body (ab wheel, hanging leg raise): no weight to pick or log. */
+export function isBodyweightOnly(e: Pick<Exercise, 'loading' | 'incrementLb' | 'type'>): boolean {
+  return e.type !== 'timed' && e.loading === 'bodyweight-plus' && e.incrementLb <= 0
+}
+
 /** Round down to a multiple of the increment (never below 0). */
 export function roundDownTo(weight: number, increment: number): number {
   if (increment <= 0) return weight
@@ -103,12 +108,27 @@ export function suggest(input: ProgressionInput): Suggestion {
 
   if (!last || last.sets.length === 0) {
     const rirText = todayRir.min === todayRir.max ? `${todayRir.min}` : `${todayRir.min}-${todayRir.max}`
+    if (timed) {
+      return { kind: 'first-time', sets: perSet(sets, () => ({ weightLb: 0, reps: repMin })), reason: `First time: hold for ${repMin}s each set.` }
+    }
+    if (isBodyweightOnly(exercise)) {
+      return {
+        kind: 'first-time',
+        sets: perSet(sets, () => ({ weightLb: 0, reps: repMin })),
+        reason: `First time: bodyweight only. Aim for ${repMin} reps with ${rirText} left in the tank.`,
+      }
+    }
+    if (exercise.loading === 'bodyweight-plus') {
+      return {
+        kind: 'first-time',
+        sets: perSet(sets, () => ({ weightLb: 0, reps: repMin })),
+        reason: `First time: start with just bodyweight (0 added). If ${repMin} reps feels easy, add weight on the next set.`,
+      }
+    }
     return {
       kind: 'first-time',
       sets: perSet(sets, () => ({ weightLb: null, reps: repMin })),
-      reason: timed
-        ? `First time: hold for ${repMin}s each set.`
-        : `First time: pick a weight you can lift for ${repMin} reps with ${rirText} reps left in the tank.`,
+      reason: `First time: pick a weight you can lift for ${repMin} reps with ${rirText} reps left in the tank.`,
     }
   }
 

@@ -94,6 +94,7 @@ export function SessionScreen() {
                 <span className="num w-6 text-2xl font-bold text-muted">{i + 1}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold">{e.name}</span>
+                  {e.description && <span className="line-clamp-2 block text-sm text-muted">{e.description}</span>}
                   <span className="num block text-2xl leading-tight">{formatSlotTarget(s, e, plan.sets)}</span>
                   <span className="mt-1 flex flex-wrap gap-1">
                     {s.isMainLift && <Badge tone="accent">Main lift</Badge>}

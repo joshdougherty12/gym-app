@@ -90,3 +90,10 @@ describe('withDefaults', () => {
     expect(s.startDate).toBe('2026-09-24')
   })
 })
+
+describe('exercise descriptions', () => {
+  it('every library exercise has a how-to description', () => {
+    const missing = EXERCISE_LIBRARY.filter((e) => !e.description || e.description.length < 20).map((e) => e.id)
+    expect(missing).toEqual([])
+  })
+})
