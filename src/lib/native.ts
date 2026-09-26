@@ -69,3 +69,53 @@ export async function cancelRestAlarm(): Promise<void> {
     /* nothing scheduled */
   }
 }
+
+const REMINDER_CHANNEL = 'reminders'
+let remindersReady: Promise<boolean> | null = null
+
+async function initReminders(): Promise<boolean> {
+  if (!isNative()) return false
+  remindersReady ??= (async () => {
+    try {
+      let perm = await LocalNotifications.checkPermissions()
+      if (perm.display !== 'granted') perm = await LocalNotifications.requestPermissions()
+      if (perm.display !== 'granted') return false
+      await LocalNotifications.createChannel({ id: REMINDER_CHANNEL, name: 'Reminders', description: 'Workout and weigh-in reminders', importance: 4, visibility: 1, vibration: true })
+      return true
+    } catch {
+      return false
+    }
+  })()
+  return remindersReady
+}
+
+/**
+ * Replace every scheduled reminder (ids in `range`) with `list`. Returns false
+ * when notifications are not allowed or this is not the Android app.
+ */
+export async function syncReminders(list: { id: number; at: Date; title: string; body: string }[], range: readonly [number, number]): Promise<boolean> {
+  if (!isNative()) return false
+  if (list.length === 0) {
+    // Nothing to schedule: clear old ones without asking for permission.
+    try {
+      const pending = await LocalNotifications.getPending()
+      const old = pending.notifications.filter((n) => n.id >= range[0] && n.id <= range[1])
+      if (old.length) await LocalNotifications.cancel({ notifications: old.map((n) => ({ id: n.id })) })
+    } catch {
+      /* nothing scheduled */
+    }
+    return true
+  }
+  if (!(await initReminders())) return false
+  try {
+    const pending = await LocalNotifications.getPending()
+    const old = pending.notifications.filter((n) => n.id >= range[0] && n.id <= range[1])
+    if (old.length) await LocalNotifications.cancel({ notifications: old.map((n) => ({ id: n.id })) })
+    await LocalNotifications.schedule({
+      notifications: list.map((r) => ({ id: r.id, title: r.title, body: r.body, channelId: REMINDER_CHANNEL, schedule: { at: r.at, allowWhileIdle: true }, autoCancel: true })),
+    })
+    return true
+  } catch {
+    return false
+  }
+}

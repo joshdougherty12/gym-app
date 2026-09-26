@@ -62,6 +62,16 @@ export function TodayScreen() {
         </Link>
       )}
 
+      {!settings.profile && (
+        <Link to="/welcome?existing=1" className="mb-3 flex min-h-16 items-center gap-3 rounded-2xl border-2 border-accent bg-accent-soft px-4">
+          <span className="flex-1">
+            <span className="block font-bold">Personalize Cutline</span>
+            <span className="block text-sm text-muted">Two minutes: goals, injuries, food, reminders. Your program stays as it is unless you choose.</span>
+          </span>
+          <Icon name="chevronRight" />
+        </Link>
+      )}
+
       <Card>
         {info.week === null ? (
           <p>

@@ -51,7 +51,12 @@ export const CAUTIONS: Record<string, Caution[]> = {
   'back-extension': ['low-back'],
   'barbell-row': ['low-back'],
   'one-arm-db-row': ['low-back'],
-  'standing-barbell-ohp': ['low-back'],
+  'standing-barbell-ohp': ['low-back', 'shoulders'],
+  'seated-db-ohp': ['shoulders'],
+  'machine-shoulder-press': ['shoulders'],
+  'flat-barbell-bench': ['shoulders'],
+  'db-fly': ['shoulders'],
+  'pike-push-up': ['shoulders'],
   'standing-calf-raise': ['low-back'],
   'walking-lunge': ['knees'],
   'step-up': ['knees'],
@@ -62,7 +67,7 @@ export const CAUTIONS: Record<string, Caution[]> = {
   'hanging-leg-raise': ['low-back'],
 }
 
-export const CAUTION_LABEL: Record<Caution, string> = { 'low-back': 'Low back', knees: 'Knees' }
+export const CAUTION_LABEL: Record<Caution, string> = { 'low-back': 'Low back', knees: 'Knees', shoulders: 'Shoulders' }
 
 function ex(d: Def): Exercise {
   const loading: Loading =
@@ -179,6 +184,13 @@ const defs: Def[] = [
   { id: 'decline-crunch', name: 'Weighted decline crunch', type: 'isolation', equipment: 'dumbbell', pattern: 'core', primary: ['core'] },
   { id: 'plank', name: 'Plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'add-weight', incrementLb: 10 },
   { id: 'rkc-plank', name: 'RKC plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'harder-variation', incrementLb: 0 },
+  // Bodyweight (home, no equipment)
+  { id: 'push-up', name: 'Push-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'horizontal-press', primary: ['chest'], secondary: ['front-delts', 'triceps'], incrementLb: 0 },
+  { id: 'pike-push-up', name: 'Pike push-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-press', primary: ['front-delts'], secondary: ['triceps'], incrementLb: 0 },
+  { id: 'inverted-row', name: 'Inverted row', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'horizontal-pull', primary: ['back'], secondary: ['biceps', 'rear-delts'], incrementLb: 0 },
+  { id: 'bodyweight-squat', name: 'Bodyweight squat', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'squat', primary: ['quads', 'glutes'], incrementLb: 0 },
+  { id: 'glute-bridge', name: 'Glute bridge', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'hip-extension', primary: ['glutes'], secondary: ['hamstrings'], incrementLb: 0 },
+  { id: 'burpee-intervals', name: 'Burpee / jumping jack intervals (30s hard / 60s easy)', type: 'cardio', equipment: 'bodyweight', pattern: 'conditioning', primary: [] },
   { id: 'dead-bug', name: 'Dead bug', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], perSide: true, incrementLb: 0 },
   { id: 'bird-dog', name: 'Bird dog', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], perSide: true, incrementLb: 0 },
   { id: 'side-plank', name: 'Side plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], perSide: true, timedProgression: 'add-weight', incrementLb: 5 },

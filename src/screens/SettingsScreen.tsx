@@ -3,6 +3,8 @@ import { ScheduleEditor } from '../components/ScheduleEditor'
 import { Section, useAccordion } from '../components/Accordion'
 import { Button, Loading, Screen, Segmented, Stepper, Toggle } from '../components/ui'
 import { DataSection } from '../components/DataSection'
+import { ReminderFields } from '../components/ReminderFields'
+import { Link } from 'react-router'
 import { MealAiSettings } from '../components/MealAiSettings'
 import { useHasApiKey } from '../db/meals'
 import { saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
@@ -37,6 +39,8 @@ function WeightStepper({ label, lb, units, stepLb, onChange }: { label: string; 
   )
 }
 
+const GOAL_LABEL = { 'lose-fat': 'lose fat', 'build-muscle': 'build muscle', recomp: 'recomp', strength: 'strength', health: 'health' } as const
+
 export function SettingsScreen() {
   const settings = useSettings()
   const sessions = useSessions()
@@ -64,6 +68,8 @@ export function SettingsScreen() {
     increments: `Barbell ${inc('barbell')} · Dumbbell ${inc('dumbbell')} · Machine ${inc('machine')} ${weightUnit(u)}`,
     program: `Started ${shortDate(settings.startDate)}${week === null ? '' : ` · week ${week}`}${settings.pauses.length ? ` · ${settings.pauses.length} shift${settings.pauses.length === 1 ? '' : 's'}` : ''}`,
     data: 'Backup, restore, demo, reset',
+    profile: settings.profile ? `${settings.profile.age} · ${GOAL_LABEL[settings.profile.goal]} · ${settings.profile.daysPerWeek} days/week${settings.profile.limitations.length ? ' · easy on ' + settings.profile.limitations.join(', ') : ''}` : 'Not set up yet',
+    reminders: [settings.reminders.workout ? `training days ${settings.reminders.workoutTime}` : '', settings.reminders.missed ? `nudge ${settings.reminders.missedTime}` : '', settings.reminders.weighIn ? `weigh-in ${settings.reminders.weighInTime}` : ''].filter(Boolean).join(' · ') || 'Off',
   }
   function addPause() {
     if (!settings) return
@@ -72,11 +78,33 @@ export function SettingsScreen() {
 
   return (
     <Screen title="Settings" subtitle="Everything stays on this device.">
-      {settings.goal === 'surplus' && (
+      {settings.week12Decision?.choice === 'surplus' && (
         <p className="mb-2 rounded-xl bg-surface-2 p-3 text-sm">Goal: small surplus (chosen at week 12). The weekly review now aims for +0.25-0.5 lb/week.</p>
       )}
 
       <div className="space-y-2">
+      <Section id="profile" title="Profile" summary={summaries.profile} open={open === 'profile'} onToggle={toggle}>
+        <div className="space-y-2">
+          {settings.profile ? (
+            <p className="text-sm text-muted">
+              {settings.profile.sex === 'unspecified' ? '' : settings.profile.sex === 'male' ? 'Male · ' : 'Female · '}
+              {settings.profile.age} years · {Math.floor(settings.profile.heightIn / 12)}'{Math.round(settings.profile.heightIn % 12)}" · {Math.round(settings.profile.weightLb)} lb at setup · {settings.profile.experience} lifter ·{' '}
+              {settings.profile.sessionMinutes} min sessions{settings.profile.limitationNotes ? ` · ${settings.profile.limitationNotes}` : ''}
+            </p>
+          ) : (
+            <p className="text-sm text-muted">Tell Cutline about you so targets, the program and meal ideas fit.</p>
+          )}
+          <Link to="/welcome?existing=1" className="flex min-h-11 items-center justify-center rounded-xl bg-accent font-bold text-accent-ink">
+            {settings.profile ? 'Edit profile' : 'Set up profile'}
+          </Link>
+          <p className="text-xs text-muted">Editing asks before changing your targets or program.</p>
+        </div>
+      </Section>
+
+      <Section id="reminders" title="Reminders" summary={summaries.reminders} open={open === 'reminders'} onToggle={toggle}>
+        <ReminderFields value={settings.reminders} onChange={(reminders) => set({ reminders })} />
+      </Section>
+
       <Section id="display" title="Display" summary={summaries.display} open={open === 'display'} onToggle={toggle}>
         <div className="space-y-3">
         <Segmented

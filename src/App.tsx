@@ -1,8 +1,11 @@
-import { useEffect } from 'react'
-import { HashRouter, Route, Routes, useLocation } from 'react-router'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { useEffect, useState } from 'react'
+import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router'
 import { AppBanners } from './components/AppBanners'
 import { BottomNav } from './components/BottomNav'
-import { useSettings } from './db/repo'
+import { db } from './db/db'
+import { useSessions, useSettings } from './db/repo'
+import { useReminderSync } from './hooks/useReminderSync'
 import { useTheme } from './hooks/useTheme'
 import { BodyScreen } from './screens/BodyScreen'
 import { FoodScreen } from './screens/FoodScreen'
@@ -15,18 +18,33 @@ import { SessionScreen } from './screens/SessionScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { SummaryScreen } from './screens/SummaryScreen'
 import { TodayScreen } from './screens/TodayScreen'
+import { WelcomeScreen } from './screens/WelcomeScreen'
 import { WorkoutScreen } from './screens/WorkoutScreen'
 
 function Shell() {
   const { pathname } = useLocation()
-  // The workout screen is full-screen: no tab bar, the rest timer lives there.
-  const showNav = pathname !== '/workout'
+  const settings = useSettings()
+  const sessions = useSessions()
+  const workoutCount = useLiveQuery(() => db.workouts.count(), [])
+  useReminderSync(settings, sessions)
+  // A brand-new install (no profile, nothing logged) starts with setup. Decided
+  // once when the app opens, so finishing setup never bounces back into it.
+  const [setup, setSetup] = useState<'unknown' | 'redirect' | 'done'>('unknown')
+  const needsSetup = settings !== undefined && workoutCount !== undefined && workoutCount === 0 && !settings.profile
+  // Workout and setup are full-screen: no tab bar.
+  const showNav = pathname !== '/workout' && pathname !== '/welcome'
+  if (setup === 'unknown' && settings !== undefined && workoutCount !== undefined) setSetup(needsSetup ? 'redirect' : 'done')
+  if (setup === 'redirect') {
+    if (pathname === '/welcome' || pathname === '/settings') setSetup('done')
+    else return <Navigate to="/welcome" replace />
+  }
   return (
     <>
       <AppBanners />
       <main>
         <Routes>
           <Route path="/" element={<TodayScreen />} />
+          <Route path="/welcome" element={<WelcomeScreen />} />
           <Route path="/workout" element={<WorkoutScreen />} />
           <Route path="/workout/summary/:id" element={<SummaryScreen />} />
           <Route path="/program" element={<ProgramScreen />} />

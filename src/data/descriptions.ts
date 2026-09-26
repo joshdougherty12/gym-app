@@ -107,6 +107,12 @@ export const EXERCISE_DESCRIPTIONS: Record<string, string> = {
   'ab-wheel':
     'Kneel holding the ab wheel. Roll it forward as far as you can while keeping your back flat and abs braced, then pull it back to your knees with your abs. Bodyweight only.',
   'decline-crunch': 'Crunch on a decline bench holding a dumbbell or plate on your chest.',
+  'push-up': 'Hands a bit wider than shoulders, body straight from head to heels. Lower your chest to just above the floor, push back up. Knees on the floor makes it easier; feet on a step makes it harder.',
+  'pike-push-up': 'Push-up with your hips high so your body makes an upside-down V. Lower the top of your head toward the floor between your hands, press back up. Works the shoulders.',
+  'inverted-row': 'Lie under a sturdy bar or table edge, grab it, and pull your chest up to it with your body straight. The more upright you are, the easier it is.',
+  'bodyweight-squat': 'Feet shoulder width, sit down and back as low as is comfortable, knees tracking over toes, stand up. Slow the lowering to make it harder.',
+  'glute-bridge': 'Lie on your back, knees bent, feet flat. Drive through your heels to lift your hips until your body is straight from shoulders to knees, squeeze, lower. One leg at a time makes it harder.',
+  'burpee-intervals': 'No equipment: 30 seconds of burpees (or jumping jacks, or fast step-ups) hard, 60 seconds easy walking, repeated for the full time.',
   'dead-bug':
     'Lie on your back, arms up, knees bent at 90° over your hips. Press your low back into the floor, then slowly lower one arm and the opposite leg toward the floor and return. Back-friendly core work. Reps per side.',
   'bird-dog':

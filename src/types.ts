@@ -64,7 +64,7 @@ export const MUSCLES: readonly Muscle[] = [
 /** What a timed exercise does once it reaches the top of its time range. */
 export type TimedProgression = 'add-weight' | 'harder-variation'
 
-export type Caution = 'low-back' | 'knees'
+export type Caution = 'low-back' | 'knees' | 'shoulders'
 
 export interface Exercise {
   id: string
@@ -196,6 +196,53 @@ export interface Settings {
   householdSize: number
   satFatLimitG: number
   fiberTargetG: number
+  /** Set by first-time setup; absent for a brand-new install. */
+  profile?: Profile
+  reminders: ReminderSettings
+}
+
+export type Sex = 'male' | 'female' | 'unspecified'
+export type Goal = 'lose-fat' | 'build-muscle' | 'recomp' | 'strength' | 'health'
+export type Pace = 'gentle' | 'steady' | 'aggressive'
+export type Experience = 'new' | 'some' | 'experienced'
+export type EquipmentItem = 'barbell' | 'dumbbells' | 'cables' | 'machines' | 'pullup-bar' | 'bench' | 'cardio'
+export type DietStyle = 'anything' | 'vegetarian' | 'vegan' | 'pescatarian' | 'keto' | 'halal' | 'kosher'
+export type Budget = 'tight' | 'moderate' | 'flexible'
+
+/** Everything first-time setup asks, used to tailor targets, the program and the meal AI. */
+export interface Profile {
+  name?: string
+  sex: Sex
+  age: number
+  heightIn: number
+  /** Weight at setup; the weekly review uses the logged weigh-ins after that. */
+  weightLb: number
+  goal: Goal
+  pace: Pace
+  experience: Experience
+  daysPerWeek: number
+  sessionMinutes: number
+  equipment: EquipmentItem[]
+  limitations: Caution[]
+  limitationNotes: string
+  dietStyle: DietStyle
+  allergies: string[]
+  healthNotes: string
+  budget: Budget
+  createdAt: number
+}
+
+export type ReminderTone = 'coach' | 'drill' | 'buddy'
+
+export interface ReminderSettings {
+  workout: boolean
+  /** "HH:MM" local time on training days. */
+  workoutTime: string
+  missed: boolean
+  missedTime: string
+  weighIn: boolean
+  weighInTime: string
+  tone: ReminderTone
 }
 
 export interface Week12Decision {

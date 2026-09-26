@@ -15,12 +15,29 @@ function client(apiKey: string): Anthropic {
   return new Anthropic({ apiKey, dangerouslyAllowBrowser: true, maxRetries: 2 })
 }
 
-type Profile = Pick<Settings, 'calorieTarget' | 'proteinTargetG' | 'foodNotes' | 'householdSize' | 'satFatLimitG' | 'fiberTargetG' | 'goal'>
+type Profile = Pick<Settings, 'calorieTarget' | 'proteinTargetG' | 'foodNotes' | 'householdSize' | 'satFatLimitG' | 'fiberTargetG' | 'goal' | 'profile'>
+
+const GOAL_TEXT = { 'lose-fat': 'lose fat while keeping strength', 'build-muscle': 'build muscle', recomp: 'lose fat and build muscle slowly (recomp)', strength: 'get stronger', health: 'improve general health and fitness' } as const
+
+function aboutUser(p: Profile): string {
+  const u = p.profile
+  if (!u) return `The user lifts weights and is currently ${p.goal === 'cut' ? 'cutting (losing fat while keeping strength)' : 'on a small calorie surplus'}.`
+  const ft = Math.floor(u.heightIn / 12)
+  const sex = u.sex === 'unspecified' ? 'person' : u.sex === 'male' ? 'man' : 'woman'
+  const bits = [
+    `The user is a ${u.age}-year-old ${sex}, about ${Math.round(u.weightLb)} lb, ${ft}'${Math.round(u.heightIn - ft * 12)}", training ${u.daysPerWeek} days a week. Goal: ${GOAL_TEXT[u.goal]}.`,
+    u.dietStyle !== 'anything' ? `Diet: ${u.dietStyle}. Never suggest foods outside it.` : '',
+    u.allergies.length ? `Allergies/intolerances (never include): ${u.allergies.join(', ')}.` : '',
+    u.healthNotes ? `Health notes: ${u.healthNotes}` : '',
+    `Budget: ${u.budget}.`,
+  ]
+  return bits.filter(Boolean).join(' ')
+}
 
 function systemPrompt(p: Profile): string {
   return [
-    'You are the nutrition helper inside Cutline, a personal training and fat-loss app.',
-    `The user is a 26-year-old man, about 195 lb, 6'1", lifting 5 days a week, currently ${p.goal === 'cut' ? 'cutting (losing fat while keeping strength)' : 'on a small surplus'}.`,
+    'You are the nutrition helper inside Cutline, a personal training and nutrition app.',
+    aboutUser(p),
     `Daily targets: ${p.calorieTarget} kcal, ${p.proteinTargetG} g protein, saturated fat under ${p.satFatLimitG} g, fiber ${p.fiberTargetG} g or more.`,
     `Dietary notes from the user: ${p.foodNotes || 'none'}`,
     'Keep suggestions budget-friendly (US grocery prices), realistic for a home cook, and heart-healthy. Estimates are fine; be honest about uncertainty. Never give medical advice beyond general healthy-eating guidance.',

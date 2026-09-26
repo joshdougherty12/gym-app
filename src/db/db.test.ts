@@ -134,7 +134,7 @@ describe('v3 joint-friendly program upgrade', () => {
   })
 
   it('the shipped program avoids exercises flagged for the low back or knees', () => {
-    const flagged = new Set(Object.keys(CAUTIONS))
+    const flagged = new Set(Object.entries(CAUTIONS).filter(([, c]) => c.includes('low-back') || c.includes('knees')).map(([id]) => id))
     const used = SESSION_TEMPLATES.flatMap((s) => s.slots.map((x) => x.exerciseId))
     expect(used.filter((id) => flagged.has(id))).toEqual([])
   })
