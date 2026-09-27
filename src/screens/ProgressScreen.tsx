@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { TargetBar, TrendChart } from '../components/charts'
 import { StepsChart } from '../components/StepsChart'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { Link } from 'react-router'
+import { db } from '../db/db'
+import { ActivityRow } from './ActivityScreen'
 import { useStrengthDrops } from '../components/StrengthWarning'
 import { Badge, Card, Loading, Screen, SectionTitle } from '../components/ui'
 import { PROGRAM_WEEKS } from '../data/program'
@@ -52,6 +56,7 @@ export function ProgressScreen() {
   const today = todayIso()
   const currentWeek = settings ? programWeek(today, settings.startDate, settings.pauses) : null
   const [volWeek, setVolWeek] = useState<number | null>(null)
+  const recentActivities = useLiveQuery(() => db.activities.orderBy('startedAt').reverse().limit(3).toArray(), [])
 
   if (!settings || !sessions || !exercises || !workouts || !logs || !waist) return <Loading />
   const u = settings.units
@@ -219,6 +224,29 @@ export function ProgressScreen() {
       <SectionTitle>Steps</SectionTitle>
       <Card>
         <StepsChart logs={logs} today={today} goal={settings.stepGoal} />
+      </Card>
+
+      <SectionTitle>Runs, walks and rides</SectionTitle>
+      <Card>
+        {recentActivities && recentActivities.length > 0 ? (
+          <ul className="space-y-2">
+            {recentActivities.map((a) => (
+              <li key={a.id}>
+                <ActivityRow a={a} units={u} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-muted">No GPS activities yet.</p>
+        )}
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Link to="/activities" className="grid min-h-11 place-items-center rounded-xl bg-surface-2 font-semibold">
+            All activities
+          </Link>
+          <Link to="/activity/track" className="grid min-h-11 place-items-center rounded-xl bg-accent font-semibold text-accent-ink">
+            Start one
+          </Link>
+        </div>
       </Card>
 
       <SectionTitle>Adherence</SectionTitle>

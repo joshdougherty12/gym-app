@@ -3,7 +3,9 @@ import { Link } from 'react-router'
 import { mondayOf, shortDate, todayIso, WEEKDAY_SHORT, weekdayOf } from '../../lib/dates'
 import { displayWeight, formatNumber, weightUnit } from '../../lib/units'
 import { markEventSeen, sendEvent } from '../../partner/engine'
-import { usePartner, usePartnerInbox, usePartnerSteps, usePartnerWorkouts } from '../../partner/hooks'
+import { usePartner, usePartnerActivities, usePartnerInbox, usePartnerSteps, usePartnerWorkouts } from '../../partner/hooks'
+import { distUnit, fmtDistance, fmtDuration, fmtRate } from '../../lib/activity/format'
+import { ACTIVITY } from '../../lib/activity/track'
 import { ago, eventText } from '../../partner/present'
 import { syncNow, useSyncStatus } from '../../partner/useSync'
 import type { Units } from '../../types'
@@ -18,6 +20,7 @@ export function PartnerCard({ units }: { units: Units }) {
   const p = usePartner()
   const today = todayIso()
   const workouts = usePartnerWorkouts(mondayOf(today))
+  const activities = usePartnerActivities(mondayOf(today))
   const inbox = usePartnerInbox(['highfive', 'nudge'])
   const partnerSteps = usePartnerSteps(today)
   const partnerLeft = useSyncStatus((s) => s.partnerLeft)
@@ -52,7 +55,8 @@ export function PartnerCard({ units }: { units: Units }) {
       void syncNow()
     })
   }
-  const latest = workouts?.[0]
+  const latest = [...(workouts ?? []).map((w) => ({ id: w.id, at: w.data.finishedAt })), ...(activities ?? []).map((a) => ({ id: a.id, at: a.data.finishedAt }))].sort((a, b) => b.at - a.at)[0]
+  const dayLabel = (date: string) => (date === today ? 'today' : `${WEEKDAY_SHORT[weekdayOf(date)]} ${shortDate(date)}`)
   return (
     <Card className="mt-3">
       <div className="flex items-center gap-2">
@@ -82,11 +86,25 @@ export function PartnerCard({ units }: { units: Units }) {
         </p>
       )}
 
-      {p.partner && !p.partner.sharesWorkouts ? (
+      {p.partner && !p.partner.sharesWorkouts && !p.partner.sharesActivities ? (
         <p className="mt-2 text-sm text-muted">{name} isn’t sharing workouts.</p>
-      ) : workouts && workouts.length > 0 ? (
+      ) : (workouts && workouts.length > 0) || (activities && activities.length > 0) ? (
         <ul className="mt-2 space-y-2">
-          {workouts.slice(0, 3).map((w) => (
+          {(activities ?? []).slice(0, 3).map((a) => {
+            const r = fmtRate(a.data.type, a.data.distanceM > 0 ? a.data.avgSpeedMps : null, units)
+            return (
+              <li key={a.key} className="rounded-xl bg-surface-2 p-3">
+                <p className="font-semibold">
+                  {ACTIVITY[a.data.type].label} <span className="font-normal text-muted">· {dayLabel(a.data.date)}</span>
+                </p>
+                <p className="num text-lg">
+                  {fmtDistance(a.data.distanceM, units)} {distUnit(units)} · {fmtDuration(a.data.movingMs)} · {r.value}
+                  {r.unit}
+                </p>
+              </li>
+            )
+          })}
+          {(workouts ?? []).slice(0, 3).map((w) => (
             <li key={w.key} className="rounded-xl bg-surface-2 p-3">
               <p className="font-semibold">
                 {w.data.name} <span className="font-normal text-muted">· {w.data.date === today ? 'today' : `${WEEKDAY_SHORT[weekdayOf(w.data.date)]} ${shortDate(w.data.date)}`}</span>

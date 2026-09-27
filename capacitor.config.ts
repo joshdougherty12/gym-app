@@ -4,6 +4,8 @@ const config: CapacitorConfig = {
   appId: 'com.joshdougherty.cutline',
   appName: 'RightPace',
   webDir: 'dist',
+  // Identifies the app to the OpenStreetMap tile servers (their usage policy asks for it).
+  appendUserAgent: 'RightPace',
   android: {
     // Dark background behind the web view while it loads.
     backgroundColor: '#121416',

@@ -18,6 +18,7 @@ import { dayInfo, planLabel } from '../lib/today'
 import { formatRir, formatSlotTarget, plannedSets } from '../lib/weekPlan'
 import { useWorkouts } from '../hooks/useData'
 import { useActiveWorkout } from '../store/activeWorkout'
+import { ACTIVITY } from '../lib/activity/track'
 
 export function TodayScreen() {
   const settings = useSettings()
@@ -32,6 +33,7 @@ export function TodayScreen() {
   const doneToday = useLiveQuery(() => db.workouts.where('date').equals(today).toArray(), [today])
   const info = settings ? dayInfo(today, settings) : null
   const weekOverride = useWeekOverride(info?.week ?? -1)
+  const tracking = useLiveQuery(() => db.activeActivity.get('current'), [])
 
   useEffect(() => {
     void load()
@@ -60,6 +62,17 @@ export function TodayScreen() {
             <span className="num block text-2xl font-bold uppercase">{sessionName(active.workout.sessionTemplateId)}</span>
           </span>
           <span className="font-bold">Resume</span>
+          <Icon name="chevronRight" />
+        </Link>
+      )}
+
+      {tracking && (
+        <Link to="/activity/track" className="mb-3 flex min-h-16 items-center gap-3 rounded-2xl bg-accent px-4 text-accent-ink">
+          <span className="flex-1">
+            <span className="block text-xs font-bold tracking-[0.14em] uppercase">{ACTIVITY[tracking.type].label} in progress</span>
+            <span className="num block text-2xl font-bold uppercase">Tracking</span>
+          </span>
+          <span className="font-bold">Open</span>
           <Icon name="chevronRight" />
         </Link>
       )}
@@ -175,9 +188,14 @@ export function TodayScreen() {
             </Button>
           </div>
         )}
-        <Button variant={info.plan.kind === 'session' ? 'ghost' : 'primary'} className="mt-2 w-full" onClick={() => setCardioOpen(true)}>
-          Log cardio
-        </Button>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          <Button variant={info.plan.kind === 'session' ? 'secondary' : 'primary'} onClick={() => setCardioOpen(true)}>
+            Log cardio
+          </Button>
+          <Button variant={info.plan.kind === 'session' ? 'secondary' : 'primary'} onClick={() => navigate('/activity/track')}>
+            {tracking ? 'Open tracker' : 'Start a run or ride'}
+          </Button>
+        </div>
       </Card>
 
       <StepsCard goal={settings.stepGoal} />

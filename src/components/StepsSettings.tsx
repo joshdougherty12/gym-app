@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import { updateSettings } from '../db/repo'
 import { refreshSteps, useStepStatus } from '../hooks/useStepSync'
 import { disableStepCounting, enableStepCounting, openStepSettings, requestStepPermission, stepCounterSupported } from '../lib/stepCounter'
 import { stepImportLink } from '../lib/steps'
 import { partnerAvailable } from '../partner/config'
-import { syncNow } from '../partner/useSync'
 import type { Settings } from '../types'
 import { pasteSteps } from './StepsCard'
 import { useToast } from './Recipes'
-import { Button, Toggle } from './ui'
+import { Button } from './ui'
 
 /** One-line summary for the Settings accordion. */
 export function useStepsSummary(stepGoal: number | undefined): string {
@@ -156,12 +154,10 @@ export function StepsSettings({ settings }: { settings: Settings }) {
       {stepCounterSupported() ? <AndroidSteps /> : <ShortcutSteps />}
       {partnerAvailable() && (
         <div className="border-t border-line pt-3">
-          <Toggle
-            label="Share my steps with my partner"
-            hint="Today’s step count only, end-to-end encrypted like everything else you share. Off by default."
-            checked={settings.partner.shareSteps}
-            onChange={(shareSteps) => void updateSettings({ partner: { ...settings.partner, shareSteps } }).then(() => syncNow())}
-          />
+          <p className="text-sm">
+            Sharing steps with your partner: <strong>{settings.partner.shareSteps ? 'on' : 'off'}</strong>
+          </p>
+          <p className="text-xs text-muted">Change it in Settings → Partner, under “What your partner sees”.</p>
         </div>
       )}
     </div>

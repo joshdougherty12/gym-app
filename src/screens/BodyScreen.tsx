@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react'
-import { CARDIO_KINDS, CardioQuickLog } from '../components/CardioQuickLog'
+import { Link } from 'react-router'
+import { CARDIO_LABEL, CardioQuickLog } from '../components/CardioQuickLog'
 import { CheckIn } from '../components/CheckIn'
 import { TargetBar, TrendChart } from '../components/charts'
 import { Icon } from '../components/Icon'
@@ -364,11 +365,17 @@ function CardioLog() {
           {cardio.slice(0, 10).map((c) => (
             <li key={c.id} className="flex min-h-11 items-center gap-2 text-sm">
               <span className="num w-14 text-base">{shortDate(c.date)}</span>
-              <span className="flex-1">{CARDIO_KINDS.find((k) => k.value === c.kind)?.label}</span>
+              <span className="flex-1">{CARDIO_LABEL[c.kind] ?? 'Cardio'}</span>
               <span className="num text-base">{c.minutes} min</span>
-              <button type="button" aria-label="Delete" onClick={() => void db.cardio.delete(c.id)} className="grid size-11 place-items-center text-muted">
-                <Icon name="trash" className="size-5" />
-              </button>
+              {c.activityId ? (
+                <Link to={`/activity/${c.activityId}`} aria-label="Open activity" className="grid size-11 place-items-center text-muted">
+                  <Icon name="chevronRight" className="size-5" />
+                </Link>
+              ) : (
+                <button type="button" aria-label="Delete" onClick={() => void db.cardio.delete(c.id)} className="grid size-11 place-items-center text-muted">
+                  <Icon name="trash" className="size-5" />
+                </button>
+              )}
             </li>
           ))}
         </ul>

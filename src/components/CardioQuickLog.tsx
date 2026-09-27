@@ -12,6 +12,9 @@ export const CARDIO_KINDS: { value: CardioKind; label: string }[] = [
   { value: 'other', label: 'Other' },
 ]
 
+/** Every kind's label, including the GPS-tracked ones (run, ride, hike) that the quick log doesn't offer. */
+export const CARDIO_LABEL: Record<CardioKind, string> = { zone2: 'Zone 2', finisher: 'Finisher', walk: 'Walk', other: 'Other', run: 'Run', bike: 'Ride', hike: 'Hike' }
+
 export function CardioQuickLog({ defaultKind = 'zone2', defaultMinutes = 30, onDone }: { defaultKind?: CardioKind; defaultMinutes?: number; onDone?: () => void }) {
   const [kind, setKind] = useState<CardioKind>(defaultKind)
   const [minutes, setMinutes] = useState(defaultMinutes)

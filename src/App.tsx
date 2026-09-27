@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useState } from 'react'
-import { HashRouter, Navigate, Route, Routes, useLocation } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { AppBanners } from './components/AppBanners'
 import { BottomNav } from './components/BottomNav'
 import { db } from './db/db'
@@ -10,6 +10,9 @@ import { useTheme } from './hooks/useTheme'
 import { usePartnerSync } from './partner/useSync'
 import { useStepSync } from './hooks/useStepSync'
 import { StepImportScreen } from './screens/StepImportScreen'
+import { ActivitiesScreen, ActivityScreen } from './screens/ActivityScreen'
+import { TrackScreen } from './screens/TrackScreen'
+import { useTracker } from './tracker/store'
 import { BodyScreen } from './screens/BodyScreen'
 import { FoodScreen } from './screens/FoodScreen'
 import { LinkCodeRoute, LinkScreen } from './screens/LinkScreen'
@@ -25,8 +28,25 @@ import { TodayScreen } from './screens/TodayScreen'
 import { WelcomeScreen } from './screens/WelcomeScreen'
 import { WorkoutScreen } from './screens/WorkoutScreen'
 
+/** On opening the app, pick up an activity in progress (or save one that was finished but not saved) and show it. */
+function useActivityRecovery(pathname: string) {
+  const navigate = useNavigate()
+  const done = useRef(false)
+  useEffect(() => {
+    if (done.current) return
+    done.current = true
+    void useTracker
+      .getState()
+      .load()
+      .then(() => {
+        if (useTracker.getState().session && pathname === '/') navigate('/activity/track')
+      })
+  }, [navigate, pathname])
+}
+
 function Shell() {
   const { pathname } = useLocation()
+  useActivityRecovery(pathname)
   const settings = useSettings()
   const sessions = useSessions()
   const workoutCount = useLiveQuery(() => db.workouts.count(), [])
@@ -38,7 +58,7 @@ function Shell() {
   const [setup, setSetup] = useState<'unknown' | 'redirect' | 'done'>('unknown')
   const needsSetup = settings !== undefined && workoutCount !== undefined && workoutCount === 0 && !settings.profile
   // Workout and setup are full-screen: no tab bar.
-  const showNav = pathname !== '/workout' && pathname !== '/welcome'
+  const showNav = pathname !== '/workout' && pathname !== '/welcome' && pathname !== '/activity/track'
   if (setup === 'unknown' && settings !== undefined && workoutCount !== undefined) setSetup(needsSetup ? 'redirect' : 'done')
   if (setup === 'redirect') {
     // A partner link opened on a new phone goes to the link screen first; it continues to setup after linking.
@@ -63,6 +83,9 @@ function Shell() {
           <Route path="/week12" element={<Week12Screen />} />
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="/steps/import" element={<StepImportScreen />} />
+          <Route path="/activity/track" element={<TrackScreen />} />
+          <Route path="/activity/:id" element={<ActivityScreen />} />
+          <Route path="/activities" element={<ActivitiesScreen />} />
           <Route path="/link" element={<LinkScreen />} />
           <Route path="/link/:code" element={<LinkCodeRoute />} />
           <Route path="*" element={<Placeholder title="Not found" text="Nothing here." />} />

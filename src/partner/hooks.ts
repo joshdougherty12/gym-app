@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { useSettings } from '../db/repo'
 import { portionSplit, type PortionSplit } from '../lib/partner/portions'
-import { EventData, MemberData, StepsShareData, WorkoutSummaryData } from '../lib/partner/types'
+import { ActivitySummaryData, EventData, MemberData, StepsShareData, WorkoutSummaryData } from '../lib/partner/types'
 import type { PartnerLinkRow, PartnerRecordRow } from '../types'
 import { partnerAvailable } from './config'
 
@@ -52,6 +52,27 @@ export function usePartnerWorkouts(since: string): PartnerWorkout[] | undefined 
     return rows
       .flatMap((r) => {
         const d = WorkoutSummaryData.safeParse(r.data)
+        return d.success && d.data.date >= since ? [{ key: r.key, id: r.id, data: d.data }] : []
+      })
+      .sort((a, b) => b.data.finishedAt - a.data.finishedAt)
+  }, [since])
+}
+
+export interface PartnerActivity {
+  key: string
+  id: string
+  data: ActivitySummaryData
+}
+
+/** The partner's shared runs, walks and rides on or after a date, newest first (summaries only: no route). */
+export function usePartnerActivities(since: string): PartnerActivity[] | undefined {
+  return useLiveQuery(async () => {
+    const link = await db.partner.get('link')
+    if (!link) return []
+    const rows = await db.partnerRecords.where('type').equals('asum').filter((r) => r.by !== link.memberId).toArray()
+    return rows
+      .flatMap((r) => {
+        const d = ActivitySummaryData.safeParse(r.data)
         return d.success && d.data.date >= since ? [{ key: r.key, id: r.id, data: d.data }] : []
       })
       .sort((a, b) => b.data.finishedAt - a.data.finishedAt)

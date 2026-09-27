@@ -28,7 +28,37 @@ function webBase(): string {
   return WEB_APP_URL
 }
 
-export const SHARED_TEXT = 'Shared: the week plan and dinner picks, the grocery list (check items off together at the store), saved recipes, and workout summaries (session, time, sets and new records). Private: body weight, check-ins, photos and your meal log.'
+export const SHARED_TEXT = 'Shared: the kitchen (week plan, grocery list, saved recipes), plus what you choose in Settings → Partner: workout summaries, run and ride summaries (never the route), steps and your calorie target. Private: body weight, check-ins, photos and your meal log.'
+
+/**
+ * "What your partner sees": every category that can be shared, each with its
+ * own switch and a plain description of exactly what is sent. The single
+ * place these choices are made. Turning one off withdraws what was shared on
+ * the next sync.
+ */
+export function SharingList({ settings, onChange }: { settings: Settings; onChange: (patch: Partial<Settings['partner']>) => void }) {
+  const s = settings.partner
+  return (
+    <div className="rounded-xl border border-line p-3">
+      <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">What your partner sees</p>
+      <div className="mt-1 divide-y divide-line">
+        <Toggle label="Workout summaries" hint="Session name, date, time, sets and new records. No body weight." checked={s.shareWorkouts} onChange={(shareWorkouts) => onChange({ shareWorkouts })} />
+        <Toggle label="Run, walk and ride summaries" hint="Type, date, distance, moving time and pace. Never the route or where you were." checked={s.shareActivities} onChange={(shareActivities) => onChange({ shareActivities })} />
+        <Toggle label="Steps" hint="Today’s step count. Off unless you turn it on." checked={s.shareSteps} onChange={(shareSteps) => onChange({ shareSteps })} />
+        <Toggle label="Calorie target" hint="Your daily target, to suggest each person’s portion of shared dinners." checked={s.shareCalorieTarget} onChange={(shareCalorieTarget) => onChange({ shareCalorieTarget })} />
+        <div className="py-2">
+          <p className="text-sm font-medium">The shared kitchen</p>
+          <p className="text-xs text-muted">Always shared while linked: the week plan and dinner picks, the grocery list, saved recipes, “I ate this”, and the high-fives and nudges you send.</p>
+        </div>
+        <div className="py-2">
+          <p className="text-sm font-medium">Always private</p>
+          <p className="text-xs text-muted">Body weight, check-ins, photos and your meal log.</p>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-muted">Everything shared is end-to-end encrypted. A switch turned off takes back what was already shared on the next sync.</p>
+    </div>
+  )
+}
 
 export function PartnerSection({ settings }: { settings: Settings }) {
   const p = usePartner()
@@ -52,6 +82,7 @@ export function PartnerSection({ settings }: { settings: Settings }) {
       )}
       <NameField settings={settings} onSave={(name) => setPartner({ name })} />
       {!p.link && <NotLinked />}
+      {p.link?.status !== 'linked' && <SharingList settings={settings} onChange={setPartner} />}
       {p.link?.status === 'waiting' && <Waiting link={p.link} />}
       {p.link?.status === 'linked' && (
         <div className="space-y-2">
@@ -59,9 +90,7 @@ export function PartnerSection({ settings }: { settings: Settings }) {
             <p className="flex-1 font-semibold">Linked with {p.partnerName}</p>
             <SyncBadge />
           </div>
-          <p className="text-xs text-muted">{SHARED_TEXT}</p>
-          <Toggle label="Share my workout summaries" hint="Session, time, sets and new records. Never your body weight." checked={settings.partner.shareWorkouts} onChange={(shareWorkouts) => setPartner({ shareWorkouts })} />
-          <Toggle label="Share my calorie target" hint="Used to suggest each person’s portion of shared dinners." checked={settings.partner.shareCalorieTarget} onChange={(shareCalorieTarget) => setPartner({ shareCalorieTarget })} />
+          <SharingList settings={settings} onChange={setPartner} />
           <Button className="w-full" onClick={() => void syncNow()}>
             Sync now
           </Button>

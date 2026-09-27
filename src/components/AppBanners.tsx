@@ -15,7 +15,7 @@ export function AppBanners() {
     updateServiceWorker,
   } = useRegisterSW({ immediate: true })
   const demo = isDemoMode()
-  const showUpdate = needRefresh && pathname !== '/workout'
+  const showUpdate = needRefresh && pathname !== '/workout' && pathname !== '/activity/track'
   if (!demo && !showUpdate) return null
   return (
     <div className="sticky top-0 z-40 space-y-px">

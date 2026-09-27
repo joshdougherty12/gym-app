@@ -66,7 +66,8 @@ link in Safari (tap **Link**); in the Android app, or in a Home Screen web app t
 both, and each keeps what is on their own phone.
 
 - **Shared:** week plan and dinner picks, the grocery list (item by item, so both can check off at the store),
-  saved recipes, workout summaries (session, time, sets, new records; never body weight), high-fives and nudges,
+  saved recipes, workout summaries (session, time, sets, new records; never body weight), run/walk/ride summaries
+  (distance, time, pace; never the route), high-fives and nudges,
   "I ate this" (recipe name and per-serving numbers), and each person's calorie target (for suggested
   portions; can be turned off).
 - **Private:** body weight, check-ins, photos, individual meal logs.
@@ -92,6 +93,37 @@ both, and each keeps what is on their own phone.
   Today shows a ring against the step goal; Progress shows 7/30-day bars with the goal line.
 - **Partner:** "Share my steps" (off by default) sends today's count as an encrypted `steps` record.
   Older app versions ignore the new record type; the server needs no change.
+
+### GPS activities (1.10)
+
+- **Start:** Today → **Start a run or ride** (or Progress → Runs, walks and rides → Start one). Pick Run, Walk, Ride or
+  Hike, then **Start**. Live: moving time, distance, current and average pace (speed for rides), the current mile/km,
+  elapsed time and approximate climb, a live map (Hide map saves battery and data) and the splits. **Pause**/**Resume**;
+  **Hold to finish** (or tap it and confirm); **Discard** while paused. Auto-pause (on by default) stops the clock
+  when you stand still; an optional buzz and beep marks each mile or km.
+- **Android app:** a foreground service (type `location`, `android/.../activity/ActivityTrackerService.java`) records
+  the platform GPS provider once a second with the screen off or the app in the background, with a "Tracking run ·
+  1.24 mi · 12:03" notification (Pause/Resume, Open). It is only started from a visible tap, so "while in use" location
+  is enough; the app never asks for background location. Fixes are kept in `filesDir/activity` (header rewritten
+  atomically, fixes appended and flushed every 5 s), so an activity survives the web view or the app being killed: on
+  the next open the app picks it up again (a gap starts a new segment) or saves one that was finished but not saved.
+  Pure logic (distance filter, active time, points file) is JUnit-tested in `TrackMath`.
+- **iPhone / web:** `navigator.geolocation` with the screen kept on; every fix is saved to IndexedDB so a reload
+  resumes. Web apps can't track in the background, and the tracker says so.
+- **Processing** (`src/lib/activity/`, unit-tested): fixes worse than 30 m accuracy, out of order or faster than the
+  activity allows are dropped; each segment is Kalman-smoothed; distance by haversine; auto-pause when the
+  6-second displacement speed is under the activity's threshold; splits interpolated at each mile/km; elevation gain with
+  3 m hysteresis (labelled approximate); calories = MET (by activity and speed) × latest logged weight (else the setup
+  weight) × moving hours.
+- **Stored route:** the smoothed track simplified with Douglas-Peucker at 3 m (`route.ts`): within GPS error of the
+  full track and 5-10× smaller. Stats are computed from the full track before simplifying. GPX 1.1 export uses it.
+- **Saved:** Dexie v7 `activities` (plus the in-progress session and, on the web, its fixes). Each activity also writes
+  a cardio entry with the same id (run/walk/ride/hike), so weekly cardio minutes count it. Backups include activities
+  with routes. Location stays on the phone; the only network use is map tiles.
+- **Map:** Leaflet with OpenStreetMap tiles (`src/lib/activity/mapConfig.ts`); a plain line on a grid when offline.
+  OSM's tile policy does not cover a commercial app: switch to a paid tile provider before selling it.
+- **Partner:** "Run, walk and ride summaries" in Settings → Partner → *What your partner sees* shares type, date,
+  distance, moving time and pace as an `asum` record. Never the route or coordinates.
 
 ### Demo mode
 
