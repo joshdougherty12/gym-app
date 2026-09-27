@@ -100,3 +100,45 @@ describe('merge from backup', () => {
     expect((await app.secrets.get('anthropic'))?.apiKey).toBe('sk-ant-keep')
   })
 })
+
+describe('backup with saved recipes', () => {
+  const recipe = { id: 'r1', savedAt: 5, name: 'Turkey chili', servings: 4, ingredients: ['turkey'], steps: ['Cook.'], calories: 520, proteinG: 42 }
+
+  it('round-trips saved recipes, and an older backup without them keeps the ones here', async () => {
+    const a = fresh()
+    await a.open()
+    await a.recipes.put(recipe)
+    const json = JSON.parse(JSON.stringify(await buildBackup(false, a)))
+    expect(json.recipes).toEqual([recipe])
+
+    const b = fresh()
+    await b.open()
+    await b.recipes.put({ ...recipe, id: 'gone', name: 'Old' })
+    await restoreBackup(parseBackup(json), b)
+    expect(await b.recipes.toArray()).toEqual([recipe])
+
+    const { recipes: _r, ...older } = json
+    const c = fresh()
+    await c.open()
+    await c.recipes.put({ ...recipe, id: 'keep' })
+    await restoreBackup(parseBackup(older), c)
+    expect((await c.recipes.toArray()).map((x) => x.id)).toEqual(['keep'])
+  })
+
+  it('merges saved recipes without deleting the ones here', async () => {
+    const a = fresh()
+    await a.open()
+    await a.recipes.put(recipe)
+    const json = JSON.parse(JSON.stringify(await buildBackup(false, a)))
+    const b = fresh()
+    await b.open()
+    await b.recipes.put({ ...recipe, id: 'here', name: 'Oats' })
+    await mergeBackup(parseBackup(json), b)
+    expect((await b.recipes.toArray()).map((x) => x.id).sort()).toEqual(['here', 'r1'])
+  })
+
+  it('rejects a recipes field that is not a list', () => {
+    const base = { app: 'cutline', settings: [], exercises: [], sessions: [], weekOverrides: [], workouts: [], activeWorkout: [], dailyLogs: [], cardio: [], measurements: [], weeklyReviews: [] }
+    expect(() => parseBackup({ ...base, recipes: {} })).toThrow(/recipes/)
+  })
+})

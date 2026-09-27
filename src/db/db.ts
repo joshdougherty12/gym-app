@@ -10,6 +10,7 @@ import type {
   Meal,
   Measurement,
   Photo,
+  Recipe,
   SecretRow,
   SessionTemplate,
   Settings,
@@ -38,6 +39,7 @@ export class CutlineDB extends Dexie {
   meals!: EntityTable<Meal, 'id'>
   aiCache!: EntityTable<AiCacheRow, 'id'>
   secrets!: EntityTable<SecretRow, 'id'>
+  recipes!: EntityTable<Recipe, 'id'>
 
   constructor(name = DB_NAME) {
     super(name)
@@ -76,6 +78,11 @@ export class CutlineDB extends Dexie {
         const updated = applySwaps(await table.toArray())
         await table.bulkPut(updated)
       })
+
+    // v4: recipes saved from Claude's suggestions. Adds a table only.
+    this.version(4).stores({
+      recipes: 'id, savedAt',
+    })
 
     this.on('populate', (tx) => {
       void tx.table('settings').add({ id: 'app', ...defaultSettings() } satisfies SettingsRow)

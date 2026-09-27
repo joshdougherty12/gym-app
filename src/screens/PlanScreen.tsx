@@ -1,11 +1,14 @@
 import { useId, useState } from 'react'
 import { Icon } from '../components/Icon'
+import { LogRecipeSheet, RecipeActions, RecipeDetails, useToast } from '../components/Recipes'
 import { Badge, Button, Card, Loading, Screen, SectionTitle } from '../components/ui'
 import { getApiKey, setCache, useCache, useHasApiKey } from '../db/meals'
 import { useSettings } from '../db/repo'
 import { AiError, groceryPlan, weekIdeas } from '../lib/ai/claude'
 import type { GroceryPlan, WeekIdea } from '../lib/ai/schemas'
-import { groceryText } from '../lib/meals'
+import { todayIso } from '../lib/dates'
+import { groceryText, mealTypeForTime } from '../lib/meals'
+import { matchIdea, recipeFromPlan, type RecipeDraft } from '../lib/recipes'
 import { shareText } from '../lib/shareText'
 
 interface WeekPlan {
@@ -28,6 +31,8 @@ export function PlanScreen() {
   const [err, setErr] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const notesId = useId()
+  const [logging, setLogging] = useState<RecipeDraft | null>(null)
+  const [toastNode, toast] = useToast()
 
   if (!settings || !loaded || hasKey === undefined) return <Loading />
   const plan: WeekPlan = { ...EMPTY, ...data }
@@ -221,27 +226,32 @@ export function PlanScreen() {
 
           <SectionTitle>Recipes</SectionTitle>
           <div className="space-y-2">
-            {plan.grocery.recipes.map((rc) => (
-              <details key={rc.name} className="rounded-2xl border border-line bg-surface p-3">
-                <summary className="min-h-11 cursor-pointer py-2 font-semibold">
-                  {rc.name} <span className="font-normal text-muted">· serves {rc.servings}</span>
-                </summary>
-                <ul className="list-disc pl-5 text-sm">
-                  {rc.ingredients.map((x) => (
-                    <li key={x}>{x}</li>
-                  ))}
-                </ul>
-                <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
-                  {rc.steps.map((x) => (
-                    <li key={x}>{x}</li>
-                  ))}
-                </ol>
-                {rc.tip && <p className="mt-2 text-sm text-muted">Tip: {rc.tip}</p>}
-              </details>
-            ))}
+            {plan.grocery.recipes.map((rc, k) => {
+              const recipe = recipeFromPlan(rc, matchIdea(rc.name, k, chosen))
+              return (
+                <details key={rc.name} className="rounded-2xl border border-line bg-surface p-3">
+                  <summary className="min-h-11 cursor-pointer py-2 font-semibold">
+                    {rc.name} <span className="font-normal text-muted">· serves {rc.servings}</span>
+                  </summary>
+                  <RecipeDetails recipe={recipe} />
+                  <RecipeActions recipe={recipe} toast={toast} onLog={() => setLogging(recipe)} />
+                </details>
+              )
+            })}
           </div>
         </>
       )}
+      <LogRecipeSheet
+        recipe={logging}
+        date={todayIso()}
+        defaultMealType={mealTypeForTime(new Date())}
+        onClose={() => setLogging(null)}
+        onLogged={(m) => {
+          setLogging(null)
+          toast(m)
+        }}
+      />
+      {toastNode}
     </Screen>
   )
 }

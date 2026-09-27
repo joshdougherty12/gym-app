@@ -2,15 +2,18 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { TargetBar } from '../components/charts'
 import { Icon } from '../components/Icon'
+import { LogRecipeSheet, RecipeActions, RecipeDetails, SavedRecipesSheet, useToast } from '../components/Recipes'
 import { Badge, Button, Card, Loading, Screen, SectionTitle, Segmented, Sheet, Stepper } from '../components/ui'
 import { deleteMeal, getApiKey, saveMeal, setCache, useCache, useHasApiKey, useMealsForDate } from '../db/meals'
+import { useRecipes } from '../db/recipes'
 import { useSettings } from '../db/repo'
-import { AiError, estimateMeal, suggestMeals } from '../lib/ai/claude'
+import { AiError, estimateMeal, estimateMealFromText, suggestMeals } from '../lib/ai/claude'
 import type { MealEstimate, MealIdea } from '../lib/ai/schemas'
 import { addDays, shortDate, todayIso, WEEKDAY_SHORT, weekdayOf } from '../lib/dates'
 import { newId, timestamp } from '../lib/id'
 import { compressImage } from '../lib/image'
 import { MEAL_LABEL, MEAL_TYPES, mealTypeForTime, nextMealType, scaleMeal, sumMeals } from '../lib/meals'
+import { recipeFromIdea, type RecipeDraft } from '../lib/recipes'
 import type { Meal, MealType, Settings } from '../types'
 
 const r = (n: number) => Math.round(n)
@@ -23,11 +26,12 @@ function useObjectUrl(blob: Blob | undefined): string | undefined {
   return url
 }
 
-function fromEstimate(e: MealEstimate, date: string, mealType: MealType, photo: Blob | undefined): Meal {
+/** A meal from Claude's estimate. A text estimate (`keep` given) updates the meal being edited in place. */
+function fromEstimate(e: MealEstimate, date: string, mealType: MealType, photo: Blob | undefined, keep?: Pick<Meal, 'id' | 'loggedAt'>): Meal {
   return {
-    id: newId('meal'),
+    id: keep?.id ?? newId('meal'),
     date,
-    loggedAt: timestamp(),
+    loggedAt: keep?.loggedAt ?? timestamp(),
     mealType,
     name: e.mealName,
     items: e.items.map((i) => ({ name: i.name, portion: i.portion, calories: r(i.calories), proteinG: r(i.proteinG), satFatG: Math.round(i.satFatG * 10) / 10, fiberG: Math.round(i.fiberG * 10) / 10 })),
@@ -40,7 +44,7 @@ function fromEstimate(e: MealEstimate, date: string, mealType: MealType, photo: 
     confidence: e.confidence,
     notes: [e.assumptions, e.heartTip].filter(Boolean).join(' '),
     ...(photo ? { photo } : {}),
-    source: 'photo',
+    source: keep ? 'text' : 'photo',
   }
 }
 
@@ -55,6 +59,10 @@ export function FoodScreen() {
   const fileId = useId()
   const galleryId = useId()
   const today = todayIso()
+  const [logging, setLogging] = useState<{ recipe: RecipeDraft; mealType: MealType } | null>(null)
+  const [savedOpen, setSavedOpen] = useState(false)
+  const [toastNode, toast] = useToast()
+  const saved = useRecipes()
 
   if (!settings || !meals || hasKey === undefined) return <Loading />
   const t = sumMeals(meals)
@@ -80,6 +88,14 @@ export function FoodScreen() {
     if (!file) return
     const [big, thumb] = await Promise.all([compressImage(file, 1568, 0.85), compressImage(file, 480, 0.8)])
     await analyze(big, thumb, '')
+  }
+
+  const describeMeal = async (text: string): Promise<MealEstimate> => {
+    const key = await getApiKey()
+    if (!key) throw new AiError('Add your Claude API key in Settings → Meal AI first.')
+    const est = await estimateMealFromText(key, settings, text)
+    if (!est.isFood) throw new AiError('That doesn’t sound like food. Describe what you ate and try again.')
+    return est
   }
 
   const manual = () =>
@@ -173,9 +189,18 @@ export function FoodScreen() {
       })}
       {meals.length === 0 && <p className="mt-4 text-center text-sm text-muted">Nothing logged {date === today ? 'yet today' : 'this day'}.</p>}
 
-      {hasKey && date === today && <Ideas settings={settings} date={date} meals={meals} />}
+      {hasKey && date === today && <Ideas settings={settings} date={date} meals={meals} toast={toast} onLog={(recipe, mealType) => setLogging({ recipe, mealType })} />}
 
-      <Link to="/food/plan" className="mt-6 flex min-h-16 items-center gap-3 rounded-2xl border border-line bg-surface px-4">
+      <button type="button" onClick={() => setSavedOpen(true)} className="mt-6 flex min-h-16 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left">
+        <Icon name="book" className="size-7 text-accent" />
+        <span className="flex-1">
+          <span className="block font-bold">Saved recipes</span>
+          <span className="block text-sm text-muted">{saved?.length ? `${saved.length} saved · log, share or copy` : 'Save any recipe Claude suggests'}</span>
+        </span>
+        <Icon name="chevronRight" className="size-5 text-muted" />
+      </button>
+
+      <Link to="/food/plan" className="mt-2 flex min-h-16 items-center gap-3 rounded-2xl border border-line bg-surface px-4">
         <Icon name="cart" className="size-7 text-accent" />
         <span className="flex-1">
           <span className="block font-bold">Plan the week</span>
@@ -195,11 +220,34 @@ export function FoodScreen() {
               setEditing(null)
               if (thumb) void analyze(thumb, thumb, note)
             }}
+            canDescribe={!!hasKey}
+            onDescribe={describeMeal}
             onSave={(m) => void saveMeal(m).then(() => setEditing(null))}
             onDelete={() => void deleteMeal(editing.id).then(() => setEditing(null))}
           />
         )}
       </Sheet>
+
+      <SavedRecipesSheet
+        open={savedOpen}
+        onClose={() => setSavedOpen(false)}
+        toast={toast}
+        onLog={(recipe) => {
+          setSavedOpen(false)
+          setLogging({ recipe, mealType: date === today ? mealTypeForTime(new Date()) : 'dinner' })
+        }}
+      />
+      <LogRecipeSheet
+        recipe={logging?.recipe ?? null}
+        date={date}
+        defaultMealType={logging?.mealType ?? 'dinner'}
+        onClose={() => setLogging(null)}
+        onLogged={(msg) => {
+          setLogging(null)
+          toast(msg)
+        }}
+      />
+      {toastNode}
     </Screen>
   )
 }
@@ -228,20 +276,83 @@ function MealRow({ meal, onOpen }: { meal: Meal; onOpen: () => void }) {
           {r(meal.calories)} kcal · {r(meal.proteinG)} g P{meal.satFatG !== undefined ? ` · ${meal.satFatG} g SF` : ''}
         </span>
       </span>
-      {meal.source === 'photo' && meal.confidence && <Badge tone={meal.confidence === 'high' ? 'good' : meal.confidence === 'low' ? 'warn' : 'muted'}>{meal.confidence}</Badge>}
+      {(meal.source === 'photo' || meal.source === 'text') && meal.confidence && <Badge tone={meal.confidence === 'high' ? 'good' : meal.confidence === 'low' ? 'warn' : 'muted'}>{meal.confidence}</Badge>}
     </button>
   )
 }
 
-function MealEditor({ meal, onSave, onDelete, canReanalyze, onReanalyze }: { meal: Meal; onSave: (m: Meal) => void; onDelete: () => void; canReanalyze: boolean; onReanalyze: (note: string) => void }) {
+function MealEditor({
+  meal,
+  onSave,
+  onDelete,
+  canReanalyze,
+  onReanalyze,
+  canDescribe,
+  onDescribe,
+}: {
+  meal: Meal
+  onSave: (m: Meal) => void
+  onDelete: () => void
+  canReanalyze: boolean
+  onReanalyze: (note: string) => void
+  canDescribe: boolean
+  onDescribe: (text: string) => Promise<MealEstimate>
+}) {
   const [m, setM] = useState<Meal>(meal)
   const [note, setNote] = useState('')
+  const [said, setSaid] = useState('')
+  const [describing, setDescribing] = useState(false)
+  const [describeErr, setDescribeErr] = useState<string | null>(null)
   const nameId = useId()
   const noteId = useId()
+  const saidId = useId()
   const url = useObjectUrl(meal.photo)
+  const showDescribe = meal.source === 'manual' || meal.source === 'text'
+
+  const describe = async () => {
+    const text = said.trim()
+    if (!text) return
+    setDescribing(true)
+    setDescribeErr(null)
+    try {
+      const est = await onDescribe(text)
+      const next = fromEstimate(est, m.date, m.mealType, undefined, m)
+      setM({ ...next, name: m.name.trim() || next.name, notes: [`You said: ${text}.`, next.notes].filter(Boolean).join(' ') })
+    } catch (e) {
+      setDescribeErr(e instanceof AiError ? e.message : 'Could not estimate that. Try again.')
+    } finally {
+      setDescribing(false)
+    }
+  }
+
   return (
     <div className="space-y-3">
       {url && <img src={url} alt="Meal photo" className="max-h-56 w-full rounded-xl object-cover" />}
+      {showDescribe && (
+        <div className="space-y-2 rounded-xl border border-line p-3">
+          <label htmlFor={saidId} className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
+            Describe what you ate
+          </label>
+          <textarea
+            id={saidId}
+            value={said}
+            onChange={(e) => setSaid(e.target.value)}
+            rows={3}
+            placeholder="e.g. two eggs scrambled with spinach, one slice whole wheat toast with butter, black coffee"
+            className="w-full rounded-xl border border-line bg-surface-2 p-3"
+          />
+          <Button className="flex w-full items-center justify-center gap-2" disabled={!canDescribe || describing || !said.trim()} onClick={() => void describe()}>
+            <Icon name="sparkle" className="size-5" /> {describing ? 'Claude is estimating…' : 'Estimate with Claude'}
+          </Button>
+          {!canDescribe && <p className="text-xs text-muted">Add your Claude API key in Settings → Meal AI to estimate from a description. You can still enter the numbers below.</p>}
+          {describeErr && (
+            <p role="alert" className="text-sm text-bad">
+              {describeErr}
+            </p>
+          )}
+          {canDescribe && !describeErr && <p className="text-xs text-muted">Or enter the numbers yourself below. You can adjust Claude’s estimate before saving.</p>}
+        </div>
+      )}
       <div>
         <label htmlFor={nameId} className="text-xs font-bold tracking-[0.14em] text-muted uppercase">
           Name
@@ -305,7 +416,7 @@ function MealEditor({ meal, onSave, onDelete, canReanalyze, onReanalyze }: { mea
   )
 }
 
-function Ideas({ settings, date, meals }: { settings: Settings; date: string; meals: Meal[] }) {
+function Ideas({ settings, date, meals, toast, onLog }: { settings: Settings; date: string; meals: Meal[]; toast: (msg: string) => void; onLog: (r: RecipeDraft, mealType: MealType) => void }) {
   const [type, setType] = useState<MealType>(() => nextMealType(new Date()))
   const cacheId = `ideas:${date}:${type}`
   const { data: ideas } = useCache<MealIdea[]>(cacheId)
@@ -338,22 +449,6 @@ function Ideas({ settings, date, meals }: { settings: Settings; date: string; me
     }
   }
 
-  const logIdea = (i: MealIdea) =>
-    void saveMeal({
-      id: newId('meal'),
-      date,
-      loggedAt: timestamp(),
-      mealType: type,
-      name: i.name,
-      items: [],
-      calories: r(i.calories),
-      proteinG: r(i.proteinG),
-      satFatG: Math.round(i.satFatG * 10) / 10,
-      fiberG: Math.round(i.fiberG * 10) / 10,
-      notes: `Logged from a suggestion. Adjust if your portion was different.`,
-      source: 'suggestion',
-    })
-
   return (
     <>
       <SectionTitle>What should I eat?</SectionTitle>
@@ -378,22 +473,9 @@ function Ideas({ settings, date, meals }: { settings: Settings; date: string; me
                     <span className="block text-sm text-muted">{i.why}</span>
                   </button>
                   {open === k && (
-                    <div className="mt-2 text-sm">
-                      <p className="font-semibold">You need</p>
-                      <ul className="list-disc pl-5">
-                        {i.ingredients.map((x) => (
-                          <li key={x}>{x}</li>
-                        ))}
-                      </ul>
-                      <p className="mt-2 font-semibold">Steps</p>
-                      <ol className="list-decimal pl-5">
-                        {i.steps.map((x) => (
-                          <li key={x}>{x}</li>
-                        ))}
-                      </ol>
-                      <Button variant="primary" className="mt-2 w-full" onClick={() => logIdea(i)}>
-                        I ate this, log it
-                      </Button>
+                    <div className="mt-2">
+                      <RecipeDetails recipe={recipeFromIdea(i)} />
+                      <RecipeActions recipe={recipeFromIdea(i)} toast={toast} onLog={() => onLog(recipeFromIdea(i), type)} />
                     </div>
                   )}
                 </li>

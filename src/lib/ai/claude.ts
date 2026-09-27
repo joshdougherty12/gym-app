@@ -100,6 +100,27 @@ export async function estimateMeal(apiKey: string, p: Profile, photo: Blob, note
   )
 }
 
+/** Estimate a meal from the user's own description (no photo). */
+export async function estimateMealFromText(apiKey: string, p: Profile, description: string): Promise<MealEstimate> {
+  return ask(
+    apiKey,
+    p,
+    MealEstimateSchema,
+    [
+      {
+        type: 'text',
+        text: [
+          'Estimate this meal from the user’s description: each item with a portion, calories, protein, saturated fat and fiber, then totals (also carbs and fat).',
+          'Where amounts are missing, assume a typical portion and say so. Assume typical cooking fat if something is cooked and the description does not say how.',
+          'Set isFood to false only if the description is not food or drink.',
+          `The user ate: ${description}`,
+        ].join('\n'),
+      },
+    ],
+    'medium',
+  )
+}
+
 export interface DaySoFar {
   mealType: MealType
   eatenCalories: number
@@ -173,7 +194,7 @@ export async function groceryPlan(apiKey: string, p: Profile, chosen: WeekIdea[]
           `Build one grocery list for these ${chosen.length} dinners for ${p.householdSize} people, plus leftovers where marked:`,
           ...chosen.map((m, i) => `${i + 1}. ${m.name}: ${m.description}${m.leftoversForLunch ? ' (make extra for lunch)' : ''}`),
           'Combine quantities across recipes, group by store section, give a rough US price for each line and a total. Assume basic pantry staples (list the ones you assumed) and do not put them on the list.',
-          'Then write each recipe for a home cook who enjoys cooking: servings, ingredient amounts, clear steps, and one tip. Keep them heart-healthy (low saturated fat).',
+          'Then write each recipe for a home cook who enjoys cooking: servings, ingredient amounts, clear steps, one tip, and nutrition for one serving. Keep them heart-healthy (low saturated fat).',
           extraNotes ? `Extra notes from the user: ${extraNotes}` : '',
         ]
           .filter(Boolean)

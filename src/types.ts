@@ -408,7 +408,26 @@ export interface Meal {
   notes?: string
   /** Small thumbnail of the meal photo (local only). */
   photo?: Blob
-  source: 'photo' | 'manual' | 'suggestion'
+  /** photo = Claude from a photo, text = Claude from a description, recipe = a suggested or saved recipe. */
+  source: 'photo' | 'text' | 'manual' | 'suggestion' | 'recipe'
+}
+
+/** A recipe the user saved from Claude's suggestions. Numbers are per serving. */
+export interface Recipe {
+  id: string
+  savedAt: number
+  name: string
+  servings: number
+  ingredients: string[]
+  steps: string[]
+  tip?: string
+  prepMinutes?: number
+  calories: number
+  proteinG: number
+  satFatG?: number
+  fiberG?: number
+  carbsG?: number
+  fatG?: number
 }
 
 /** Cached AI results: meal ideas per day/meal, and the current week plan. */

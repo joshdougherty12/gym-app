@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router'
 import { BigStepper } from '../components/BigStepper'
 import { ExercisePicker } from '../components/ExercisePicker'
@@ -18,6 +19,7 @@ import { formatRir } from '../lib/weekPlan'
 import { isBodyweightOnly } from '../lib/progression'
 import { bestSetInWeek, defaultDraft, findLogged, planWorkout, rowKey, type SlotPlan } from '../lib/workoutPlan'
 import { useActiveWorkout } from '../store/activeWorkout'
+import { useHowTo } from '../store/howTo'
 import { useRestTimer } from '../store/restTimer'
 import type { DraftSet, SetLog, Settings } from '../types'
 
@@ -339,7 +341,19 @@ function SlotCard({
   const unitLabel = timed ? 's' : ''
   const bwOnly = isBodyweightOnly(e)
   const bwPlus = e.loading === 'bodyweight-plus'
-  const [howOpen, setHowOpen] = useState(false)
+  const howOpen = useHowTo((s) => s.open)
+  const toggleHow = useHowTo((s) => s.toggle)
+  const howId = useId()
+  /**
+   * The choice applies to every exercise, so cards above this one can grow or
+   * shrink too. Keep the tapped button where it was on screen.
+   */
+  const toggleHowTo = (el: HTMLElement) => {
+    const before = el.getBoundingClientRect().top
+    flushSync(toggleHow)
+    const shift = el.getBoundingClientRect().top - before
+    if (shift) window.scrollBy(0, shift)
+  }
   /** "60", or "BW" / "BW+25" for bodyweight exercises. */
   const load = (lb: number) => {
     const n = formatNumber(displayWeight(lb, settings.units))
@@ -363,14 +377,23 @@ function SlotCard({
             {!cardio && ` · rest ${formatRest(restFor(slot, e, settings))}`}
           </p>
           {e.description && (
-            <button
-              type="button"
-              onClick={() => setHowOpen((v) => !v)}
-              aria-expanded={howOpen}
-              className={`mt-1 block text-left text-sm text-muted ${howOpen ? '' : 'line-clamp-2'}`}
-            >
-              {e.description}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={(ev) => toggleHowTo(ev.currentTarget)}
+                aria-expanded={howOpen}
+                aria-controls={howId}
+                className="-ml-1 flex min-h-11 items-center gap-1 px-1 text-sm font-semibold text-accent"
+              >
+                How to do it
+                <Icon name="chevronDown" className={`size-4 transition-transform ${howOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {howOpen && (
+                <p id={howId} className="text-sm text-muted">
+                  {e.description}
+                </p>
+              )}
+            </>
           )}
         </div>
         <button type="button" onClick={onSwap} aria-label={`Swap ${e.name}`} className="grid size-11 shrink-0 place-items-center rounded-xl bg-surface-2 text-muted">

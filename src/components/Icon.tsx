@@ -6,6 +6,7 @@ const PATHS = {
   settings: 'M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4',
   chevronRight: 'M9 5l7 7-7 7',
   chevronLeft: 'M15 5l-7 7 7 7',
+  chevronDown: 'M5 9l7 7 7-7',
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
   close: 'M6 6l12 12M18 6 6 18',
@@ -19,6 +20,10 @@ const PATHS = {
   camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 16.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   share: 'M12 3v12M7 8l5-5 5 5M5 13v7h14v-7',
   cart: 'M3 4h2l2.5 11h10L20 7H6.2M9 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM17 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z',
+  bookmark: 'M6 3h12v18l-6-4-6 4z',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  book: 'M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4ZM5 17a3 3 0 0 1 3-3h11M9 8h6',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
 } as const
 
 export type IconName = keyof typeof PATHS
