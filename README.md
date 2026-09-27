@@ -165,5 +165,5 @@ Every push to `main` runs tests, lint and build in GitHub Actions and publishes 
 (`.github/workflows/deploy.yml`). The build uses a relative base, so it also works on Netlify, Vercel or any
 static host: upload `dist/`.
 
-This repo authenticates with its own `gh` login (`GH_CONFIG_DIR=C:\Users\joshu\.gh-gym`, wired in through
+This repo authenticates with its own `gh` login (`GH_CONFIG_DIR=C:\Users\joshu\RightPace\.private\gh`, wired in through
 the repo-local `credential.helper`), so `git push` here never uses any other account.

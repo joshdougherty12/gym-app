@@ -16,9 +16,9 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-    // Signing key lives outside the repo (C:/Users/joshu/.gym-signing), used only for this app.
+    // Signing key lives outside the repo (C:/Users/joshu/RightPace/.private/signing), used only for this app.
     def signingProps = new Properties()
-    def signingFile = new File(System.getenv('CUTLINE_SIGNING') ?: 'C:/Users/joshu/.gym-signing/keystore.properties')
+    def signingFile = new File(System.getenv('CUTLINE_SIGNING') ?: 'C:/Users/joshu/RightPace/.private/signing/keystore.properties')
     if (signingFile.exists()) signingFile.withInputStream { signingProps.load(it) }
     signingConfigs {
         cutline {
