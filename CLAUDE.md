@@ -21,10 +21,16 @@ Defense in particular:
 
 - TypeScript strict, no `any`. Pure logic goes in `src/lib/` with unit tests.
 - Store everything in lb and inches; units only change what is displayed.
-- No network calls. Data lives in IndexedDB (Dexie). Schema changes add a new
+- Data lives in IndexedDB (Dexie). The only network calls are opt-in: Meal AI (the user's own
+  Anthropic key) and the partner link (end-to-end encrypted sync, `server/`, hidden unless the build
+  sets `VITE_SYNC_URL`). Link credentials never go into backups or logs. Schema changes add a new
   `this.version(n + 1)` with an upgrade; never edit a released version.
 - 44 px minimum tap targets, labelled controls, visible focus.
+
+- Brand strings: new text uses `APP_NAME` from `src/lib/brand.ts` (the name will change again).
 
 ## Checks before calling a phase done
 
 `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`, then look at it at phone width.
+Server changes: `cd server && npm test && npm run typecheck` (local only; never `wrangler login` or
+`deploy` without Joshua).

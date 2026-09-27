@@ -6,6 +6,8 @@ import { DataSection } from '../components/DataSection'
 import { ReminderFields } from '../components/ReminderFields'
 import { Link } from 'react-router'
 import { MealAiSettings } from '../components/MealAiSettings'
+import { PartnerSection, usePartnerSummary } from '../components/partner/PartnerSection'
+import { partnerAvailable } from '../partner/config'
 import { useHasApiKey } from '../db/meals'
 import { saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
 import { programWeek } from '../lib/calendar'
@@ -51,6 +53,7 @@ export function SettingsScreen() {
   const [edited, setEdited] = useState<Set<Equipment>>(new Set())
   const { open, toggle } = useAccordion()
   const hasKey = useHasApiKey()
+  const partnerSummary = usePartnerSummary()
 
   if (!settings || !sessions || !exercises) return <Loading />
   const set = (patch: Partial<Settings>) => void updateSettings(patch)
@@ -77,7 +80,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <Screen title="Settings" subtitle="Everything stays on this device.">
+    <Screen title="Settings" subtitle={partnerAvailable() ? 'Stored on this device. Sharing with a partner is opt-in.' : 'Everything stays on this device.'}>
       {settings.week12Decision?.choice === 'surplus' && (
         <p className="mb-2 rounded-xl bg-surface-2 p-3 text-sm">Goal: small surplus (chosen at week 12). The weekly review now aims for +0.25-0.5 lb/week.</p>
       )}
@@ -153,6 +156,10 @@ export function SettingsScreen() {
 
       <Section id="mealai" title="Meal AI" summary={summaries.mealai} open={open === 'mealai'} onToggle={toggle}>
         <MealAiSettings settings={settings} />
+      </Section>
+
+      <Section id="partner" title="Partner" summary={partnerSummary} open={open === 'partner'} onToggle={toggle}>
+        <PartnerSection settings={settings} />
       </Section>
 
       <Section id="rest" title="Rest timer" summary={summaries.rest} open={open === 'rest'} onToggle={toggle}>

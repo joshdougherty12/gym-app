@@ -6,7 +6,9 @@ A personal workout and fat-loss tracker: a 12-week program engine with automatic
 workout logging with a rest timer, body and nutrition tracking, weekly calorie reviews and a
 progress dashboard. Phone-first, installable as a PWA, fully offline.
 
-**All data stays in this browser (IndexedDB). No accounts, no backend, no network calls.**
+**All data stays in this browser (IndexedDB). No accounts.** Two opt-in features use the network: Meal AI
+(your own Anthropic key) and the **partner link** (below), which syncs end-to-end encrypted data through a
+small server in `server/`. With no `VITE_SYNC_URL` at build time the partner link is hidden.
 
 **Live:** https://joshdougherty12.github.io/gym-app/ · Spec: `../gym prompt.md`
 
@@ -55,6 +57,23 @@ Your data is tied to this URL on this phone. Use **Settings → Download backup*
 
 Increments default to the gym's equipment: barbell +5 lb total (2.5 lb plates), dumbbells +5 lb (the weight
 field is one dumbbell), cables and most machines +2.5 lb, plate-loaded machines +5 lb.
+
+### Partner link (1.8)
+
+**Settings → Partner → Link partner** shows a QR code and a link code. On an iPhone, the Camera opens the
+link in Safari (tap **Link**); in the Android app, or in a Home Screen web app that already has data, use
+**Enter link code** and paste it. Two people per household; **Unlink** on either phone stops sharing for
+both, and each keeps what is on their own phone.
+
+- **Shared:** week plan and dinner picks, the grocery list (item by item, so both can check off at the store),
+  saved recipes, workout summaries (session, time, sets, new records; never body weight), high-fives and nudges,
+  "I ate this" (recipe name and per-serving numbers), and each person's calorie target (for suggested
+  portions; can be turned off).
+- **Private:** body weight, check-ins, photos, individual meal logs.
+- Every record is encrypted on the phone (AES-GCM, key made on the phone, carried only in the link code).
+  The server stores ciphertext and a hash of the household secret. Design and deploy steps: `server/README.md`.
+- Backups include the grocery list and saved recipes (they are also on this phone) but never the link
+  credentials or the partner's records. Restoring a backup while linked re-pulls the shared kitchen.
 
 ### Demo mode
 

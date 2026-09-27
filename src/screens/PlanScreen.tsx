@@ -2,31 +2,24 @@ import { useId, useState } from 'react'
 import { Icon } from '../components/Icon'
 import { LogRecipeSheet, RecipeActions, RecipeDetails, useToast } from '../components/Recipes'
 import { Badge, Button, Card, Loading, Screen, SectionTitle } from '../components/ui'
-import { getApiKey, setCache, useCache, useHasApiKey } from '../db/meals'
+import { SyncBadge } from '../components/partner/SyncBadge'
+import { saveWeekPlan, setGroceryList, setItemChecked, startNewWeek, useGroceryItems, useWeekPlan } from '../db/kitchen'
+import { getApiKey, useHasApiKey } from '../db/meals'
 import { useSettings } from '../db/repo'
 import { AiError, groceryPlan, weekIdeas } from '../lib/ai/claude'
-import type { GroceryPlan, WeekIdea } from '../lib/ai/schemas'
 import { todayIso } from '../lib/dates'
+import { groupBySection, type WeekPlan } from '../lib/kitchen'
 import { groceryText, mealTypeForTime } from '../lib/meals'
 import { matchIdea, recipeFromPlan, type RecipeDraft } from '../lib/recipes'
 import { shareText } from '../lib/shareText'
-
-interface WeekPlan {
-  ideas: WeekIdea[]
-  selected: string[]
-  notes: string
-  grocery?: GroceryPlan
-  groceryFor?: string[]
-  checked: string[]
-}
-
-const CACHE_ID = 'weekplan'
-const EMPTY: WeekPlan = { ideas: [], selected: [], notes: '', checked: [] }
+import { usePartner } from '../partner/hooks'
 
 export function PlanScreen() {
   const settings = useSettings()
   const hasKey = useHasApiKey()
-  const { data, loaded } = useCache<WeekPlan>(CACHE_ID)
+  const { plan, loaded } = useWeekPlan()
+  const items = useGroceryItems(plan.grocery?.listId)
+  const partner = usePartner()
   const [busy, setBusy] = useState<'ideas' | 'list' | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
@@ -34,9 +27,10 @@ export function PlanScreen() {
   const [logging, setLogging] = useState<RecipeDraft | null>(null)
   const [toastNode, toast] = useToast()
 
-  if (!settings || !loaded || hasKey === undefined) return <Loading />
-  const plan: WeekPlan = { ...EMPTY, ...data }
-  const save = (p: WeekPlan) => void setCache(CACHE_ID, p)
+  if (!settings || !loaded || hasKey === undefined || !items) return <Loading />
+  const linked = partner?.link?.status === 'linked'
+  const save = (p: WeekPlan) => void saveWeekPlan(p)
+  const sections = groupBySection(items)
   const chosen = plan.ideas.filter((i) => plan.selected.includes(i.id))
   const listIsStale = !!plan.grocery && (plan.groceryFor ?? []).join('|') !== plan.selected.join('|')
 
@@ -60,31 +54,34 @@ export function PlanScreen() {
       // Keep ids unique across batches.
       const taken = new Set(plan.ideas.map((i) => i.id))
       const renamed = fresh.map((i, k) => (taken.has(i.id) ? { ...i, id: `${i.id}-${Date.now().toString(36)}-${k}` } : i))
-      save(more ? { ...plan, ideas: [...plan.ideas, ...renamed] } : { ...EMPTY, notes: plan.notes, ideas: renamed })
+      if (more) save({ ...plan, ideas: [...plan.ideas, ...renamed] })
+      else {
+        await startNewWeek(plan.notes)
+        save({ ideas: renamed, selected: [], notes: plan.notes })
+      }
     })
 
   const makeList = () =>
     run('list', async (key) => {
       const g = await groceryPlan(key, settings, chosen, plan.notes)
-      save({ ...plan, grocery: g, groceryFor: [...plan.selected], checked: [] })
+      await setGroceryList(plan, g)
     })
 
   const toggle = (id: string) => save({ ...plan, selected: plan.selected.includes(id) ? plan.selected.filter((x) => x !== id) : [...plan.selected, id] })
-  const toggleItem = (k: string) => save({ ...plan, checked: plan.checked.includes(k) ? plan.checked.filter((x) => x !== k) : [...plan.checked, k] })
 
   const share = async (what: 'list' | 'recipes') => {
     if (!plan.grocery) return
     const names = chosen.map((c) => c.name)
     const text =
       what === 'list'
-        ? groceryText(plan.grocery, names)
+        ? groceryText({ ...plan.grocery, sections: sections.map((sec) => ({ name: sec.name, items: sec.items })) }, names)
         : plan.grocery.recipes.map((rc) => [rc.name.toUpperCase(), `Serves ${rc.servings}`, '', ...rc.ingredients.map((i) => `• ${i}`), '', ...rc.steps.map((s, k) => `${k + 1}. ${s}`), rc.tip ? `Tip: ${rc.tip}` : ''].join('\n')).join('\n\n———\n\n')
     const res = await shareText(what === 'list' ? 'Grocery list' : 'This week’s recipes', text)
     setMsg(res === 'copied' ? 'Copied. Paste it into a text message.' : res === 'failed' ? 'Could not share. Try again.' : null)
   }
 
   return (
-    <Screen title="Plan the week" subtitle="Pick dinners, get one grocery list" back="/food">
+    <Screen title="Plan the week" subtitle={linked ? <span className="inline-flex flex-wrap items-center gap-2">Shared with {partner.partnerName} <SyncBadge /></span> : 'Pick dinners, get one grocery list'} back="/food">
       {!hasKey && (
         <Card className="mb-3 border-accent">
           <p className="text-sm">Add your Claude API key in Settings → Meal AI to plan meals.</p>
@@ -138,7 +135,7 @@ export function PlanScreen() {
             </Button>
             <Button
               onClick={() => {
-                if (window.confirm('Start over with new ideas? The current list will be cleared.')) save({ ...EMPTY, notes: plan.notes })
+                if (window.confirm(linked ? `Start over with new ideas? The current list will be cleared for ${partner.partnerName} too.` : 'Start over with new ideas? The current list will be cleared.')) void startNewWeek(plan.notes)
               }}
             >
               Start a new week
@@ -152,6 +149,7 @@ export function PlanScreen() {
             </label>
             <textarea
               id={notesId}
+              key={plan.notes}
               defaultValue={plan.notes}
               onBlur={(e) => save({ ...plan, notes: e.target.value })}
               rows={2}
@@ -189,19 +187,16 @@ export function PlanScreen() {
           {msg && <p className="mt-2 text-sm text-good">{msg}</p>}
           <Card className="mt-3">
             <p className="num text-2xl font-bold">About ${Math.round(plan.grocery.estTotalUsd)}</p>
-            <p className="text-xs text-muted">Rough estimate at typical US prices. Tap items to check them off.</p>
-            {plan.grocery.sections
-              .filter((s) => s.items.length)
-              .map((s) => (
+            <p className="text-xs text-muted">Rough estimate at typical US prices. Tap items to check them off{linked ? `; ${partner.partnerName} sees it right away` : ''}.</p>
+            {sections.map((s) => (
                 <div key={s.name} className="mt-3">
                   <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{s.name}</p>
                   <ul>
                     {s.items.map((it) => {
-                      const k = `${s.name}|${it.item}`
-                      const done = plan.checked.includes(k)
+                      const done = it.checked
                       return (
-                        <li key={k}>
-                          <button type="button" role="checkbox" aria-checked={done} onClick={() => toggleItem(k)} className="flex min-h-11 w-full items-center gap-3 text-left">
+                        <li key={it.id}>
+                          <button type="button" role="checkbox" aria-checked={done} onClick={() => void setItemChecked(it.id, !done)} className="flex min-h-11 w-full items-center gap-3 text-left">
                             <span className={`grid size-5 shrink-0 place-items-center rounded border-2 ${done ? 'border-good bg-good text-bg' : 'border-line'}`}>{done && <Icon name="check" className="size-3.5" />}</span>
                             <span className={`min-w-0 flex-1 ${done ? 'text-muted line-through' : ''}`}>
                               {it.item} <span className="text-muted">· {it.quantity}</span>
@@ -242,6 +237,7 @@ export function PlanScreen() {
         </>
       )}
       <LogRecipeSheet
+        share
         recipe={logging}
         date={todayIso()}
         defaultMealType={mealTypeForTime(new Date())}

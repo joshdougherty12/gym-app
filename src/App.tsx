@@ -7,8 +7,10 @@ import { db } from './db/db'
 import { useSessions, useSettings } from './db/repo'
 import { useReminderSync } from './hooks/useReminderSync'
 import { useTheme } from './hooks/useTheme'
+import { usePartnerSync } from './partner/useSync'
 import { BodyScreen } from './screens/BodyScreen'
 import { FoodScreen } from './screens/FoodScreen'
+import { LinkCodeRoute, LinkScreen } from './screens/LinkScreen'
 import { PlanScreen } from './screens/PlanScreen'
 import { Placeholder } from './screens/Placeholder'
 import { ProgressScreen } from './screens/ProgressScreen'
@@ -27,6 +29,7 @@ function Shell() {
   const sessions = useSessions()
   const workoutCount = useLiveQuery(() => db.workouts.count(), [])
   useReminderSync(settings, sessions)
+  usePartnerSync()
   // A brand-new install (no profile, nothing logged) starts with setup. Decided
   // once when the app opens, so finishing setup never bounces back into it.
   const [setup, setSetup] = useState<'unknown' | 'redirect' | 'done'>('unknown')
@@ -35,7 +38,8 @@ function Shell() {
   const showNav = pathname !== '/workout' && pathname !== '/welcome'
   if (setup === 'unknown' && settings !== undefined && workoutCount !== undefined) setSetup(needsSetup ? 'redirect' : 'done')
   if (setup === 'redirect') {
-    if (pathname === '/welcome' || pathname === '/settings') setSetup('done')
+    // A partner link opened on a new phone goes to the link screen first; it continues to setup after linking.
+    if (pathname === '/welcome' || pathname === '/settings' || pathname.startsWith('/link')) setSetup('done')
     else return <Navigate to="/welcome" replace />
   }
   return (
@@ -55,6 +59,8 @@ function Shell() {
           <Route path="/body" element={<BodyScreen />} />
           <Route path="/week12" element={<Week12Screen />} />
           <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/link" element={<LinkScreen />} />
+          <Route path="/link/:code" element={<LinkCodeRoute />} />
           <Route path="*" element={<Placeholder title="Not found" text="Nothing here." />} />
         </Routes>
       </main>

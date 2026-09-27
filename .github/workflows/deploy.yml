@@ -27,6 +27,9 @@ jobs:
       - run: npm test
       - run: npm run lint
       - run: npm run build
+        env:
+          # Partner sync server. Unset (the default) hides the partner link entirely.
+          VITE_SYNC_URL: ${{ vars.VITE_SYNC_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

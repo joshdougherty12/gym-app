@@ -21,6 +21,7 @@ import { bestSetInWeek, defaultDraft, findLogged, planWorkout, rowKey, type Slot
 import { useActiveWorkout } from '../store/activeWorkout'
 import { useHowTo } from '../store/howTo'
 import { useRestTimer } from '../store/restTimer'
+import { publishWorkout } from '../partner/engine'
 import type { DraftSet, SetLog, Settings } from '../types'
 
 function useElapsed(since: number): string {
@@ -151,6 +152,8 @@ export function WorkoutScreen() {
     if (remaining > 0 && !window.confirm(`${remaining} planned set${remaining === 1 ? '' : 's'} not logged. Finish anyway?`)) return
     skipTimer()
     const log = await finish()
+    // Shared with a linked partner as a summary, if sharing is on.
+    if (log) void publishWorkout(log).catch(() => undefined)
     if (log) navigate(`/workout/summary/${log.id}`, { replace: true })
   }
 

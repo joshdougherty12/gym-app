@@ -8,6 +8,10 @@ import { copyText, shareText } from '../lib/shareText'
 import type { MealType, Recipe } from '../types'
 import { Icon } from './Icon'
 import { Button, Segmented, Sheet, Stepper } from './ui'
+import { PortionLine } from './partner/PortionLine'
+import { sendEvent } from '../partner/engine'
+import { usePartner, usePortions } from '../partner/hooks'
+import { timestamp } from '../lib/id'
 
 /** A short confirmation that disappears on its own and leaves the user where they were. */
 export function useToast(): [React.ReactNode, (msg: string) => void] {
@@ -46,6 +50,7 @@ export function RecipeDetails({ recipe }: { recipe: RecipeDraft }) {
       <p className="text-muted">
         Per serving{recipe.servings !== 1 ? ` (serves ${recipe.servings})` : ''}: {perServingLine(recipe)}
       </p>
+      <PortionLine />
       <p className="mt-2 font-semibold">You need</p>
       <ul className="list-disc pl-5">
         {recipe.ingredients.map((x, k) => (
@@ -111,19 +116,36 @@ export function RecipeActions({ recipe, onLog, onDelete, toast }: { recipe: Reci
   )
 }
 
+/** Optional per-serving numbers a recipe has. */
+function pick(r: RecipeDraft) {
+  const out: { satFatG?: number; fiberG?: number; carbsG?: number; fatG?: number } = {}
+  for (const k of ['satFatG', 'fiberG', 'carbsG', 'fatG'] as const) {
+    const v = r[k]
+    if (v !== undefined) out[k] = v
+  }
+  return out
+}
+
 const dayLabel = (date: string) => (date === todayIso() ? 'today' : `${WEEKDAY_SHORT[weekdayOf(date)]} ${shortDate(date)}`)
 
-/** Log a recipe as a meal: pick servings and meal. Uses the recipe's own numbers, no AI call. */
-export function LogRecipeSheet({ recipe, date, defaultMealType, onClose, onLogged }: { recipe: RecipeDraft | null; date: string; defaultMealType: MealType; onClose: () => void; onLogged: (msg: string) => void }) {
+/**
+ * Log a recipe as a meal: pick servings and meal. Uses the recipe's own numbers, no AI call.
+ * With `share` (week-plan and saved recipes) and a linked partner, the partner gets a
+ * one-tap "Log it too" card: recipe name and per-serving numbers only, not your servings.
+ */
+export function LogRecipeSheet({ recipe, date, defaultMealType, onClose, onLogged, share = false }: { recipe: RecipeDraft | null; date: string; defaultMealType: MealType; onClose: () => void; onLogged: (msg: string) => void; share?: boolean }) {
+  const portions = usePortions()
+  const partner = usePartner()
+  const shareWith = share && partner?.link?.status === 'linked' ? partner.partnerName : null
   return (
     <Sheet open={!!recipe} onClose={onClose} title="I ate this">
-      {recipe && <LogRecipeForm key={recipe.name} recipe={recipe} date={date} defaultMealType={defaultMealType} onLogged={onLogged} />}
+      {recipe && <LogRecipeForm key={recipe.name} recipe={recipe} date={date} defaultMealType={defaultMealType} onLogged={onLogged} defaultServings={portions?.split.mine ?? 1} shareWith={shareWith} />}
     </Sheet>
   )
 }
 
-function LogRecipeForm({ recipe, date, defaultMealType, onLogged }: { recipe: RecipeDraft; date: string; defaultMealType: MealType; onLogged: (msg: string) => void }) {
-  const [servings, setServings] = useState(1)
+function LogRecipeForm({ recipe, date, defaultMealType, onLogged, defaultServings, shareWith }: { recipe: RecipeDraft; date: string; defaultMealType: MealType; onLogged: (msg: string) => void; defaultServings: number; shareWith: string | null }) {
+  const [servings, setServings] = useState(defaultServings)
   const [mealType, setMealType] = useState<MealType>(defaultMealType)
   const [busy, setBusy] = useState(false)
   const preview = mealFromRecipe(recipe, { servings, date, mealType })
@@ -138,7 +160,7 @@ function LogRecipeForm({ recipe, date, defaultMealType, onLogged }: { recipe: Re
           {preview.fiberG !== undefined ? ` · ${preview.fiberG} g fiber` : ''}
         </span>
         <span className="text-muted">
-          {MEAL_LABEL[mealType]}, {dayLabel(date)}. You can adjust it after.
+          {MEAL_LABEL[mealType]}, {dayLabel(date)}. You can adjust it after.{shareWith ? ` ${shareWith} will get a “log it too” card.` : ''}
         </span>
       </p>
       <Button
@@ -148,7 +170,16 @@ function LogRecipeForm({ recipe, date, defaultMealType, onLogged }: { recipe: Re
         onClick={() => {
           setBusy(true)
           void saveMeal(mealFromRecipe(recipe, { servings, date, mealType }))
-            .then(() => onLogged(`Logged to ${MEAL_LABEL[mealType].toLowerCase()}`))
+            .then(async () => {
+              const shared =
+                shareWith !== null &&
+                (await sendEvent({
+                  kind: 'atethis',
+                  at: timestamp(),
+                  recipe: { name: recipe.name, calories: recipe.calories, proteinG: recipe.proteinG, ...pick(recipe) },
+                }).catch(() => false))
+              onLogged(`Logged to ${MEAL_LABEL[mealType].toLowerCase()}${shared ? ` · ${shareWith} can log it too` : ''}`)
+            })
             .finally(() => setBusy(false))
         }}
       >

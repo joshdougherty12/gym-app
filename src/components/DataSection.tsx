@@ -2,6 +2,7 @@ import { useId, useState } from 'react'
 import { downloadBackup, importBackupFile } from '../db/backup'
 import { isDemoMode } from '../db/db'
 import { resetAllData, resetProgram } from '../db/repo'
+import { unlink } from '../partner/engine'
 import { enterDemoMode, exitDemoMode } from '../dev/demoMode'
 import { Button } from './ui'
 
@@ -84,7 +85,8 @@ export function DataSection() {
           className="w-full"
           onClick={() => {
             const typed = window.prompt('This deletes ALL workouts, weigh-ins, photos and settings. Type RESET to confirm.')
-            if (typed === 'RESET') void resetAllData().then(() => window.location.reload())
+            // A partner link ends too (best effort: the partner's phone learns on its next sync).
+            if (typed === 'RESET') void unlink(undefined, undefined, true).catch(() => undefined).then(() => resetAllData()).then(() => window.location.reload())
           }}
         >
           Reset all data

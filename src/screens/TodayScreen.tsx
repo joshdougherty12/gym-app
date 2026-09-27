@@ -6,6 +6,7 @@ import { CheckIn } from '../components/CheckIn'
 import { StrengthWarning } from '../components/StrengthWarning'
 import { WeekSetupCard } from '../components/WeekSetupCard'
 import { Icon } from '../components/Icon'
+import { PartnerCard } from '../components/partner/PartnerCard'
 import { PHASE_TEXT } from '../components/phase'
 import { Badge, Button, Card, Loading, Screen, Sheet } from '../components/ui'
 import { PHASES, PROGRAM_WEEKS, weekDefinition } from '../data/program'
@@ -177,6 +178,8 @@ export function TodayScreen() {
           Log cardio
         </Button>
       </Card>
+
+      <PartnerCard units={settings.units} />
 
       <div className="mt-3">
         <CheckIn date={today} units={settings.units} targets={{ calories: settings.calorieTarget, protein: settings.proteinTargetG, steps: settings.stepGoal }} />

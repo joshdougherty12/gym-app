@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { TargetBar } from '../components/charts'
 import { Icon } from '../components/Icon'
+import { AteThisToo } from '../components/partner/AteThisToo'
 import { LogRecipeSheet, RecipeActions, RecipeDetails, SavedRecipesSheet, useToast } from '../components/Recipes'
 import { Badge, Button, Card, Loading, Screen, SectionTitle, Segmented, Sheet, Stepper } from '../components/ui'
 import { deleteMeal, getApiKey, saveMeal, setCache, useCache, useHasApiKey, useMealsForDate } from '../db/meals'
@@ -59,7 +60,7 @@ export function FoodScreen() {
   const fileId = useId()
   const galleryId = useId()
   const today = todayIso()
-  const [logging, setLogging] = useState<{ recipe: RecipeDraft; mealType: MealType } | null>(null)
+  const [logging, setLogging] = useState<{ recipe: RecipeDraft; mealType: MealType; share: boolean } | null>(null)
   const [savedOpen, setSavedOpen] = useState(false)
   const [toastNode, toast] = useToast()
   const saved = useRecipes()
@@ -138,6 +139,8 @@ export function FoodScreen() {
         <p className="text-xs text-muted">Photo numbers are Claude’s estimates. Saturated fat limit {settings.satFatLimitG} g/day (heart-healthy guideline; follow your doctor’s advice).</p>
       </Card>
 
+      {date === today && <AteThisToo toast={toast} />}
+
       <div className="mt-3 grid grid-cols-2 gap-2">
         <label htmlFor={fileId} className={`col-span-2 flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-accent text-lg font-bold tracking-wide text-accent-ink uppercase ${!hasKey || analyzing ? 'pointer-events-none opacity-40' : ''}`}>
           <Icon name="camera" /> Snap a meal
@@ -189,7 +192,7 @@ export function FoodScreen() {
       })}
       {meals.length === 0 && <p className="mt-4 text-center text-sm text-muted">Nothing logged {date === today ? 'yet today' : 'this day'}.</p>}
 
-      {hasKey && date === today && <Ideas settings={settings} date={date} meals={meals} toast={toast} onLog={(recipe, mealType) => setLogging({ recipe, mealType })} />}
+      {hasKey && date === today && <Ideas settings={settings} date={date} meals={meals} toast={toast} onLog={(recipe, mealType) => setLogging({ recipe, mealType, share: false })} />}
 
       <button type="button" onClick={() => setSavedOpen(true)} className="mt-6 flex min-h-16 w-full items-center gap-3 rounded-2xl border border-line bg-surface px-4 text-left">
         <Icon name="book" className="size-7 text-accent" />
@@ -234,13 +237,14 @@ export function FoodScreen() {
         toast={toast}
         onLog={(recipe) => {
           setSavedOpen(false)
-          setLogging({ recipe, mealType: date === today ? mealTypeForTime(new Date()) : 'dinner' })
+          setLogging({ recipe, mealType: date === today ? mealTypeForTime(new Date()) : 'dinner', share: true })
         }}
       />
       <LogRecipeSheet
         recipe={logging?.recipe ?? null}
         date={date}
         defaultMealType={logging?.mealType ?? 'dinner'}
+        share={logging?.share ?? false}
         onClose={() => setLogging(null)}
         onLogged={(msg) => {
           setLogging(null)
