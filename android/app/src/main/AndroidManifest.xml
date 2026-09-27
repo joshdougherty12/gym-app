@@ -20,6 +20,20 @@
             </intent-filter>
         </activity>
 
+        <!-- Step counting: holds the step counter registered (Android only counts while someone listens). -->
+        <service
+            android:name=".steps.StepCounterService"
+            android:exported="false"
+            android:foregroundServiceType="health" />
+
+        <!-- Restart step counting after a reboot or an app update. Both broadcasts are protected (only the system sends them). -->
+        <receiver android:name=".steps.StepBootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -43,4 +57,10 @@
     <!-- Rest timer: exact alarm that rings on time even when the app is in the background. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Step counting (asked for only when the user turns it on). -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
 </manifest>
