@@ -6,11 +6,12 @@ import type { WeekPlan } from '../lib/kitchen'
 import { b64url, deriveKeys, openRecord, randomBytes, randomId, sealRecord, type HouseholdKeys, type SealedRecord } from '../lib/partner/crypto'
 import { dueEntries, failed, shouldApply } from '../lib/partner/merge'
 import { decodeLinkCode, encodeLinkCode } from '../lib/partner/pairing'
-import { EventData, GroceryItemData, MemberData, PlanData, RecipeData, StepsShareData, WorkoutSummaryData, type RecordType } from '../lib/partner/types'
+import { ActivitySummaryData, EventData, GroceryItemData, MemberData, PlanData, RecipeData, StepsShareData, WorkoutSummaryData, type RecordType } from '../lib/partner/types'
 import { shouldPublishSteps } from '../lib/steps'
 import { workoutSummary } from '../lib/partner/summary'
+import { activitySummary } from '../lib/partner/activitySummary'
 import { sameRecipe } from '../lib/recipes'
-import type { PartnerLinkRow, PartnerRecordRow, Settings, WorkoutLog } from '../types'
+import type { Activity, PartnerLinkRow, PartnerRecordRow, Settings, WorkoutLog } from '../types'
 import { call, defaultDeps, isGone, SyncHttpError, SyncOfflineError, type SyncDeps } from './api'
 import { markChanged, syncKey } from './outbox'
 
@@ -73,6 +74,7 @@ const CODECS: Record<RecordType, Codec> = {
   wsum: syncOnlyCodec('wsum', (x) => WorkoutSummaryData.parse(x)),
   event: syncOnlyCodec('event', (x) => EventData.parse(x)),
   steps: syncOnlyCodec('steps', (x) => StepsShareData.parse(x)),
+  asum: syncOnlyCodec('asum', (x) => ActivitySummaryData.parse(x)),
 }
 
 const isRecordType = (t: string): t is RecordType => t in CODECS
@@ -118,10 +120,10 @@ async function deleteOwn(d: CutlineDB, type: PartnerRecordRow['type'], ids: stri
 
 export function memberFromSettings(s: Settings): MemberData {
   const name = (s.partner.name.trim() || s.profile?.name?.trim() || '').slice(0, 60)
-  return { name, sharesWorkouts: s.partner.shareWorkouts, ...(s.partner.shareCalorieTarget ? { calorieTarget: s.calorieTarget } : {}) }
+  return { name, sharesWorkouts: s.partner.shareWorkouts, sharesActivities: s.partner.shareActivities, ...(s.partner.shareCalorieTarget ? { calorieTarget: s.calorieTarget } : {}) }
 }
 
-/** Keep this phone's member record in step with its settings; withdraw workout summaries when sharing is turned off. */
+/** Keep this phone's member record in step with its settings; withdraw workout or activity summaries when their sharing is turned off. */
 export async function refreshOwnRecords(d: CutlineDB = defaultDb): Promise<void> {
   const link = await getLink(d)
   if (!link) return
@@ -130,6 +132,10 @@ export async function refreshOwnRecords(d: CutlineDB = defaultDb): Promise<void>
   if (!s.partner.shareWorkouts) {
     const mine = await d.partnerRecords.where('type').equals('wsum').filter((r) => r.by === link.memberId).toArray()
     await deleteOwn(d, 'wsum', mine.map((r) => r.id))
+  }
+  if (!s.partner.shareActivities) {
+    const acts = await d.partnerRecords.where('type').equals('asum').filter((r) => r.by === link.memberId).toArray()
+    await deleteOwn(d, 'asum', acts.map((r) => r.id))
   }
   await refreshOwnSteps(d, link, s)
 }
@@ -161,6 +167,23 @@ export async function publishWorkout(log: WorkoutLog, d: CutlineDB = defaultDb):
   const earlier = workouts.filter((w) => w.id !== log.id && (w.date < log.date || (w.date === log.date && w.startedAt < log.startedAt)))
   const summary = workoutSummary(log, earlier, new Map(exercises.map((e) => [e.id, e])), session?.name ?? 'Workout')
   await putOwn(d, link, 'wsum', log.id, summary)
+}
+
+/** Share a finished GPS activity as a summary (type, date, distance, time, pace; never the route) when linked and sharing activities. */
+export async function publishActivity(a: Activity, d: CutlineDB = defaultDb): Promise<void> {
+  const link = await getLink(d)
+  if (!link) return
+  const s = await getSettings(d)
+  if (!s.partner.shareActivities) return
+  await putOwn(d, link, 'asum', a.id, activitySummary(a))
+}
+
+/** Withdraw a deleted activity's summary. */
+export async function withdrawActivity(id: string, d: CutlineDB = defaultDb): Promise<void> {
+  const link = await getLink(d)
+  if (!link) return
+  const row = await d.partnerRecords.get(syncKey('asum', id))
+  if (row && row.by === link.memberId) await deleteOwn(d, 'asum', [id])
 }
 
 /** Send a high-five, a nudge or "I ate this". */
@@ -210,6 +233,7 @@ async function queueInitial(d: CutlineDB, withPlan: boolean): Promise<void> {
   await refreshOwnRecords(d)
   const weekAgo = addDays(todayIso(), -7)
   for (const w of await d.workouts.where('date').aboveOrEqual(weekAgo).toArray()) await publishWorkout(w, d)
+  for (const a of await d.activities.where('date').aboveOrEqual(weekAgo).toArray()) await publishActivity(a, d)
 }
 
 /** Partner A: create the household and return the link code to show. */

@@ -201,6 +201,19 @@ export interface Settings {
   reminders: ReminderSettings
   /** What this phone shares with a linked partner. */
   partner: PartnerSettings
+  /** GPS activity tracker preferences. */
+  activity: ActivitySettings
+}
+
+export interface ActivitySettings {
+  autoPause: boolean
+  /** Vibrate (Android) or beep at each mile or km. */
+  splitCue: boolean
+  lastType: ActivityType
+  /** The first-run explanation has been shown. */
+  introSeen: boolean
+  /** Live map shown while tracking (collapsed saves battery and data). */
+  showMap: boolean
 }
 
 /** Partner link sharing choices. More toggles can be added here; defaults come from withDefaults. */
@@ -211,6 +224,8 @@ export interface PartnerSettings {
   shareCalorieTarget: boolean
   /** Share today's step count (off unless turned on). */
   shareSteps: boolean
+  /** Share run, walk and ride summaries: type, date, distance, time, pace (1.10.0). */
+  shareActivities: boolean
 }
 
 export type Sex = 'male' | 'female' | 'unspecified'
@@ -319,7 +334,8 @@ export interface DailyLog {
   fatigue?: 1 | 2 | 3 | 4 | 5
 }
 
-export type CardioKind = 'zone2' | 'finisher' | 'walk' | 'other'
+// run, bike and hike (1.10.0) come from GPS-tracked activities.
+export type CardioKind = 'zone2' | 'finisher' | 'walk' | 'other' | 'run' | 'bike' | 'hike'
 
 /** Steps counted by the phone or imported from Apple Health for one day (the check-in uses it unless a manual value was typed). */
 export interface StepDay {
@@ -335,6 +351,9 @@ export interface CardioLog {
   kind: CardioKind
   minutes: number
   notes?: string
+  /** Set when the entry was made by a GPS-tracked activity (same id as the activity). */
+  activityId?: string
+  distanceM?: number
 }
 
 export interface Measurement {
@@ -520,7 +539,7 @@ export interface SyncMetaRow {
 /** Shared records that live only in sync: member profiles, workout summaries, high-fives and nudges. */
 export interface PartnerRecordRow {
   key: string
-  type: 'member' | 'wsum' | 'event' | 'steps'
+  type: 'member' | 'wsum' | 'event' | 'steps' | 'asum'
   id: string
   /** Member id of the phone that wrote it. */
   by: string
@@ -530,4 +549,78 @@ export interface PartnerRecordRow {
   seen?: boolean
   /** Local only: an Android notification was shown. */
   notified?: boolean
+}
+
+// ---- GPS activities (1.10.0) ----
+
+export type ActivityType = 'run' | 'walk' | 'bike' | 'hike'
+
+/** One GPS fix. t = wall-clock ms; acc = horizontal accuracy (m); alt = altitude (m); spd = reported speed (m/s). */
+export interface TrackPoint {
+  t: number
+  lat: number
+  lon: number
+  acc?: number
+  alt?: number
+  spd?: number
+}
+
+/** Manual pause and resume, and a gap where tracking was interrupted (app or service restarted). */
+export interface TrackEvent {
+  t: number
+  kind: 'pause' | 'resume' | 'gap'
+}
+
+/** Stored route point: [seconds since start, lat, lon, elevation m or null]. */
+export type RoutePoint = [number, number, number, number | null]
+
+export interface ActivitySplit {
+  /** 1-based mile or km number. */
+  index: number
+  distanceM: number
+  movingMs: number
+}
+
+/** A finished GPS activity. The route is the smoothed track simplified to about 3 m (see lib/activity/route.ts). */
+export interface Activity {
+  id: string
+  type: ActivityType
+  /** Local date the activity started, YYYY-MM-DD. */
+  date: string
+  startedAt: number
+  endedAt: number
+  movingMs: number
+  elapsedMs: number
+  distanceM: number
+  /** Approximate (GPS altitude, 3 m hysteresis); absent without altitude data. */
+  elevationGainM?: number
+  avgSpeedMps: number
+  /** Split length used: 1609.344 (mile) or 1000 (km). */
+  splitM: number
+  splits: ActivitySplit[]
+  calories?: number
+  /** One array per continuous segment (a pause or interruption starts a new one). */
+  route: RoutePoint[][]
+  source: 'android' | 'web'
+  autoPause: boolean
+  notes?: string
+}
+
+/** The activity being tracked right now (one at most). */
+export interface ActiveActivity {
+  id: 'current'
+  activityId: string
+  type: ActivityType
+  startedAt: number
+  source: 'android' | 'web'
+  events: TrackEvent[]
+  autoPause: boolean
+  splitCue: boolean
+  splitM: number
+}
+
+/** Web only: GPS fixes of the activity in progress, one row each, so a reload loses nothing. */
+export interface ActivityPointRow extends TrackPoint {
+  id?: number
+  activityId: string
 }

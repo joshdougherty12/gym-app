@@ -4,8 +4,8 @@ import { z } from 'zod'
 // checked against these before it touches the database.
 
 /** Record types that travel between partners. */
-// 'steps' (1.9.0): older app versions skip record types they don't know, so adding one is safe.
-export const RECORD_TYPES = ['recipe', 'plan', 'grocery', 'member', 'wsum', 'event', 'steps'] as const
+// 'steps' (1.9.0), 'asum' (1.10.0): older app versions skip record types they don't know, so adding one is safe.
+export const RECORD_TYPES = ['recipe', 'plan', 'grocery', 'member', 'wsum', 'event', 'steps', 'asum'] as const
 export type RecordType = (typeof RECORD_TYPES)[number]
 
 const num = z.number().finite()
@@ -43,6 +43,8 @@ export const MemberData = z.object({
   name: z.string().max(60),
   calorieTarget: num.optional(),
   sharesWorkouts: z.boolean(),
+  /** 1.10.0+: shares run and ride summaries (absent from older versions, which share none). */
+  sharesActivities: z.boolean().optional(),
 })
 export type MemberData = z.infer<typeof MemberData>
 
@@ -57,6 +59,23 @@ export const WorkoutSummaryData = z.object({
   finishedAt: num,
 })
 export type WorkoutSummaryData = z.infer<typeof WorkoutSummaryData>
+
+/**
+ * A finished GPS activity, summarized for the partner. Never the route, any
+ * coordinate or the start location: only what is listed here (strict, so an
+ * extra field is rejected on the way in).
+ */
+export const ActivitySummaryData = z
+  .object({
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    type: z.enum(['run', 'walk', 'bike', 'hike']),
+    distanceM: num.min(0).max(1_000_000),
+    movingMs: num.min(0).max(7 * 24 * 3600 * 1000),
+    avgSpeedMps: num.min(0).max(100),
+    finishedAt: num,
+  })
+  .strict()
+export type ActivitySummaryData = z.infer<typeof ActivitySummaryData>
 
 /** Per-serving nutrition of a recipe someone ate, so the partner can log the same thing. */
 export const SharedRecipeNutrition = z.object({

@@ -35,8 +35,8 @@ async function linkedPair() {
   const deps = server.deps()
   const a = await phone()
   const b = await phone()
-  await updateSettings({ partner: { name: 'Josh', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false }, calorieTarget: 2400 }, a)
-  await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false }, calorieTarget: 1600 }, b)
+  await updateSettings({ partner: { name: 'Josh', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true }, calorieTarget: 2400 }, a)
+  await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true }, calorieTarget: 1600 }, b)
   const code = await createHousehold(a, deps)
   await joinHousehold(code, b, deps)
   const sync = async () => {
@@ -91,11 +91,11 @@ describe('linking', () => {
       const me = (await d.partner.get('link'))?.memberId
       return (await d.partnerRecords.where('type').equals('member').toArray()).find((r) => r.by !== me)?.data
     }
-    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, calorieTarget: 1600 })
-    expect(await theirs(b)).toEqual({ name: 'Josh', sharesWorkouts: true, calorieTarget: 2400 })
-    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: false, shareSteps: false } }, b)
+    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, sharesActivities: true, calorieTarget: 1600 })
+    expect(await theirs(b)).toEqual({ name: 'Josh', sharesWorkouts: true, sharesActivities: true, calorieTarget: 2400 })
+    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: false, shareSteps: false, shareActivities: true } }, b)
     await sync()
-    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true })
+    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, sharesActivities: true })
   })
 })
 
@@ -166,8 +166,8 @@ describe('shared kitchen', () => {
     const { server, a, b, sync } = await linkedPair()
     // Long, unique, case-sensitive plaintext markers: random ciphertext cannot
     // match them by chance (short words like "Sam" matched base64 now and then).
-    await updateSettings({ partner: { name: 'Josh-marker-Q7Z4K9', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false } }, a)
-    await updateSettings({ partner: { name: 'Sam-marker-W3X8P2', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false } }, b)
+    await updateSettings({ partner: { name: 'Josh-marker-Q7Z4K9', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, a)
+    await updateSettings({ partner: { name: 'Sam-marker-W3X8P2', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, b)
     await saveRecipe(recipe('Secret family lasagna'), a)
     await setGroceryList(await getWeekPlan(a), grocery, a)
     await sync()
@@ -205,7 +205,7 @@ describe('workouts and events', () => {
     expect(wsum).toHaveLength(1)
     expect(wsum[0]?.data).toMatchObject({ minutes: 45, setsDone: 1 })
     expect(JSON.stringify(wsum[0]?.data)).not.toContain('201.4')
-    await updateSettings({ partner: { name: 'Josh', shareWorkouts: false, shareCalorieTarget: true, shareSteps: false } }, a)
+    await updateSettings({ partner: { name: 'Josh', shareWorkouts: false, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, a)
     await sync()
     expect(await b.partnerRecords.where('type').equals('wsum').count()).toBe(0)
   })
@@ -251,13 +251,13 @@ describe('shared steps', () => {
     const stepsOnA = async () => (await a.partnerRecords.where('type').equals('steps').toArray()).map((r) => r.data as { date: string; steps: number })
     await sync()
     expect(await stepsOnA()).toEqual([]) // off by default
-    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: true } }, b)
+    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: true, shareActivities: true } }, b)
     await sync()
     expect((await stepsOnA()).map((s) => [s.date, s.steps])).toEqual([[today, 6400]])
     await saveAutoSteps([{ date: today, steps: 9000 }], 'sensor', b)
     await sync()
     expect((await stepsOnA()).map((s) => s.steps)).toEqual([9000])
-    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false } }, b)
+    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, b)
     await sync()
     expect(await stepsOnA()).toEqual([])
   })

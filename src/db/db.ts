@@ -2,7 +2,10 @@ import Dexie, { type EntityTable } from 'dexie'
 import { EXERCISE_LIBRARY } from '../data/exercises'
 import { applySwaps, SESSION_TEMPLATES } from '../data/program'
 import type {
+  ActiveActivity,
   ActiveWorkout,
+  Activity,
+  ActivityPointRow,
   AiCacheRow,
   CardioLog,
   DailyLog,
@@ -58,6 +61,9 @@ export class CutlineDB extends Dexie {
   syncMeta!: EntityTable<SyncMetaRow, 'key'>
   partnerRecords!: EntityTable<PartnerRecordRow, 'key'>
   steps!: EntityTable<StepDay, 'date'>
+  activities!: EntityTable<Activity, 'id'>
+  activeActivity!: EntityTable<ActiveActivity, 'id'>
+  activityPoints!: EntityTable<ActivityPointRow, 'id'>
 
   constructor(name = DB_NAME) {
     super(name)
@@ -139,6 +145,14 @@ export class CutlineDB extends Dexie {
             if (log.steps !== undefined && log.stepsSource === undefined) log.stepsSource = 'manual'
           })
       })
+
+    // v7: GPS activities (run, walk, bike, hike), the one in progress, and
+    // (web only) its raw fixes. Adds tables only; existing data untouched.
+    this.version(7).stores({
+      activities: 'id, date, startedAt',
+      activeActivity: 'id',
+      activityPoints: '++id, activityId',
+    })
 
     this.on('populate', (tx) => {
       void tx.table('settings').add({ id: 'app', ...defaultSettings() } satisfies SettingsRow)

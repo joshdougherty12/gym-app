@@ -31,7 +31,7 @@ describe('v6 steps upgrade', () => {
     const d = new CutlineDB(name)
     dbs.push(d)
     await d.open()
-    expect(d.verno).toBe(6)
+    expect(d.verno).toBeGreaterThanOrEqual(6)
     expect(await d.dailyLogs.get('2026-09-25')).toEqual({ date: '2026-09-25', steps: 8000, weightLb: 190, stepsSource: 'manual' })
     expect(await d.dailyLogs.get('2026-09-26')).toEqual({ date: '2026-09-26', weightLb: 189 })
     expect(await d.steps.count()).toBe(0)
