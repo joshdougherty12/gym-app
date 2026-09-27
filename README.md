@@ -10,7 +10,7 @@ progress dashboard. Phone-first, installable as a PWA, fully offline.
 (your own Anthropic key) and the **partner link** (below), which syncs end-to-end encrypted data through a
 small server in `server/`. With no `VITE_SYNC_URL` at build time the partner link is hidden.
 
-**Live:** https://joshdougherty12.github.io/gym-app/ · Spec: `../gym prompt.md`
+**Live:** https://joshdougherty12.github.io/gym-app/ · Spec: `../docs/gym prompt.md`
 
 ## Install on Android
 
