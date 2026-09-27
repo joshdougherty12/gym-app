@@ -22,6 +22,7 @@ import { defaultSettings } from './defaults'
 
 export type SettingsRow = Settings & { id: 'app' }
 
+// Kept from the app's old name (Cutline): renaming the database would orphan existing data.
 export const DB_NAME = 'cutline'
 
 export class CutlineDB extends Dexie {

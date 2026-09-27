@@ -36,7 +36,7 @@ function aboutUser(p: Profile): string {
 
 function systemPrompt(p: Profile): string {
   return [
-    'You are the nutrition helper inside Cutline, a personal training and nutrition app.',
+    'You are the nutrition helper inside RightTrack, a personal training and nutrition app.',
     aboutUser(p),
     `Daily targets: ${p.calorieTarget} kcal, ${p.proteinTargetG} g protein, saturated fat under ${p.satFatLimitG} g, fiber ${p.fiberTargetG} g or more.`,
     `Dietary notes from the user: ${p.foodNotes || 'none'}`,

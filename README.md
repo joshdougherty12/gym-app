@@ -1,4 +1,6 @@
-# Cutline
+# RightTrack
+
+(Formerly Cutline. The Android app ID, database names and backup marker keep the old name so existing installs and backups carry over.)
 
 A personal workout and fat-loss tracker: a 12-week program engine with automatic progression,
 workout logging with a rest timer, body and nutrition tracking, weekly calorie reviews and a

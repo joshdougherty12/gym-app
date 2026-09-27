@@ -17,8 +17,8 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Cutline',
-        short_name: 'Cutline',
+        name: 'RightTrack',
+        short_name: 'RightTrack',
         description: 'Personal training, fat-loss and progress tracker. Local only.',
         theme_color: '#121416',
         background_color: '#121416',

@@ -135,7 +135,7 @@ function WelcomeFlow({ settings, lib, existing }: { settings: Settings; lib: Map
         <p className="mt-3 text-xs font-bold tracking-[0.14em] text-muted uppercase">
           Step {step + 1} of {STEPS.length}
         </p>
-        <h1 className="num text-4xl leading-none font-bold uppercase">{step === 0 && !existing && !settings.profile ? 'Welcome to Cutline' : STEPS[step]}</h1>
+        <h1 className="num text-4xl leading-none font-bold uppercase">{step === 0 && !existing && !settings.profile ? 'Welcome to RightTrack' : STEPS[step]}</h1>
         {step === 0 && <p className="mt-1 text-sm text-muted">A few questions so the program, targets and meal ideas fit you. About two minutes. Everything stays on this phone.</p>}
       </header>
 
@@ -233,7 +233,7 @@ function WelcomeFlow({ settings, lib, existing }: { settings: Settings; lib: Map
               </label>
               <textarea id="lim-notes" rows={3} value={d.limitationNotes ?? ''} onChange={(e) => set({ limitationNotes: e.target.value })} placeholder="e.g. patellar tendonitis in my right knee, old disc issue" className="w-full rounded-2xl border-2 border-line bg-surface p-3" />
             </div>
-            <p className="text-xs text-muted">Cutline is not medical advice. If something hurts, stop and swap it, and follow your doctor or physical therapist.</p>
+            <p className="text-xs text-muted">RightTrack is not medical advice. If something hurts, stop and swap it, and follow your doctor or physical therapist.</p>
           </>
         )}
 

@@ -14,6 +14,7 @@ export interface BackupPhoto {
 }
 
 export interface Backup {
+  // The app was called Cutline; the marker stays 'cutline' so old and new backups both restore.
   app: 'cutline'
   exportedAt: string
   schemaVersion: number
@@ -84,11 +85,11 @@ export async function buildBackup(includePhotos: boolean, d: CutlineDB = default
 
 const ARRAYS = ['settings', 'exercises', 'sessions', 'weekOverrides', 'workouts', 'activeWorkout', 'dailyLogs', 'cardio', 'measurements', 'weeklyReviews'] as const
 
-/** Check that parsed JSON is a Cutline backup; throws with a readable message if not. */
+/** Check that parsed JSON is a RightTrack backup; throws with a readable message if not. */
 export function parseBackup(json: unknown): Backup {
   if (typeof json !== 'object' || json === null) throw new Error('Not a JSON object.')
   const o = json as Record<string, unknown>
-  if (o.app !== 'cutline') throw new Error('This file is not a Cutline backup.')
+  if (o.app !== 'cutline') throw new Error('This file is not a RightTrack backup.')
   for (const k of ARRAYS) if (!Array.isArray(o[k])) throw new Error(`Backup is missing "${k}".`)
   if (o.photos !== undefined && !Array.isArray(o.photos)) throw new Error('Backup "photos" is not a list.')
   if (o.meals !== undefined && !Array.isArray(o.meals)) throw new Error('Backup "meals" is not a list.')
@@ -174,11 +175,11 @@ export async function mergeBackupFile(file: File): Promise<void> {
 
 export async function downloadBackup(includePhotos: boolean): Promise<void> {
   const b = await buildBackup(includePhotos)
-  const name = `cutline-backup-${new Date().toISOString().slice(0, 10)}${includePhotos ? '-with-photos' : ''}.json`
+  const name = `righttrack-backup-${new Date().toISOString().slice(0, 10)}${includePhotos ? '-with-photos' : ''}.json`
   if (isNative()) {
     // Android app: write the file, then open the share sheet (save to Drive, Files, email...).
     const res = await Filesystem.writeFile({ path: name, data: JSON.stringify(b), directory: Directory.Cache, encoding: Encoding.UTF8 })
-    await Share.share({ title: 'Cutline backup', files: [res.uri] })
+    await Share.share({ title: 'RightTrack backup', files: [res.uri] })
     return
   }
   const blob = new Blob([JSON.stringify(b)], { type: 'application/json' })

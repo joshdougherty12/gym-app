@@ -49,10 +49,25 @@ describe('backup', () => {
     expect(await b.photos.count()).toBe(1)
   })
 
-  it('rejects files that are not Cutline backups', () => {
-    expect(() => parseBackup({ app: 'other' })).toThrow(/not a Cutline backup/)
+  it('rejects files that are not RightTrack backups', () => {
+    expect(() => parseBackup({ app: 'other' })).toThrow(/not a RightTrack backup/)
     expect(() => parseBackup({ app: 'cutline', settings: [] })).toThrow(/missing "exercises"/)
     expect(() => parseBackup(null)).toThrow()
+  })
+
+  it('still reads a backup file saved before the rename to RightTrack', async () => {
+    // A Cutline-era file: marker 'cutline', no meals/recipes/photos fields.
+    const old = { app: 'cutline', settings: [], exercises: [], sessions: [], weekOverrides: [], workouts: [], activeWorkout: [], dailyLogs: [{ date: '2026-09-01', weightLb: 200 }], cardio: [], measurements: [], weeklyReviews: [] }
+    const b = fresh()
+    await b.open()
+    await restoreBackup(parseBackup(old), b)
+    expect(await b.dailyLogs.toArray()).toEqual([{ date: '2026-09-01', weightLb: 200 }])
+  })
+
+  it('new backups keep the original file marker', async () => {
+    const a = fresh()
+    await a.open()
+    expect((await buildBackup(false, a)).app).toBe('cutline')
   })
 })
 
