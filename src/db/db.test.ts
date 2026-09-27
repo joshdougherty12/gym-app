@@ -139,3 +139,39 @@ describe('v3 joint-friendly program upgrade', () => {
     expect(used.filter((id) => flagged.has(id))).toEqual([])
   })
 })
+
+describe('v5 partner-link upgrade', () => {
+  it('moves a saved grocery list into item rows and keeps what was checked', async () => {
+    const { default: Dexie } = await import('dexie')
+    const name = `upgrade-v5-${n++}`
+    const old = new Dexie(name)
+    old.version(4).stores({ settings: 'id', exercises: 'id, pattern', sessions: 'id', aiCache: 'id', recipes: 'id, savedAt' })
+    const grocery = {
+      sections: [{ name: 'Produce', items: [{ item: 'Spinach', quantity: '1 bag', estCostUsd: 3, forMeals: ['Salmon'] }, { item: 'Lemons', quantity: '2', estCostUsd: 1, forMeals: [] }] }],
+      estTotalUsd: 4,
+      pantryStaplesAssumed: [],
+      recipes: [],
+      shoppingTips: [],
+    }
+    await old.table('aiCache').put({ id: 'weekplan', createdAt: 1, data: { ideas: [], selected: ['s'], notes: 'Aldi', grocery, groceryFor: ['s'], checked: ['Produce|Lemons'] } })
+    await old.table('recipes').put({ id: 'r1', savedAt: 1, name: 'Oats', servings: 1, ingredients: [], steps: [], calories: 300, proteinG: 10 })
+    old.close()
+
+    const d = new CutlineDB(name)
+    dbs.push(d)
+    await d.open()
+    expect(d.verno).toBe(5)
+    const items = (await d.groceryItems.toArray()).sort((a, b) => a.order - b.order)
+    expect(items.map((i) => [i.item, i.checked])).toEqual([
+      ['Spinach', false],
+      ['Lemons', true],
+    ])
+    const plan = (await d.aiCache.get('weekplan'))?.data as { grocery: { listId: string }; notes: string; checked?: unknown }
+    expect(plan.notes).toBe('Aldi')
+    expect(plan.checked).toBeUndefined()
+    expect(items.every((i) => i.listId === plan.grocery.listId)).toBe(true)
+    expect(await d.recipes.count()).toBe(1)
+    expect(await d.partner.count()).toBe(0)
+    expect(await d.syncOutbox.count()).toBe(0)
+  })
+})

@@ -157,3 +157,20 @@ describe('backup with saved recipes', () => {
     expect(() => parseBackup({ ...base, recipes: {} })).toThrow(/recipes/)
   })
 })
+
+describe('backup and the partner link', () => {
+  it('never includes the link credentials or the partner records, but keeps the grocery list', async () => {
+    const a = fresh()
+    await a.open()
+    await a.partner.put({ id: 'link', householdId: 'HHHHHHHHHHHHHHHHHHHHHH', secret: 'SECRET-SECRET', rootKey: 'ROOTKEY-ROOTKEY', memberId: 'MMMMMMMMMMMMMMMMMMMMMM', role: 'creator', status: 'linked', createdAt: 1, cursor: 3 })
+    await a.partnerRecords.put({ key: 'wsum:w9', type: 'wsum', id: 'w9', by: 'other', ts: 1, data: { name: 'Partner workout' } })
+    await a.groceryItems.put({ id: 'g1', listId: 'L', section: 'Produce', item: 'Kale', quantity: '1', estCostUsd: 2, order: 0, checked: true })
+    const text = JSON.stringify(await buildBackup(false, a))
+    expect(text).not.toMatch(/SECRET-SECRET|ROOTKEY-ROOTKEY|HHHHHHHH|Partner workout/)
+    const b = fresh()
+    await b.open()
+    await restoreBackup(parseBackup(JSON.parse(text)), b)
+    expect((await b.groceryItems.get('g1'))?.checked).toBe(true)
+    expect(await b.partner.count()).toBe(0)
+  })
+})

@@ -1,9 +1,11 @@
-import type { ActiveWorkout, AiCacheRow, CardioLog, Meal, DailyLog, Exercise, Measurement, PhotoAngle, Recipe, SessionTemplate, WeekOverride, WeeklyReview, WorkoutLog } from '../types'
+import type { ActiveWorkout, AiCacheRow, CardioLog, GroceryItem, Meal, DailyLog, Exercise, Measurement, PhotoAngle, Recipe, SessionTemplate, WeekOverride, WeeklyReview, WorkoutLog } from '../types'
 import { Directory, Encoding, Filesystem } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 import { isNative } from '../lib/native'
 import { db as defaultDb, type CutlineDB, type SettingsRow } from './db'
 import { syncDayFromMeals } from './meals'
+import { upgradeLegacyWeekPlan } from './kitchen'
+import { resyncFromScratch } from '../partner/engine'
 
 export interface BackupPhoto {
   id: string
@@ -34,6 +36,8 @@ export interface Backup {
   aiCache?: AiCacheRow[]
   /** Saved recipes (v4+). */
   recipes?: Recipe[]
+  /** Grocery list items (v5+). Partner-link credentials, sync state and the partner's records are never included. */
+  groceryItems?: GroceryItem[]
 }
 
 export type BackupMeal = Omit<Meal, 'photo'> & { photoBase64?: string; photoType?: string }
@@ -74,6 +78,7 @@ export async function buildBackup(includePhotos: boolean, d: CutlineDB = default
   }
   backup.aiCache = await d.aiCache.toArray()
   backup.recipes = await d.recipes.toArray()
+  backup.groceryItems = await d.groceryItems.toArray()
   if (includePhotos) {
     backup.photos = []
     for (const p of await d.photos.toArray()) {
@@ -94,6 +99,7 @@ export function parseBackup(json: unknown): Backup {
   if (o.photos !== undefined && !Array.isArray(o.photos)) throw new Error('Backup "photos" is not a list.')
   if (o.meals !== undefined && !Array.isArray(o.meals)) throw new Error('Backup "meals" is not a list.')
   if (o.recipes !== undefined && !Array.isArray(o.recipes)) throw new Error('Backup "recipes" is not a list.')
+  if (o.groceryItems !== undefined && !Array.isArray(o.groceryItems)) throw new Error('Backup "groceryItems" is not a list.')
   if (typeof o.schemaVersion === 'number' && o.schemaVersion > defaultDb.verno) throw new Error('This backup is from a newer version of the app. Update the app first.')
   return o as unknown as Backup
 }
@@ -106,7 +112,7 @@ export function parseBackup(json: unknown): Backup {
 export async function restoreBackup(b: Backup, d: CutlineDB = defaultDb): Promise<void> {
   const photos = b.photos?.map((p) => ({ id: p.id, date: p.date, angle: p.angle, blob: new Blob([fromBase64(p.base64)], { type: p.type }) }))
   const meals: Meal[] | undefined = b.meals?.map(({ photoBase64, photoType, ...m }) => (photoBase64 ? { ...m, photo: new Blob([fromBase64(photoBase64)], { type: photoType ?? 'image/jpeg' }) } : m))
-  const tables = [d.settings, d.exercises, d.sessions, d.weekOverrides, d.workouts, d.activeWorkout, d.dailyLogs, d.cardio, d.measurements, d.weeklyReviews, d.photos, d.meals, d.aiCache, d.recipes]
+  const tables = [d.settings, d.exercises, d.sessions, d.weekOverrides, d.workouts, d.activeWorkout, d.dailyLogs, d.cardio, d.measurements, d.weeklyReviews, d.photos, d.meals, d.aiCache, d.recipes, d.groceryItems]
   await d.transaction('rw', tables, async () => {
     await Promise.all([
       d.settings.clear().then(() => d.settings.bulkPut(b.settings)),
@@ -125,8 +131,14 @@ export async function restoreBackup(b: Backup, d: CutlineDB = defaultDb): Promis
       b.aiCache ? d.aiCache.clear().then(() => d.aiCache.bulkPut(b.aiCache ?? [])) : Promise.resolve(),
       // Backups from before saved recipes have none: keep the current ones.
       b.recipes ? d.recipes.clear().then(() => d.recipes.bulkPut(b.recipes ?? [])) : Promise.resolve(),
+      b.groceryItems ? d.groceryItems.clear().then(() => d.groceryItems.bulkPut(b.groceryItems ?? [])) : Promise.resolve(),
     ])
   })
+  // A week plan from a pre-1.8 backup keeps its list inside the plan: split it out.
+  await upgradeLegacyWeekPlan(d)
+  // Linked to a partner: take the household's shared kitchen again rather than
+  // pushing old data over it (the restored copy fills in anything not shared).
+  await resyncFromScratch(d)
 }
 
 /**
@@ -139,7 +151,7 @@ export async function restoreBackup(b: Backup, d: CutlineDB = defaultDb): Promis
 export async function mergeBackup(b: Backup, d: CutlineDB = defaultDb): Promise<void> {
   const photos = b.photos?.map((p) => ({ id: p.id, date: p.date, angle: p.angle, blob: new Blob([fromBase64(p.base64)], { type: p.type }) }))
   const meals: Meal[] | undefined = b.meals?.map(({ photoBase64, photoType, ...m }) => (photoBase64 ? { ...m, photo: new Blob([fromBase64(photoBase64)], { type: photoType ?? 'image/jpeg' }) } : m))
-  const tables = [d.settings, d.exercises, d.sessions, d.weekOverrides, d.workouts, d.activeWorkout, d.dailyLogs, d.cardio, d.measurements, d.weeklyReviews, d.photos, d.meals, d.recipes]
+  const tables = [d.settings, d.exercises, d.sessions, d.weekOverrides, d.workouts, d.activeWorkout, d.dailyLogs, d.cardio, d.measurements, d.weeklyReviews, d.photos, d.meals, d.recipes, d.groceryItems]
   await d.transaction('rw', tables, async () => {
     if (b.settings.length) await d.settings.bulkPut(b.settings)
     await d.exercises.bulkPut(b.exercises)
@@ -152,6 +164,7 @@ export async function mergeBackup(b: Backup, d: CutlineDB = defaultDb): Promise<
     if (photos) await d.photos.bulkPut(photos)
     if (meals) await d.meals.bulkPut(meals)
     if (b.recipes) await d.recipes.bulkPut(b.recipes)
+    if (b.groceryItems) await d.groceryItems.bulkPut(b.groceryItems)
     for (const log of b.dailyLogs) {
       const cur = await d.dailyLogs.get(log.date)
       await d.dailyLogs.put({ ...log, ...cur })

@@ -7,20 +7,30 @@ import type {
   CardioLog,
   DailyLog,
   Exercise,
+  GroceryItem,
   Meal,
   Measurement,
+  PartnerLinkRow,
+  PartnerRecordRow,
   Photo,
   Recipe,
   SecretRow,
   SessionTemplate,
   Settings,
+  SyncMetaRow,
+  SyncOutboxRow,
   WeekOverride,
   WeeklyReview,
   WorkoutLog,
 } from '../types'
 import { defaultSettings } from './defaults'
+import { newId } from '../lib/id'
+import { splitLegacyPlan } from '../lib/kitchen'
 
 export type SettingsRow = Settings & { id: 'app' }
+
+/** aiCache row holding the week plan. */
+export const WEEKPLAN_ID = 'weekplan'
 
 // Kept from the app's old name (Cutline): renaming the database would orphan existing data.
 export const DB_NAME = 'cutline'
@@ -41,6 +51,11 @@ export class CutlineDB extends Dexie {
   aiCache!: EntityTable<AiCacheRow, 'id'>
   secrets!: EntityTable<SecretRow, 'id'>
   recipes!: EntityTable<Recipe, 'id'>
+  groceryItems!: EntityTable<GroceryItem, 'id'>
+  partner!: EntityTable<PartnerLinkRow, 'id'>
+  syncOutbox!: EntityTable<SyncOutboxRow, 'key'>
+  syncMeta!: EntityTable<SyncMetaRow, 'key'>
+  partnerRecords!: EntityTable<PartnerRecordRow, 'key'>
 
   constructor(name = DB_NAME) {
     super(name)
@@ -84,6 +99,30 @@ export class CutlineDB extends Dexie {
     this.version(4).stores({
       recipes: 'id, savedAt',
     })
+
+    // v5: partner link. Grocery items become their own rows (so two people can
+    // check items off at once), plus the link, the sync outbox, sync timestamps
+    // and records that exist only in sync (partner profile, workout summaries,
+    // high-fives). A saved week plan's grocery list moves into the new table.
+    this.version(5)
+      .stores({
+        groceryItems: 'id, listId',
+        partner: 'id',
+        syncOutbox: 'key, nextAttemptAt',
+        syncMeta: 'key',
+        partnerRecords: 'key, type, by',
+      })
+      .upgrade(async (tx) => {
+        const cache = tx.table<AiCacheRow, string>('aiCache')
+        const row = await cache.get(WEEKPLAN_ID)
+        if (!row) return
+        // Random ids: two phones that migrate and then link must not collide.
+        const listId = newId('list')
+        const split = splitLegacyPlan(row.data, listId, (n) => `${listId}-${n}`)
+        if (!split) return
+        await tx.table<GroceryItem, string>('groceryItems').bulkPut(split.items)
+        await cache.put({ ...row, data: split.plan })
+      })
 
     this.on('populate', (tx) => {
       void tx.table('settings').add({ id: 'app', ...defaultSettings() } satisfies SettingsRow)

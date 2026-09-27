@@ -119,3 +119,31 @@ export async function syncReminders(list: { id: number; at: Date; title: string;
     return false
   }
 }
+
+const PARTNER_CHANNEL = 'partner'
+let partnerReady: Promise<boolean> | null = null
+let partnerNotifyId = 8000
+
+/** Android: show a partner high-five, nudge or "ate this" right away. Does nothing on the web. */
+export async function notifyPartner(title: string, body: string): Promise<void> {
+  if (!isNative()) return
+  partnerReady ??= (async () => {
+    try {
+      let perm = await LocalNotifications.checkPermissions()
+      if (perm.display !== 'granted') perm = await LocalNotifications.requestPermissions()
+      if (perm.display !== 'granted') return false
+      await LocalNotifications.createChannel({ id: PARTNER_CHANNEL, name: 'Partner', description: 'High-fives, nudges and shared meals from your partner', importance: 3, visibility: 1, vibration: true })
+      return true
+    } catch {
+      return false
+    }
+  })()
+  if (!(await partnerReady)) return
+  try {
+    // Ids 8000-8999 are partner notifications (reminders use 5000-7999, the rest timer 4201).
+    partnerNotifyId = partnerNotifyId >= 8999 ? 8000 : partnerNotifyId + 1
+    await LocalNotifications.schedule({ notifications: [{ id: partnerNotifyId, title, body, channelId: PARTNER_CHANNEL, autoCancel: true }] })
+  } catch {
+    /* in-app only */
+  }
+}

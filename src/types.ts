@@ -199,6 +199,16 @@ export interface Settings {
   /** Set by first-time setup; absent for a brand-new install. */
   profile?: Profile
   reminders: ReminderSettings
+  /** What this phone shares with a linked partner. */
+  partner: PartnerSettings
+}
+
+/** Partner link sharing choices. More toggles can be added here; defaults come from withDefaults. */
+export interface PartnerSettings {
+  /** Name shown to the partner; empty uses the profile name. */
+  name: string
+  shareWorkouts: boolean
+  shareCalorieTarget: boolean
 }
 
 export type Sex = 'male' | 'female' | 'unspecified'
@@ -441,4 +451,67 @@ export interface AiCacheRow {
 export interface SecretRow {
   id: 'anthropic'
   apiKey: string
+}
+
+/** One grocery list item. Shared with a linked partner item by item. */
+export interface GroceryItem {
+  id: string
+  /** Which list it belongs to; rebuilding the list starts a new one. */
+  listId: string
+  section: string
+  item: string
+  quantity: string
+  estCostUsd: number
+  order: number
+  checked: boolean
+}
+
+/**
+ * This phone's partner link: the household credentials (never backed up,
+ * never logged) and sync progress.
+ */
+export interface PartnerLinkRow {
+  id: 'link'
+  householdId: string
+  /** Household secret the server checks (it stores only a hash). */
+  secret: string
+  /** Encryption root key; never leaves the phone except inside the link code. */
+  rootKey: string
+  memberId: string
+  role: 'creator' | 'joiner'
+  /** waiting = created, partner not joined yet. */
+  status: 'waiting' | 'linked'
+  createdAt: number
+  /** Last server version pulled. */
+  cursor: number
+  lastSyncAt?: number
+}
+
+export interface SyncOutboxRow {
+  key: string
+  type: string
+  id: string
+  attempts: number
+  nextAttemptAt: number
+}
+
+/** Last-writer-wins timestamp per shared record ("type:id"). */
+export interface SyncMetaRow {
+  key: string
+  ts: number
+}
+
+/** Shared records that live only in sync: member profiles, workout summaries, high-fives and nudges. */
+export interface PartnerRecordRow {
+  key: string
+  type: 'member' | 'wsum' | 'event'
+  id: string
+  /** Member id of the phone that wrote it. */
+  by: string
+  ts: number
+  data: unknown
+  /** Local only: handled or dismissed on this phone. */
+  seen?: boolean
+  /** Local only: an Android notification was shown. */
+  notified?: boolean
 }
