@@ -7,6 +7,7 @@ import { ReminderFields } from '../components/ReminderFields'
 import { Link } from 'react-router'
 import { MealAiSettings } from '../components/MealAiSettings'
 import { PartnerSection, usePartnerSummary } from '../components/partner/PartnerSection'
+import { StepsSettings, useStepsSummary } from '../components/StepsSettings'
 import { partnerAvailable } from '../partner/config'
 import { useHasApiKey } from '../db/meals'
 import { saveExercise, updateSettings, useExercises, useSessions, useSettings } from '../db/repo'
@@ -54,6 +55,7 @@ export function SettingsScreen() {
   const { open, toggle } = useAccordion()
   const hasKey = useHasApiKey()
   const partnerSummary = usePartnerSummary()
+  const stepsSummary = useStepsSummary(settings?.stepGoal)
 
   if (!settings || !sessions || !exercises) return <Loading />
   const set = (patch: Partial<Settings>) => void updateSettings(patch)
@@ -152,6 +154,10 @@ export function SettingsScreen() {
         <WeightStepper label="Loss rate, min / week" lb={settings.lossRateMinLb} units={settings.units} stepLb={0.25} onChange={(lossRateMinLb) => set({ lossRateMinLb, lossRateMaxLb: Math.max(lossRateMinLb, settings.lossRateMaxLb) })} />
         <WeightStepper label="Loss rate, max / week" lb={settings.lossRateMaxLb} units={settings.units} stepLb={0.25} onChange={(lossRateMaxLb) => set({ lossRateMaxLb, lossRateMinLb: Math.min(lossRateMaxLb, settings.lossRateMinLb) })} />
         </div>
+      </Section>
+
+      <Section id="steps" title="Steps" summary={stepsSummary} open={open === 'steps'} onToggle={toggle}>
+        <StepsSettings settings={settings} />
       </Section>
 
       <Section id="mealai" title="Meal AI" summary={summaries.mealai} open={open === 'mealai'} onToggle={toggle}>

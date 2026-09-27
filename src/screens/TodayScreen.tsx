@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { CardioQuickLog } from '../components/CardioQuickLog'
 import { CheckIn } from '../components/CheckIn'
+import { StepsCard } from '../components/StepsCard'
 import { StrengthWarning } from '../components/StrengthWarning'
 import { WeekSetupCard } from '../components/WeekSetupCard'
 import { Icon } from '../components/Icon'
@@ -178,6 +179,8 @@ export function TodayScreen() {
           Log cardio
         </Button>
       </Card>
+
+      <StepsCard goal={settings.stepGoal} />
 
       <PartnerCard units={settings.units} />
 

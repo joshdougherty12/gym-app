@@ -6,7 +6,8 @@ import type { WeekPlan } from '../lib/kitchen'
 import { b64url, deriveKeys, openRecord, randomBytes, randomId, sealRecord, type HouseholdKeys, type SealedRecord } from '../lib/partner/crypto'
 import { dueEntries, failed, shouldApply } from '../lib/partner/merge'
 import { decodeLinkCode, encodeLinkCode } from '../lib/partner/pairing'
-import { EventData, GroceryItemData, MemberData, PlanData, RecipeData, WorkoutSummaryData, type RecordType } from '../lib/partner/types'
+import { EventData, GroceryItemData, MemberData, PlanData, RecipeData, StepsShareData, WorkoutSummaryData, type RecordType } from '../lib/partner/types'
+import { shouldPublishSteps } from '../lib/steps'
 import { workoutSummary } from '../lib/partner/summary'
 import { sameRecipe } from '../lib/recipes'
 import type { PartnerLinkRow, PartnerRecordRow, Settings, WorkoutLog } from '../types'
@@ -71,6 +72,7 @@ const CODECS: Record<RecordType, Codec> = {
   member: syncOnlyCodec('member', (x) => MemberData.parse(x)),
   wsum: syncOnlyCodec('wsum', (x) => WorkoutSummaryData.parse(x)),
   event: syncOnlyCodec('event', (x) => EventData.parse(x)),
+  steps: syncOnlyCodec('steps', (x) => StepsShareData.parse(x)),
 }
 
 const isRecordType = (t: string): t is RecordType => t in CODECS
@@ -129,6 +131,24 @@ export async function refreshOwnRecords(d: CutlineDB = defaultDb): Promise<void>
     const mine = await d.partnerRecords.where('type').equals('wsum').filter((r) => r.by === link.memberId).toArray()
     await deleteOwn(d, 'wsum', mine.map((r) => r.id))
   }
+  await refreshOwnSteps(d, link, s)
+}
+
+/** Share today's steps (one record per member, id = member id) when sharing is on; withdraw it when off. */
+async function refreshOwnSteps(d: CutlineDB, link: PartnerLinkRow, s: Settings, now = Date.now()): Promise<void> {
+  const key = syncKey('steps', link.memberId)
+  const cur = await d.partnerRecords.get(key)
+  if (!s.partner.shareSteps) {
+    if (cur) await deleteOwn(d, 'steps', [link.memberId])
+    return
+  }
+  const today = todayIso()
+  const steps = (await d.dailyLogs.get(today))?.steps
+  if (steps === undefined) return
+  const prev = cur ? StepsShareData.safeParse(cur.data) : null
+  const next = { date: today, steps: Math.min(100_000, Math.max(0, Math.round(steps))) }
+  if (!shouldPublishSteps(prev?.success ? prev.data : undefined, next, now)) return
+  await putOwn(d, link, 'steps', link.memberId, { ...next, at: now })
 }
 
 /** Share a finished workout as a summary (when linked and sharing is on). */

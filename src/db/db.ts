@@ -17,6 +17,7 @@ import type {
   SecretRow,
   SessionTemplate,
   Settings,
+  StepDay,
   SyncMetaRow,
   SyncOutboxRow,
   WeekOverride,
@@ -56,6 +57,7 @@ export class CutlineDB extends Dexie {
   syncOutbox!: EntityTable<SyncOutboxRow, 'key'>
   syncMeta!: EntityTable<SyncMetaRow, 'key'>
   partnerRecords!: EntityTable<PartnerRecordRow, 'key'>
+  steps!: EntityTable<StepDay, 'date'>
 
   constructor(name = DB_NAME) {
     super(name)
@@ -122,6 +124,20 @@ export class CutlineDB extends Dexie {
         if (!split) return
         await tx.table<GroceryItem, string>('groceryItems').bulkPut(split.items)
         await cache.put({ ...row, data: split.plan })
+      })
+
+    // v6: steps counted by the phone or imported from Apple Health, one row per
+    // day. The day's log keeps the steps everything reads, now with a source;
+    // every step count logged before this was typed in.
+    this.version(6)
+      .stores({ steps: 'date' })
+      .upgrade(async (tx) => {
+        await tx
+          .table<DailyLog, string>('dailyLogs')
+          .toCollection()
+          .modify((log) => {
+            if (log.steps !== undefined && log.stepsSource === undefined) log.stepsSource = 'manual'
+          })
       })
 
     this.on('populate', (tx) => {

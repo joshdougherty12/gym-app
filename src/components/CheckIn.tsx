@@ -1,6 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useId } from 'react'
 import { db } from '../db/db'
+import { setManualSteps } from '../db/steps'
+import { stepSourceOf } from '../lib/steps'
 import { displayBodyweight, formatNumber, inputWeightToLb, weightUnit } from '../lib/units'
 import type { DailyLog, Units } from '../types'
 import { Card } from './ui'
@@ -22,6 +24,9 @@ export function CheckIn({ date, units, targets }: { date: string; units: Units; 
   // With meals logged, calories and protein come from the meals (Food tab).
   const mealCount = useLiveQuery(() => db.meals.where('date').equals(date).count(), [date]) ?? 0
   const base = useId()
+  // Counted (Android) or imported (Apple Health) steps; a typed-in number wins over them.
+  const auto = useLiveQuery(() => db.steps.get(date), [date])
+  const stepSource = stepSourceOf(log)
 
   const fields: { key: NumField; label: string; suffix: string; target?: number; toStored: (v: number) => number; toShown: (v: number) => number }[] = [
     { key: 'weightLb', label: 'Weight', suffix: weightUnit(units), toStored: (v) => inputWeightToLb(v, units), toShown: (v) => displayBodyweight(v, units) },
@@ -61,13 +66,24 @@ export function CheckIn({ date, units, targets }: { date: string; units: Units; 
                     // Unchanged: don't re-save the rounded display value over the stored one.
                     if (t === e.target.defaultValue.trim()) return
                     const n = Number(t)
-                    if (t === '') void save(date, { [f.key]: undefined })
+                    if (f.key === 'steps') {
+                      if (t === '') void setManualSteps(date, undefined)
+                      else if (Number.isFinite(n) && n >= 0) void setManualSteps(date, n)
+                    } else if (t === '') void save(date, { [f.key]: undefined })
                     else if (Number.isFinite(n) && n >= 0) void save(date, { [f.key]: f.toStored(n) })
                   }}
                   className="num min-h-11 w-full min-w-0 bg-transparent text-3xl font-bold outline-none"
                 />
                 <span className="text-xs text-muted">{f.suffix}</span>
               </div>
+              )}
+              {f.key === 'steps' && (stepSource === 'sensor' || stepSource === 'health-import') && (
+                <p className="text-[11px] text-muted">{stepSource === 'sensor' ? 'Counted by phone' : 'From Apple Health'}</p>
+              )}
+              {f.key === 'steps' && stepSource === 'manual' && auto && auto.steps !== v && (
+                <button type="button" onClick={() => void setManualSteps(date, undefined)} className="min-h-11 text-left text-[11px] font-semibold text-accent">
+                  Use {auto.source === 'sensor' ? 'phone count' : 'Apple Health'} ({auto.steps.toLocaleString()})
+                </button>
               )}
             </div>
           )

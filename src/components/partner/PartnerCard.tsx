@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { mondayOf, shortDate, todayIso, WEEKDAY_SHORT, weekdayOf } from '../../lib/dates'
 import { displayWeight, formatNumber, weightUnit } from '../../lib/units'
 import { markEventSeen, sendEvent } from '../../partner/engine'
-import { usePartner, usePartnerInbox, usePartnerWorkouts } from '../../partner/hooks'
+import { usePartner, usePartnerInbox, usePartnerSteps, usePartnerWorkouts } from '../../partner/hooks'
 import { ago, eventText } from '../../partner/present'
 import { syncNow, useSyncStatus } from '../../partner/useSync'
 import type { Units } from '../../types'
@@ -19,6 +19,7 @@ export function PartnerCard({ units }: { units: Units }) {
   const today = todayIso()
   const workouts = usePartnerWorkouts(mondayOf(today))
   const inbox = usePartnerInbox(['highfive', 'nudge'])
+  const partnerSteps = usePartnerSteps(today)
   const partnerLeft = useSyncStatus((s) => s.partnerLeft)
   const [toastNode, toast] = useToast()
   // A few seconds between sends, so a double tap sends one.
@@ -74,6 +75,12 @@ export function PartnerCard({ units }: { units: Units }) {
           </div>
         )
       })}
+
+      {partnerSteps && (
+        <p className="mt-2 text-sm">
+          <span className="num text-lg font-semibold">{partnerSteps.steps.toLocaleString()}</span> <span className="text-muted">steps today</span>
+        </p>
+      )}
 
       {p.partner && !p.partner.sharesWorkouts ? (
         <p className="mt-2 text-sm text-muted">{name} isn’t sharing workouts.</p>

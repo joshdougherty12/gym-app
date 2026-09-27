@@ -4,7 +4,8 @@ import { z } from 'zod'
 // checked against these before it touches the database.
 
 /** Record types that travel between partners. */
-export const RECORD_TYPES = ['recipe', 'plan', 'grocery', 'member', 'wsum', 'event'] as const
+// 'steps' (1.9.0): older app versions skip record types they don't know, so adding one is safe.
+export const RECORD_TYPES = ['recipe', 'plan', 'grocery', 'member', 'wsum', 'event', 'steps'] as const
 export type RecordType = (typeof RECORD_TYPES)[number]
 
 const num = z.number().finite()
@@ -68,6 +69,14 @@ export const SharedRecipeNutrition = z.object({
   fatG: optNum,
 })
 export type SharedRecipeNutrition = z.infer<typeof SharedRecipeNutrition>
+
+/** Today's step count, one record per member (replaced each day). */
+export const StepsShareData = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  steps: z.number().int().min(0).max(100_000),
+  at: num,
+})
+export type StepsShareData = z.infer<typeof StepsShareData>
 
 export const EventData = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('highfive'), at: num, workoutId: z.string().max(80).optional() }),

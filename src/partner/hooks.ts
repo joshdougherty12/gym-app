@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { useSettings } from '../db/repo'
 import { portionSplit, type PortionSplit } from '../lib/partner/portions'
-import { EventData, MemberData, WorkoutSummaryData } from '../lib/partner/types'
+import { EventData, MemberData, StepsShareData, WorkoutSummaryData } from '../lib/partner/types'
 import type { PartnerLinkRow, PartnerRecordRow } from '../types'
 import { partnerAvailable } from './config'
 
@@ -80,4 +80,15 @@ export function usePartnerInbox(kinds: readonly EventData['kind'][]): InboxEvent
       })
       .sort((a, b) => b.data.at - a.data.at)
   }, [key])
+}
+
+/** The partner's shared step count for `date`, if they share steps and have synced that day. */
+export function usePartnerSteps(date: string): StepsShareData | null | undefined {
+  return useLiveQuery(async () => {
+    const link = await db.partner.get('link')
+    if (!link) return null
+    const row = (await db.partnerRecords.where('type').equals('steps').toArray()).find((r) => r.by !== link.memberId)
+    const d = row ? StepsShareData.safeParse(row.data) : null
+    return d?.success && d.data.date === date ? d.data : null
+  }, [date])
 }

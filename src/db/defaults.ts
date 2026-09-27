@@ -17,7 +17,7 @@ export const DEFAULT_REMINDERS: ReminderSettings = {
   tone: 'coach',
 }
 
-export const DEFAULT_PARTNER: PartnerSettings = { name: '', shareWorkouts: true, shareCalorieTarget: true }
+export const DEFAULT_PARTNER: PartnerSettings = { name: '', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false }
 
 export function defaultSettings(startDate: string = todayIso()): Settings {
   return {

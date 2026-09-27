@@ -75,6 +75,24 @@ both, and each keeps what is on their own phone.
 - Backups include the grocery list and saved recipes (they are also on this phone) but never the link
   credentials or the partner's records. Restoring a backup while linked re-pulls the shared kitchen.
 
+### Steps (1.9)
+
+- **Android app:** Settings → Steps → **Turn on step counting**, then **Allow** "Physical activity". The phone's
+  hardware step counter is read by a quiet foreground service (Android only counts while an app listens; a
+  silent "Counting steps" notification shows), plus a 15-minute WorkManager reading and a reading after every
+  reboot or app update. Steps count from when it was turned on. Per-day totals live natively
+  (`android/.../steps/StepLedger.java`, JUnit-tested: reboot resets, stale batched events, midnight split in
+  proportion to time) and are copied into the check-in when the app opens and every minute while it is open.
+- **iPhone (web app):** Settings → Steps explains an Apple Health Shortcut. Its link
+  `#/steps/import?date=YYYY-MM-DD&steps=N` (or `d=YYYY-MM-DD:N,...`) saves steps; values must be whole
+  numbers up to 100,000 within the last 60 days. Shortcuts' "Open URLs" always opens Safari, whose storage is
+  separate from a Home Screen web app, so Home Screen users copy the link to the clipboard in the Shortcut and
+  tap **Paste steps from Shortcut** on Today.
+- A typed-in number always wins for that day; clearing it goes back to the counted or imported value.
+  Today shows a ring against the step goal; Progress shows 7/30-day bars with the goal line.
+- **Partner:** "Share my steps" (off by default) sends today's count as an encrypted `steps` record.
+  Older app versions ignore the new record type; the server needs no change.
+
 ### Demo mode
 
 **Settings → Open demo mode** loads about ten weeks of generated history (the real progression engine

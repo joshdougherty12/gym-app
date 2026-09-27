@@ -8,6 +8,8 @@ import { useSessions, useSettings } from './db/repo'
 import { useReminderSync } from './hooks/useReminderSync'
 import { useTheme } from './hooks/useTheme'
 import { usePartnerSync } from './partner/useSync'
+import { useStepSync } from './hooks/useStepSync'
+import { StepImportScreen } from './screens/StepImportScreen'
 import { BodyScreen } from './screens/BodyScreen'
 import { FoodScreen } from './screens/FoodScreen'
 import { LinkCodeRoute, LinkScreen } from './screens/LinkScreen'
@@ -30,6 +32,7 @@ function Shell() {
   const workoutCount = useLiveQuery(() => db.workouts.count(), [])
   useReminderSync(settings, sessions)
   usePartnerSync()
+  useStepSync()
   // A brand-new install (no profile, nothing logged) starts with setup. Decided
   // once when the app opens, so finishing setup never bounces back into it.
   const [setup, setSetup] = useState<'unknown' | 'redirect' | 'done'>('unknown')
@@ -59,6 +62,7 @@ function Shell() {
           <Route path="/body" element={<BodyScreen />} />
           <Route path="/week12" element={<Week12Screen />} />
           <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/steps/import" element={<StepImportScreen />} />
           <Route path="/link" element={<LinkScreen />} />
           <Route path="/link/:code" element={<LinkCodeRoute />} />
           <Route path="*" element={<Placeholder title="Not found" text="Nothing here." />} />

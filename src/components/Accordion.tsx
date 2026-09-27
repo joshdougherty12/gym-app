@@ -11,6 +11,15 @@ function readOpen(): string | null {
   }
 }
 
+/** Open a Settings section the next time Settings is shown (a link from another screen). */
+export function openSettingsSection(id: string): void {
+  try {
+    sessionStorage.setItem(KEY, id)
+  } catch {
+    /* Settings opens with everything closed */
+  }
+}
+
 /** One open section at a time; remembers the open one while the app is open. */
 export function useAccordion(): { open: string | null; toggle: (id: string) => void } {
   const [open, setOpen] = useState<string | null>(readOpen)

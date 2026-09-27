@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { TargetBar, TrendChart } from '../components/charts'
+import { StepsChart } from '../components/StepsChart'
 import { useStrengthDrops } from '../components/StrengthWarning'
 import { Badge, Card, Loading, Screen, SectionTitle } from '../components/ui'
 import { PROGRAM_WEEKS } from '../data/program'
@@ -213,6 +214,11 @@ export function ProgressScreen() {
           )
         })}
         {vWeek === currentWeek && <p className="text-xs text-muted">This week so far. Muscles marked low may still get their sets later in the week.</p>}
+      </Card>
+
+      <SectionTitle>Steps</SectionTitle>
+      <Card>
+        <StepsChart logs={logs} today={today} goal={settings.stepGoal} />
       </Card>
 
       <SectionTitle>Adherence</SectionTitle>

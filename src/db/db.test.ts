@@ -160,7 +160,7 @@ describe('v5 partner-link upgrade', () => {
     const d = new CutlineDB(name)
     dbs.push(d)
     await d.open()
-    expect(d.verno).toBe(5)
+    expect(d.verno).toBeGreaterThanOrEqual(5)
     const items = (await d.groceryItems.toArray()).sort((a, b) => a.order - b.order)
     expect(items.map((i) => [i.item, i.checked])).toEqual([
       ['Spinach', false],

@@ -209,6 +209,8 @@ export interface PartnerSettings {
   name: string
   shareWorkouts: boolean
   shareCalorieTarget: boolean
+  /** Share today's step count (off unless turned on). */
+  shareSteps: boolean
 }
 
 export type Sex = 'male' | 'female' | 'unspecified'
@@ -302,16 +304,30 @@ export interface WorkoutLog {
   exerciseNotes?: Record<string, string>
 }
 
+/** Where a day's step count came from. */
+export type StepSource = 'sensor' | 'health-import' | 'manual'
+
 export interface DailyLog {
   date: string
   weightLb?: number
+  /** The day's steps as used everywhere (manual wins over counted or imported). */
   steps?: number
+  /** Absent on logs from before 1.9.0, which were all typed in (manual). */
+  stepsSource?: StepSource
   calories?: number
   proteinG?: number
   fatigue?: 1 | 2 | 3 | 4 | 5
 }
 
 export type CardioKind = 'zone2' | 'finisher' | 'walk' | 'other'
+
+/** Steps counted by the phone or imported from Apple Health for one day (the check-in uses it unless a manual value was typed). */
+export interface StepDay {
+  date: string
+  steps: number
+  source: Exclude<StepSource, 'manual'>
+  updatedAt: number
+}
 
 export interface CardioLog {
   id: string
@@ -504,7 +520,7 @@ export interface SyncMetaRow {
 /** Shared records that live only in sync: member profiles, workout summaries, high-fives and nudges. */
 export interface PartnerRecordRow {
   key: string
-  type: 'member' | 'wsum' | 'event'
+  type: 'member' | 'wsum' | 'event' | 'steps'
   id: string
   /** Member id of the phone that wrote it. */
   by: string
