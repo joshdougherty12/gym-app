@@ -5,6 +5,7 @@ import { setGroceryList, setItemChecked, getWeekPlan, saveWeekPlan } from '../db
 import { deleteRecipe, saveRecipe } from '../db/recipes'
 import { updateSettings } from '../db/repo'
 import { createHousehold, joinHousehold, LinkError, publishWorkout, sendEvent, syncOnce, unlink } from './engine'
+import { b64url } from '../lib/partner/crypto'
 import { FakeServer } from './fakeServer'
 import { markChanged } from './outbox'
 
@@ -162,11 +163,33 @@ describe('shared kitchen', () => {
   })
 
   it('stores only ciphertext on the server', async () => {
-    const { server, a, sync } = await linkedPair()
+    const { server, a, b, sync } = await linkedPair()
+    // Long, unique, case-sensitive plaintext markers: random ciphertext cannot
+    // match them by chance (short words like "Sam" matched base64 now and then).
+    await updateSettings({ partner: { name: 'Josh-marker-Q7Z4K9', shareWorkouts: true, shareCalorieTarget: true } }, a)
+    await updateSettings({ partner: { name: 'Sam-marker-W3X8P2', shareWorkouts: true, shareCalorieTarget: true } }, b)
     await saveRecipe(recipe('Secret family lasagna'), a)
+    await setGroceryList(await getWeekPlan(a), grocery, a)
     await sync()
-    const dump = JSON.stringify([...server.houses.values()].map((h) => [...h.rows.values()]))
-    expect(dump).not.toMatch(/lasagna|Josh|Sam|2400|recipe|grocery/i)
+    // It did travel, so the server rows below really carry it.
+    expect((await b.recipes.toArray()).map((r) => r.name)).toContain('Secret family lasagna')
+
+    const rows = [...server.houses.values()].flatMap((h) => [...h.rows.values()])
+    expect(rows.length).toBeGreaterThan(0)
+    // Every stored row is an opaque id, a version, a timestamp and a base64url blob; nothing else.
+    for (const r of rows) {
+      expect(Object.keys(r).sort()).toEqual(['data', 'rid', 'ts', 'v'])
+      expect(r.rid).toMatch(/^[A-Za-z0-9_-]+$/)
+      expect(r.data).toMatch(/^[A-Za-z0-9_-]+$/)
+    }
+    // The plaintext appears neither in what the server holds nor in the decoded ciphertext bytes.
+    const dump = JSON.stringify(rows)
+    const decoded = rows.map((r) => new TextDecoder().decode(b64url.decode(r.data))).join('\n')
+    const markers = ['Secret family lasagna', 'Josh-marker-Q7Z4K9', 'Sam-marker-W3X8P2', 'calorieTarget', '"t":"recipe"', '"t":"member"', '"t":"grocery"', 'Spinach', 'Lemons']
+    for (const m of markers) {
+      expect(dump).not.toContain(m)
+      expect(decoded).not.toContain(m)
+    }
   })
 })
 
