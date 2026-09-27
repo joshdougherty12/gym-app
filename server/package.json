@@ -1,0 +1,20 @@
+{
+  "name": "righttrack-sync",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "End-to-end-encrypted partner sync for the app. Stores only ciphertext.",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "test": "vitest run",
+    "typecheck": "wrangler types && tsc --noEmit",
+    "cf-typegen": "wrangler types"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/workers-types": "^5.20260927.1",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.11",
+    "wrangler": "^4.141.0"
+  }
+}

@@ -1,0 +1,19 @@
+// Partner sync server. Placeholder name; no account_id on purpose (set by
+// `wrangler login` on the account that deploys it). See README.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "righttrack-sync",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-15",
+  "observability": { "enabled": false },
+  "durable_objects": {
+    "bindings": [{ "name": "HOUSEHOLD", "class_name": "Household" }]
+  },
+  // SQLite-backed Durable Objects are the ones available on the Workers free plan.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Household"] }],
+  "vars": {
+    // Comma-separated browser origins allowed to call the API: the web app,
+    // and the Android app's WebView (https://localhost; capacitor://localhost for iOS WebViews).
+    "ALLOWED_ORIGINS": "https://joshdougherty12.github.io,https://localhost,capacitor://localhost"
+  }
+}
