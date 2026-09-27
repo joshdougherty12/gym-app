@@ -35,8 +35,8 @@ async function linkedPair() {
   const deps = server.deps()
   const a = await phone()
   const b = await phone()
-  await updateSettings({ partner: { name: 'Josh', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true }, calorieTarget: 2400 }, a)
-  await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true }, calorieTarget: 1600 }, b)
+  await updateSettings({ partner: { name: 'Josh', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true }, calorieTarget: 2400 }, a)
+  await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true }, calorieTarget: 1600 }, b)
   const code = await createHousehold(a, deps)
   await joinHousehold(code, b, deps)
   const sync = async () => {
@@ -91,11 +91,11 @@ describe('linking', () => {
       const me = (await d.partner.get('link'))?.memberId
       return (await d.partnerRecords.where('type').equals('member').toArray()).find((r) => r.by !== me)?.data
     }
-    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, sharesActivities: true, calorieTarget: 1600 })
-    expect(await theirs(b)).toEqual({ name: 'Josh', sharesWorkouts: true, sharesActivities: true, calorieTarget: 2400 })
-    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: false, shareSteps: false, shareActivities: true } }, b)
+    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, sharesActivities: true, sharesRoutes: true, calorieTarget: 1600 })
+    expect(await theirs(b)).toEqual({ name: 'Josh', sharesWorkouts: true, sharesActivities: true, sharesRoutes: true, calorieTarget: 2400 })
+    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: false, shareSteps: false, shareActivities: true, shareRoutes: true } }, b)
     await sync()
-    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, sharesActivities: true })
+    expect(await theirs(a)).toEqual({ name: 'Sam', sharesWorkouts: true, sharesActivities: true, sharesRoutes: true })
   })
 })
 
@@ -166,8 +166,8 @@ describe('shared kitchen', () => {
     const { server, a, b, sync } = await linkedPair()
     // Long, unique, case-sensitive plaintext markers: random ciphertext cannot
     // match them by chance (short words like "Sam" matched base64 now and then).
-    await updateSettings({ partner: { name: 'Josh-marker-Q7Z4K9', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, a)
-    await updateSettings({ partner: { name: 'Sam-marker-W3X8P2', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, b)
+    await updateSettings({ partner: { name: 'Josh-marker-Q7Z4K9', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true } }, a)
+    await updateSettings({ partner: { name: 'Sam-marker-W3X8P2', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true } }, b)
     await saveRecipe(recipe('Secret family lasagna'), a)
     await setGroceryList(await getWeekPlan(a), grocery, a)
     await sync()
@@ -205,7 +205,7 @@ describe('workouts and events', () => {
     expect(wsum).toHaveLength(1)
     expect(wsum[0]?.data).toMatchObject({ minutes: 45, setsDone: 1 })
     expect(JSON.stringify(wsum[0]?.data)).not.toContain('201.4')
-    await updateSettings({ partner: { name: 'Josh', shareWorkouts: false, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, a)
+    await updateSettings({ partner: { name: 'Josh', shareWorkouts: false, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true } }, a)
     await sync()
     expect(await b.partnerRecords.where('type').equals('wsum').count()).toBe(0)
   })
@@ -251,14 +251,47 @@ describe('shared steps', () => {
     const stepsOnA = async () => (await a.partnerRecords.where('type').equals('steps').toArray()).map((r) => r.data as { date: string; steps: number })
     await sync()
     expect(await stepsOnA()).toEqual([]) // off by default
-    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: true, shareActivities: true } }, b)
+    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: true, shareActivities: true, shareRoutes: true } }, b)
     await sync()
     expect((await stepsOnA()).map((s) => [s.date, s.steps])).toEqual([[today, 6400]])
     await saveAutoSteps([{ date: today, steps: 9000 }], 'sensor', b)
     await sync()
     expect((await stepsOnA()).map((s) => s.steps)).toEqual([9000])
-    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, b)
+    await updateSettings({ partner: { name: 'Sam', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true } }, b)
     await sync()
     expect(await stepsOnA()).toEqual([])
+  })
+})
+
+describe('shared routes', () => {
+  it('delivers a route to the partner encrypted, and takes it back when route sharing is turned off', async () => {
+    const { server, a, b, sync } = await linkedPair()
+    const { publishActivity } = await import('./engine')
+    const { buildActivity } = await import('../lib/activity/finish')
+    const { makeTrack } = await import('../lib/activity/testTrack')
+    const { METERS_PER_MILE } = await import('../lib/activity/track')
+    const { ActivityRouteData } = await import('../lib/partner/types')
+    const now = Date.now()
+    const act = buildActivity(
+      { activityId: 'run-1', type: 'run', startedAt: now - 600_000, source: 'web', events: [], autoPause: true, splitCue: false, splitM: METERS_PER_MILE },
+      makeTrack([{ seconds: 600, speed: 3 }], now - 600_000, 41.23456, -76.54321),
+      now,
+      180,
+    )
+    await publishActivity(act, a)
+    await sync()
+    const onB = await b.partnerRecords.get('aroute:run-1')
+    expect(onB).toBeDefined()
+    const route = ActivityRouteData.parse(onB?.data)
+    expect(route.segments.flat().length).toBeGreaterThan(1)
+    expect(await b.partnerRecords.get('asum:run-1')).toBeDefined()
+    // The server only ever held ciphertext: no coordinate digits from the route.
+    expect(JSON.stringify(server)).not.toContain('41.2345')
+    expect(JSON.stringify(server)).not.toContain('-76.5432')
+
+    await updateSettings({ partner: { name: 'Josh', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: false } }, a)
+    await sync()
+    expect(await b.partnerRecords.get('aroute:run-1')).toBeUndefined()
+    expect(await b.partnerRecords.get('asum:run-1')).toBeDefined() // the summary stays
   })
 })

@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { RouteSvg } from '../components/activity/RouteSvg'
 import { useChartColors } from '../components/charts'
+import { openSettingsSection } from '../components/Accordion'
 import { Icon } from '../components/Icon'
 import { Button, Card, Loading, Screen, SectionTitle, Sheet } from '../components/ui'
 import { db } from '../db/db'
@@ -13,6 +14,7 @@ import { distUnit, fmtDistance, fmtDuration, fmtElevation, fmtRate } from '../li
 import { ACTIVITY } from '../lib/activity/track'
 import { shortDate, WEEKDAY_SHORT, weekdayOf } from '../lib/dates'
 import { timestamp } from '../lib/id'
+import { useOwnRouteShared, usePartner } from '../partner/hooks'
 import type { Activity, Units } from '../types'
 
 const RouteMap = lazy(() => import('../components/activity/RouteMap'))
@@ -71,6 +73,8 @@ function SplitsChart({ a, units }: { a: Activity; units: Units }) {
 /** One saved activity: map, stats, splits, GPX export, delete. */
 export function ActivityScreen() {
   const { id = '' } = useParams()
+  const routeShared = useOwnRouteShared(id)
+  const partner = usePartner()
   const settings = useSettings()
   const a = useLiveQuery(async () => (await db.activities.get(id)) ?? null, [id])
   const navigate = useNavigate()
@@ -96,6 +100,14 @@ export function ActivityScreen() {
         </Suspense>
       ) : (
         <p className="rounded-xl bg-surface-2 p-4 text-sm text-muted">No GPS route was recorded.</p>
+      )}
+      {routeShared && partner?.link && (
+        <p className="mt-2 flex flex-wrap items-center gap-1 text-sm text-muted">
+          Shared with {partner.partnerName}: route and map ·{' '}
+          <Link to="/settings" onClick={() => openSettingsSection('partner')} className="font-semibold text-accent underline-offset-2 hover:underline">
+            Change
+          </Link>
+        </p>
       )}
 
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -185,7 +197,7 @@ export function ActivityScreen() {
           Delete {prof.noun}
         </Button>
       </div>
-      <p className="mt-3 text-xs text-muted">Elevation is approximate (GPS altitude). The route stays on this phone.</p>
+      <p className="mt-3 text-xs text-muted">Elevation is approximate (GPS altitude).{routeShared ? '' : ' The route stays on this phone.'}</p>
 
       <Sheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title={`Delete ${prof.noun}?`}>
         <p className="text-sm">The route, stats and its cardio entry are deleted.</p>

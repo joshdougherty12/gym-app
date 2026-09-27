@@ -28,7 +28,7 @@ function webBase(): string {
   return WEB_APP_URL
 }
 
-export const SHARED_TEXT = 'Shared: the kitchen (week plan, grocery list, saved recipes), plus what you choose in Settings → Partner: workout summaries, run and ride summaries (never the route), steps and your calorie target. Private: body weight, check-ins, photos and your meal log.'
+export const SHARED_TEXT = 'Shared: the kitchen (week plan, grocery list, saved recipes), plus what you choose in Settings → Partner: workout summaries, run and ride summaries, routes and maps (last 30 days), steps and your calorie target. Private: body weight, check-ins, photos and your meal log.'
 
 /**
  * "What your partner sees": every category that can be shared, each with its
@@ -43,7 +43,14 @@ export function SharingList({ settings, onChange }: { settings: Settings; onChan
       <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">What your partner sees</p>
       <div className="mt-1 divide-y divide-line">
         <Toggle label="Workout summaries" hint="Session name, date, time, sets and new records. No body weight." checked={s.shareWorkouts} onChange={(shareWorkouts) => onChange({ shareWorkouts })} />
-        <Toggle label="Run, walk and ride summaries" hint="Type, date, distance, moving time and pace. Never the route or where you were." checked={s.shareActivities} onChange={(shareActivities) => onChange({ shareActivities })} />
+        <Toggle label="Run, walk and ride summaries" hint="Type, date, distance, moving time and pace." checked={s.shareActivities} onChange={(shareActivities) => onChange({ shareActivities })} />
+        <Toggle
+          label="Routes and maps"
+          hint={s.shareActivities ? 'The full route line on a map, including where it started and ended. Kept for 30 days, then only the summary stays.' : 'Turn on run, walk and ride summaries to share routes.'}
+          checked={s.shareActivities && s.shareRoutes}
+          disabled={!s.shareActivities}
+          onChange={(shareRoutes) => onChange({ shareRoutes })}
+        />
         <Toggle label="Steps" hint="Today’s step count. Off unless you turn it on." checked={s.shareSteps} onChange={(shareSteps) => onChange({ shareSteps })} />
         <Toggle label="Calorie target" hint="Your daily target, to suggest each person’s portion of shared dinners." checked={s.shareCalorieTarget} onChange={(shareCalorieTarget) => onChange({ shareCalorieTarget })} />
         <div className="py-2">

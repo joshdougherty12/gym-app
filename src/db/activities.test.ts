@@ -142,7 +142,7 @@ describe('partner activity summary', () => {
     expect(JSON.stringify(row?.data)).not.toMatch(/lat|lon|route|40\.|-75/)
     expect(await d.syncOutbox.get(`asum:${a.id}`)).toBeDefined()
 
-    await updateSettings({ partner: { name: '', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: false } }, d)
+    await updateSettings({ partner: { name: '', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: false, shareRoutes: true } }, d)
     await refreshOwnRecords(d)
     expect(await d.partnerRecords.get(`asum:${a.id}`)).toBeUndefined()
     await publishActivity(a, d)
@@ -153,11 +153,90 @@ describe('partner activity summary', () => {
     const d = await fresh()
     await d.partner.put(link)
     const a = buildActivity(header, makeTrack([{ seconds: 300, speed: 3 }]), T0 + 300_000, 180)
-    await updateSettings({ partner: { name: '', shareWorkouts: false, shareCalorieTarget: true, shareSteps: false, shareActivities: true } }, d)
+    await updateSettings({ partner: { name: '', shareWorkouts: false, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true } }, d)
     await refreshOwnRecords(d)
     await publishActivity(a, d)
     expect(await d.partnerRecords.get(`asum:${a.id}`)).toBeDefined()
     const member = await d.partnerRecords.get('member:me')
     expect(member?.data).toMatchObject({ sharesWorkouts: false, sharesActivities: true })
+  })
+})
+
+describe('partner route sharing', () => {
+  const link: PartnerLinkRow = { id: 'link', householdId: 'h', secret: 's', rootKey: 'k', memberId: 'me', role: 'creator', status: 'linked', createdAt: 0, cursor: 0 }
+  const recent = () => {
+    const now = Date.now()
+    return buildActivity({ ...header, startedAt: now - 300_000 }, makeTrack([{ seconds: 300, speed: 3 }], now - 300_000), now, 180)
+  }
+  const partner = (over: Partial<{ shareActivities: boolean; shareRoutes: boolean }>) => ({
+    partner: { name: '', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true, ...over },
+  })
+
+  it('shares the route only when "Routes and maps" is on, and keeps the summary coordinate-free', async () => {
+    const d = await fresh()
+    await d.partner.put(link)
+    const a = recent()
+    await updateSettings(partner({ shareRoutes: false }), d)
+    await publishActivity(a, d)
+    expect(await d.partnerRecords.get(`asum:${a.id}`)).toBeDefined()
+    expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeUndefined()
+
+    await updateSettings(partner({ shareRoutes: true }), d)
+    await publishActivity(a, d)
+    expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeDefined()
+    expect(await d.syncOutbox.get(`aroute:${a.id}`)).toBeDefined()
+    expect(JSON.stringify((await d.partnerRecords.get(`asum:${a.id}`))?.data)).not.toMatch(/lat|lon|route|segments|40\.|-75/)
+    await refreshOwnRecords(d)
+    expect((await d.partnerRecords.get('member:me'))?.data).toMatchObject({ sharesActivities: true, sharesRoutes: true })
+  })
+
+  it('withdraws shared routes when route sharing, or activity sharing, is turned off', async () => {
+    for (const off of [{ shareRoutes: false }, { shareActivities: false }]) {
+      const d = await fresh()
+      await d.partner.put(link)
+      const a = recent()
+      await updateSettings(partner({}), d)
+      await publishActivity(a, d)
+      expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeDefined()
+      await d.syncOutbox.clear()
+      await updateSettings(partner(off), d)
+      await refreshOwnRecords(d)
+      expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeUndefined()
+      // The withdrawal is queued to sync, so the partner's phone drops it too.
+      expect(await d.syncOutbox.get(`aroute:${a.id}`)).toBeDefined()
+      expect((await d.partnerRecords.get('member:me'))?.data).toMatchObject({ sharesRoutes: false })
+    }
+  })
+
+  it('never shares routes older than 30 days, and withdraws a shared route once it expires', async () => {
+    const d = await fresh()
+    await d.partner.put(link)
+    await updateSettings(partner({}), d)
+    const old = { ...recent(), id: 'old', startedAt: Date.now() - 31 * 86_400_000 }
+    await publishActivity(old, d)
+    expect(await d.partnerRecords.get('asum:old')).toBeDefined()
+    expect(await d.partnerRecords.get('aroute:old')).toBeUndefined()
+
+    const a = recent()
+    await publishActivity(a, d)
+    const row = await d.partnerRecords.get(`aroute:${a.id}`)
+    if (!row) throw new Error('route not shared')
+    // Age the shared route past 30 days: the next refresh withdraws it and keeps the summary.
+    await d.partnerRecords.put({ ...row, data: { ...(row.data as object), startedAt: Date.now() - 31 * 86_400_000 } })
+    await refreshOwnRecords(d)
+    expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeUndefined()
+    expect(await d.partnerRecords.get(`asum:${a.id}`)).toBeDefined()
+  })
+
+  it('withdraws the route with the summary when the activity is deleted', async () => {
+    const d = await fresh()
+    await d.partner.put(link)
+    await updateSettings(partner({}), d)
+    const a = recent()
+    await saveActivity(a, d)
+    expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeDefined()
+    await deleteActivity(a.id, d)
+    expect(await d.partnerRecords.get(`aroute:${a.id}`)).toBeUndefined()
+    expect(await d.partnerRecords.get(`asum:${a.id}`)).toBeUndefined()
   })
 })

@@ -2,7 +2,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db/db'
 import { useSettings } from '../db/repo'
 import { portionSplit, type PortionSplit } from '../lib/partner/portions'
-import { ActivitySummaryData, EventData, MemberData, StepsShareData, WorkoutSummaryData } from '../lib/partner/types'
+import { ActivityRouteData, ActivitySummaryData, EventData, MemberData, StepsShareData, WorkoutSummaryData } from '../lib/partner/types'
+import { routeShareable } from '../lib/partner/activityRoute'
+import { syncKey } from './outbox'
 import type { PartnerLinkRow, PartnerRecordRow } from '../types'
 import { partnerAvailable } from './config'
 
@@ -112,4 +114,34 @@ export function usePartnerSteps(date: string): StepsShareData | null | undefined
     const d = row ? StepsShareData.safeParse(row.data) : null
     return d?.success && d.data.date === date ? d.data : null
   }, [date])
+}
+
+export interface PartnerActivityDetail {
+  summary: ActivitySummaryData
+  /** Present only while the partner shares routes and the activity is from the last 30 days. */
+  route: ActivityRouteData | null
+}
+
+/** One of the partner's shared activities, with its route when shared; null if it isn't (or is no longer) shared. */
+export function usePartnerActivity(id: string): PartnerActivityDetail | null | undefined {
+  return useLiveQuery(async () => {
+    const link = await db.partner.get('link')
+    if (!link) return null
+    const [s, r] = await Promise.all([db.partnerRecords.get(syncKey('asum', id)), db.partnerRecords.get(syncKey('aroute', id))])
+    if (!s || s.by === link.memberId) return null
+    const summary = ActivitySummaryData.safeParse(s.data)
+    if (!summary.success) return null
+    const route = r && r.by !== link.memberId ? ActivityRouteData.safeParse(r.data) : null
+    return { summary: summary.data, route: route?.success && routeShareable(route.data) ? route.data : null }
+  }, [id])
+}
+
+/** Whether this phone's own activity route is currently shared with the partner. */
+export function useOwnRouteShared(id: string): boolean | undefined {
+  return useLiveQuery(async () => {
+    const link = await db.partner.get('link')
+    if (!link || link.status !== 'linked') return false
+    const r = await db.partnerRecords.get(syncKey('aroute', id))
+    return !!r && r.by === link.memberId
+  }, [id])
 }

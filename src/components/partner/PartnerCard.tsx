@@ -93,14 +93,19 @@ export function PartnerCard({ units }: { units: Units }) {
           {(activities ?? []).slice(0, 3).map((a) => {
             const r = fmtRate(a.data.type, a.data.distanceM > 0 ? a.data.avgSpeedMps : null, units)
             return (
-              <li key={a.key} className="rounded-xl bg-surface-2 p-3">
-                <p className="font-semibold">
-                  {ACTIVITY[a.data.type].label} <span className="font-normal text-muted">· {dayLabel(a.data.date)}</span>
-                </p>
-                <p className="num text-lg">
-                  {fmtDistance(a.data.distanceM, units)} {distUnit(units)} · {fmtDuration(a.data.movingMs)} · {r.value}
-                  {r.unit}
-                </p>
+              <li key={a.key}>
+                <Link to={`/partner/activity/${a.id}`} className="flex items-center gap-2 rounded-xl bg-surface-2 p-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">
+                      {ACTIVITY[a.data.type].label} <span className="font-normal text-muted">· {dayLabel(a.data.date)}</span>
+                    </span>
+                    <span className="num block text-lg">
+                      {fmtDistance(a.data.distanceM, units)} {distUnit(units)} · {fmtDuration(a.data.movingMs)} · {r.value}
+                      {r.unit}
+                    </span>
+                  </span>
+                  <Icon name="chevronRight" className="size-5 text-muted" />
+                </Link>
               </li>
             )
           })}

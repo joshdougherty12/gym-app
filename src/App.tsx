@@ -11,6 +11,7 @@ import { usePartnerSync } from './partner/useSync'
 import { useStepSync } from './hooks/useStepSync'
 import { StepImportScreen } from './screens/StepImportScreen'
 import { ActivitiesScreen, ActivityScreen } from './screens/ActivityScreen'
+import { PartnerActivityScreen } from './screens/PartnerActivityScreen'
 import { TrackScreen } from './screens/TrackScreen'
 import { useTracker } from './tracker/store'
 import { BodyScreen } from './screens/BodyScreen'
@@ -86,6 +87,7 @@ function Shell() {
           <Route path="/activity/track" element={<TrackScreen />} />
           <Route path="/activity/:id" element={<ActivityScreen />} />
           <Route path="/activities" element={<ActivitiesScreen />} />
+          <Route path="/partner/activity/:id" element={<PartnerActivityScreen />} />
           <Route path="/link" element={<LinkScreen />} />
           <Route path="/link/:code" element={<LinkCodeRoute />} />
           <Route path="*" element={<Placeholder title="Not found" text="Nothing here." />} />

@@ -219,14 +219,15 @@ export function Segmented<T extends string>({
   )
 }
 
-export function Toggle({ label, checked, onChange, hint }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string }) {
+export function Toggle({ label, checked, onChange, hint, disabled }: { label: string; checked: boolean; onChange: (v: boolean) => void; hint?: string; disabled?: boolean }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="flex min-h-11 w-full items-center gap-3 text-left"
+      className="flex min-h-11 w-full items-center gap-3 text-left disabled:opacity-40"
     >
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium">{label}</span>

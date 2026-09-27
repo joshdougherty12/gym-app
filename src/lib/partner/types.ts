@@ -4,8 +4,8 @@ import { z } from 'zod'
 // checked against these before it touches the database.
 
 /** Record types that travel between partners. */
-// 'steps' (1.9.0), 'asum' (1.10.0): older app versions skip record types they don't know, so adding one is safe.
-export const RECORD_TYPES = ['recipe', 'plan', 'grocery', 'member', 'wsum', 'event', 'steps', 'asum'] as const
+// 'steps' (1.9.0), 'asum' (1.10.0), 'aroute' (1.10.1): older app versions skip record types they don't know, so adding one is safe.
+export const RECORD_TYPES = ['recipe', 'plan', 'grocery', 'member', 'wsum', 'event', 'steps', 'asum', 'aroute'] as const
 export type RecordType = (typeof RECORD_TYPES)[number]
 
 const num = z.number().finite()
@@ -45,6 +45,8 @@ export const MemberData = z.object({
   sharesWorkouts: z.boolean(),
   /** 1.10.0+: shares run and ride summaries (absent from older versions, which share none). */
   sharesActivities: z.boolean().optional(),
+  /** 1.10.1+: also shares routes and maps of recent activities. */
+  sharesRoutes: z.boolean().optional(),
 })
 export type MemberData = z.infer<typeof MemberData>
 
@@ -139,3 +141,26 @@ export const PlanData = z.object({
     })
     .optional(),
 })
+
+/** Most route points one shared activity carries (about 12 KB of JSON: far under the server's 64 KiB record cap). */
+export const MAX_SHARED_ROUTE_POINTS = 400
+
+/**
+ * The route of a shared activity, sent only while "Routes and maps" is on and
+ * only for activities from the last 30 days. A separate record type (keyed by
+ * the activity id) so the activity summary stays summary-only and older app
+ * versions, which don't know this type, simply skip it.
+ */
+export const ActivityRouteData = z
+  .object({
+    startedAt: num,
+    /** One array per segment; [lat, lon] rounded to 5 decimals (about 1 m). */
+    segments: z
+      .array(z.array(z.tuple([num.min(-90).max(90), num.min(-180).max(180)])).max(MAX_SHARED_ROUTE_POINTS))
+      .max(50)
+      .refine((segs) => segs.reduce((n, s) => n + s.length, 0) <= MAX_SHARED_ROUTE_POINTS, 'too many points'),
+    splitM: num.min(0).max(100_000),
+    splits: z.array(z.object({ index: num, distanceM: num.min(0), movingMs: num.min(0) }).strict()).max(200),
+  })
+  .strict()
+export type ActivityRouteData = z.infer<typeof ActivityRouteData>

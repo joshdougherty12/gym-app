@@ -17,7 +17,7 @@ export const DEFAULT_REMINDERS: ReminderSettings = {
   tone: 'coach',
 }
 
-export const DEFAULT_PARTNER: PartnerSettings = { name: '', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true }
+export const DEFAULT_PARTNER: PartnerSettings = { name: '', shareWorkouts: true, shareCalorieTarget: true, shareSteps: false, shareActivities: true, shareRoutes: true }
 
 export const DEFAULT_ACTIVITY: ActivitySettings = { autoPause: true, splitCue: false, lastType: 'run', introSeen: false, showMap: true }
 

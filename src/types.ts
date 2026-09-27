@@ -226,6 +226,8 @@ export interface PartnerSettings {
   shareSteps: boolean
   /** Share run, walk and ride summaries: type, date, distance, time, pace (1.10.0). */
   shareActivities: boolean
+  /** Also share each activity's route on a map, for 30 days (1.10.1). Only while shareActivities is on. */
+  shareRoutes: boolean
 }
 
 export type Sex = 'male' | 'female' | 'unspecified'
@@ -539,7 +541,7 @@ export interface SyncMetaRow {
 /** Shared records that live only in sync: member profiles, workout summaries, high-fives and nudges. */
 export interface PartnerRecordRow {
   key: string
-  type: 'member' | 'wsum' | 'event' | 'steps' | 'asum'
+  type: 'member' | 'wsum' | 'event' | 'steps' | 'asum' | 'aroute'
   id: string
   /** Member id of the phone that wrote it. */
   by: string
