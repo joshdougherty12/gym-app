@@ -2,7 +2,7 @@
 // `wrangler login` on the account that deploys it). See README.md.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "righttrack-sync",
+  "name": "partner-sync",
   "main": "src/index.ts",
   "compatibility_date": "2026-08-15",
   "observability": { "enabled": false },

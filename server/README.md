@@ -57,8 +57,8 @@ None of this needs a Cloudflare account.
 
 1. `cd server && npx wrangler login` (log in to **the account meant for this app**).
 2. Optional: change `name` in `wrangler.jsonc` (it becomes part of the URL).
-3. `npx wrangler deploy`. It prints the URL, e.g. `https://righttrack-sync.<subdomain>.workers.dev`.
-4. Check it: `curl https://righttrack-sync.<subdomain>.workers.dev/v1/health` gives `{"ok":true}`.
+3. `npx wrangler deploy`. It prints the URL, e.g. `https://partner-sync.<subdomain>.workers.dev`.
+4. Check it: `curl https://partner-sync.<subdomain>.workers.dev/v1/health` gives `{"ok":true}`.
 5. If the web app moves off `https://joshdougherty12.github.io`, update `ALLOWED_ORIGINS` and deploy again.
 
 Then point the apps at it:
@@ -67,7 +67,7 @@ Then point the apps at it:
   **Variables** → New repository variable `VITE_SYNC_URL` = the Worker URL (no trailing slash).
   Re-run the "Test and deploy" workflow (or push). The deploy workflow passes it to `npm run build`.
 - **Android app:** build with the variable set, e.g. in Git Bash from the repo root:
-  `VITE_SYNC_URL=https://righttrack-sync.<subdomain>.workers.dev npm run build:android`, then
+  `VITE_SYNC_URL=https://partner-sync.<subdomain>.workers.dev npm run build:android`, then
   `./gradlew.bat assembleRelease` in `android/`. (Or put `VITE_SYNC_URL=...` in a gitignored
   `.env.production.local` in the repo root so every build picks it up.)
 
