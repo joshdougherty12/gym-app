@@ -1,4 +1,4 @@
-# CLAUDE.md: RightTrack, formerly Cutline (personal gym app)
+# CLAUDE.md: RightPace, formerly RightTrack, originally Cutline (personal gym app)
 
 Personal project. The spec is `../gym prompt.md`, built in six phases, stopping after each one for
 review.

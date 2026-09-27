@@ -95,7 +95,7 @@ export function SettingsScreen() {
               {settings.profile.sessionMinutes} min sessions{settings.profile.limitationNotes ? ` · ${settings.profile.limitationNotes}` : ''}
             </p>
           ) : (
-            <p className="text-sm text-muted">Tell RightTrack about you so targets, the program and meal ideas fit.</p>
+            <p className="text-sm text-muted">Tell RightPace about you so targets, the program and meal ideas fit.</p>
           )}
           <Link to="/welcome?existing=1" className="flex min-h-11 items-center justify-center rounded-xl bg-accent font-bold text-accent-ink">
             {settings.profile ? 'Edit profile' : 'Set up profile'}

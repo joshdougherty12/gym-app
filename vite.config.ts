@@ -17,9 +17,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'RightTrack',
-        short_name: 'RightTrack',
-        description: 'Personal training, fat-loss and progress tracker. Local only.',
+        name: 'RightPace',
+        short_name: 'RightPace',
+        description: 'RightPace — Get there the right way. Workouts, meals and recipes, with a coach that keeps you on pace.',
         theme_color: '#121416',
         background_color: '#121416',
         display: 'standalone',

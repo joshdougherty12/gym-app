@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'com.joshdougherty.cutline',
-  appName: 'RightTrack',
+  appName: 'RightPace',
   webDir: 'dist',
   android: {
     // Dark background behind the web view while it loads.
