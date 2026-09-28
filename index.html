@@ -16,6 +16,8 @@
         var t = localStorage.getItem('cutline-theme') || 'system'
         var dark = t === 'dark' || (t === 'system' && !matchMedia('(prefers-color-scheme: light)').matches)
         document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        var a = localStorage.getItem('cutline-accent')
+        if (a) document.documentElement.dataset.accent = a
       } catch (e) {}
     </script>
   </head>

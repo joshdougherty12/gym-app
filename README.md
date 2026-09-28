@@ -142,6 +142,14 @@ both, and each keeps what is on their own phone.
   range to that type's default, so 8 reps don't become 8 seconds.
 - Dexie v8 renames stored "Weighted" pull-ups the user hadn't renamed and takes the added-weight setting off timed holds.
 
+### Accent colors (1.12)
+
+- **Settings → Display → Accent color:** Orange (default), Barbie pink or Olive drab. Barbie pink also turns every
+  checkmark into a heart and scatters faint little hearts over the background. Until one is picked, a linked
+  couple's phones choose their own (`src/lib/accent.ts`): pink when this phone's name starts with "Soph" and the
+  partner's with "Jo", olive drab the other way round, orange for everyone else.
+- On that same "Soph" phone, a full-screen note from "Hubband" opens with the app once a day (`LoveNote.tsx`).
+
 ### Demo mode
 
 **Settings → Open demo mode** loads about ten weeks of generated history (the real progression engine

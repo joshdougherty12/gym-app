@@ -118,6 +118,64 @@ body {
   border-radius: 6px;
 }
 
+/*
+ * Accent colors (Settings -> Display, data-accent on <html>). Orange is the
+ * default above. Barbie pink and olive drab also tint the neutrals a touch.
+ */
+:root[data-accent='pink'] {
+  --bg: #171216;
+  --surface: #201a1f;
+  --surface-2: #2b2229;
+  --line: #3b2e38;
+  --accent: #ff4fae;
+  --accent-ink: #1a0b14;
+  --accent-soft: rgb(255 79 174 / 0.16);
+  --chart-1: #ff4fae;
+}
+
+:root[data-theme='light'][data-accent='pink'] {
+  --bg: #fdf1f7;
+  --surface: #ffffff;
+  --surface-2: #f8e3ee;
+  --line: #eed0df;
+  --accent: #d0187c;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(208 24 124 / 0.1);
+  --chart-1: #d0187c;
+}
+
+:root[data-accent='olive'] {
+  --bg: #121410;
+  --surface: #1a1d17;
+  --surface-2: #242820;
+  --line: #33382c;
+  --accent: #a4ae5e;
+  --accent-ink: #11130c;
+  --accent-soft: rgb(164 174 94 / 0.16);
+  --chart-1: #a4ae5e;
+}
+
+:root[data-theme='light'][data-accent='olive'] {
+  --bg: #f4f4ee;
+  --surface: #ffffff;
+  --surface-2: #e9eadf;
+  --line: #d6d8c6;
+  --accent: #4b5320;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(75 83 32 / 0.12);
+  --chart-1: #4b5320;
+}
+
+/* Barbie pink: little hearts scattered over the background. */
+:root[data-accent='pink'] body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' fill='%23ff4fae' fill-opacity='.1'%3E%3Cdefs%3E%3Cpath id='h' d='M12 21s-7.5-4.6-10-9.3C.3 8.4 2.1 4.5 5.8 4.1c2.1-.2 3.9.9 5 2.6 1.1-1.7 2.9-2.8 5-2.6 3.7.4 5.5 4.3 3.8 7.6C19.5 16.4 12 21 12 21z'/%3E%3C/defs%3E%3Cuse href='%23h' transform='translate(14 18) rotate(-14 12 12) scale(.8)'/%3E%3Cuse href='%23h' transform='translate(96 8) rotate(12 12 12) scale(.55)'/%3E%3Cuse href='%23h' transform='translate(62 70) rotate(-6 12 12) scale(1.05)'/%3E%3Cuse href='%23h' transform='translate(128 96) rotate(18 12 12) scale(.7)'/%3E%3Cuse href='%23h' transform='translate(20 118) rotate(8 12 12) scale(.6)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+:root[data-theme='light'][data-accent='pink'] body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' fill='%23e0218a' fill-opacity='.1'%3E%3Cdefs%3E%3Cpath id='h' d='M12 21s-7.5-4.6-10-9.3C.3 8.4 2.1 4.5 5.8 4.1c2.1-.2 3.9.9 5 2.6 1.1-1.7 2.9-2.8 5-2.6 3.7.4 5.5 4.3 3.8 7.6C19.5 16.4 12 21 12 21z'/%3E%3C/defs%3E%3Cuse href='%23h' transform='translate(14 18) rotate(-14 12 12) scale(.8)'/%3E%3Cuse href='%23h' transform='translate(96 8) rotate(12 12 12) scale(.55)'/%3E%3Cuse href='%23h' transform='translate(62 70) rotate(-6 12 12) scale(1.05)'/%3E%3Cuse href='%23h' transform='translate(128 96) rotate(18 12 12) scale(.7)'/%3E%3Cuse href='%23h' transform='translate(20 118) rotate(8 12 12) scale(.6)'/%3E%3C/svg%3E");
+}
+
 dialog::backdrop {
   background: rgb(0 0 0 / 0.6);
 }
@@ -129,4 +187,54 @@ dialog::backdrop {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Joshua's note for Sophie (LoveNote.tsx): Barbie pink in both themes. */
+.love-note {
+  --love-ink: #ffffff;
+  --love-heart: #ffffff;
+  background: radial-gradient(120% 90% at 50% 30%, #ff5fb8, #d0107a 60%, #8e0a55);
+  color: var(--love-ink);
+  overflow: hidden;
+}
+
+.love-float {
+  position: absolute;
+  bottom: -40px;
+  color: rgb(255 255 255 / 0.35);
+  animation: love-rise linear infinite;
+}
+
+@keyframes love-rise {
+  from { transform: translateY(0) rotate(-10deg); opacity: 0; }
+  10% { opacity: 1; }
+  to { transform: translateY(-110vh) rotate(14deg); opacity: 0; }
+}
+
+.love-heart {
+  color: var(--love-heart);
+  filter: drop-shadow(0 6px 24px rgb(120 0 60 / 0.45));
+  animation: love-beat 1.6s ease-in-out infinite;
+}
+
+.love-strong {
+  color: #fff;
+  text-shadow: 0 2px 12px rgb(120 0 60 / 0.5);
+}
+
+.love-button {
+  background: #fff;
+  color: #c2106f;
+}
+
+.love-button:focus-visible {
+  outline: 3px solid var(--love-ink);
+  outline-offset: 3px;
+}
+
+@keyframes love-beat {
+  0%, 60%, 100% { transform: scale(1); }
+  15% { transform: scale(1.14); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.08); }
 }

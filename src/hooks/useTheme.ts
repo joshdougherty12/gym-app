@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import type { ThemePref } from '../types'
+import { useAccentStore } from '../store/accent'
+import type { AccentPref, ThemePref } from '../types'
 
 const THEME_COLOR = { dark: '#121416', light: '#f6f4f0' } as const
 
@@ -8,6 +9,21 @@ function apply(pref: ThemePref) {
   const mode = dark ? 'dark' : 'light'
   document.documentElement.dataset.theme = mode
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[mode])
+}
+
+/** Applies the accent color (data-accent on <html>; the CSS swaps the tokens). */
+export function useAccent(accent: AccentPref | undefined) {
+  const setStore = useAccentStore((s) => s.set)
+  useEffect(() => {
+    if (!accent) return
+    document.documentElement.dataset.accent = accent
+    setStore(accent)
+    try {
+      localStorage.setItem('cutline-accent', accent) // pre-paint hint only
+    } catch {
+      /* storage unavailable */
+    }
+  }, [accent, setStore])
 }
 
 /** Applies the theme preference and follows the system when set to "system". */

@@ -22,7 +22,7 @@ export function useChartColors(): ChartColors {
   const [c, setC] = useState(readColors)
   useEffect(() => {
     const mo = new MutationObserver(() => setC(readColors()))
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-accent'] })
     return () => mo.disconnect()
   }, [])
   return c
