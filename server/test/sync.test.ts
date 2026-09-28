@@ -188,6 +188,8 @@ describe('tombstone purge', () => {
     // Age the tombstone past the 30-day limit; the next push purges it.
     await runInDurableObject(env.HOUSEHOLD.getByName(hid), async (_obj, state) => {
       state.storage.sql.exec(`UPDATE records SET stored_at = 0 WHERE tomb = 1`)
+      // The purge runs at most once a day; let the next push run it now.
+      state.storage.sql.exec(`DELETE FROM meta WHERE k = 'purge_checked_at'`)
     })
     await push([{ rid: later, ts: 3, data: blob() }]) // v3
     const behind = await pull(1)
@@ -197,6 +199,59 @@ describe('tombstone purge', () => {
     expect(current.reset).toBe(false)
     expect(current.records.map((r) => r.rid)).toEqual([later])
     expect((await pull(0)).reset).toBe(false)
+  })
+})
+
+describe('stored totals', () => {
+  type Sql = { exec: <T extends Record<string, SqlStorageValue>>(q: string, ...b: unknown[]) => { toArray(): T[]; one(): T } }
+  const inside = <T>(hid: string, fn: (sql: Sql) => T) => runInDurableObject(env.HOUSEHOLD.getByName(hid), async (_o, state) => fn(state.storage.sql as unknown as Sql))
+  const stored = (hid: string) =>
+    inside(hid, (sql) => {
+      const meta = Object.fromEntries(sql.exec<{ k: string; v: string }>(`SELECT k, v FROM meta`).toArray().map((r) => [r.k, Number(r.v)]))
+      const real = sql.exec<{ n: number; b: number | null }>(`SELECT COUNT(*) AS n, SUM(size) AS b FROM records`).one()
+      return { kept: { count: meta.rec_count, bytes: meta.rec_bytes }, real: { count: Number(real.n), bytes: Number(real.b ?? 0) } }
+    })
+
+  it('keeps the record count and size in step through adds, updates and purges', async () => {
+    const { hid, secret, a } = await household()
+    const push = (records: unknown[]) => call('POST', `/v1/households/${hid}/push`, { secret, member: a, body: { records } })
+    const [r1, r2] = [newId(), newId()]
+    await push([{ rid: r1, ts: 1, data: blob(100) }, { rid: r2, ts: 1, data: blob(50) }])
+    await push([{ rid: r1, ts: 2, data: blob(10), tomb: true }, { rid: r2, ts: 0, data: blob(999) }]) // r2 is stale
+    let t = await stored(hid)
+    expect(t.kept).toEqual(t.real)
+    expect(t.kept.count).toBe(2)
+    await inside(hid, (sql) => {
+      sql.exec(`UPDATE records SET stored_at = 0 WHERE tomb = 1`)
+      sql.exec(`DELETE FROM meta WHERE k = 'purge_checked_at'`)
+    })
+    await push([{ rid: newId(), ts: 3, data: blob(20) }])
+    t = await stored(hid)
+    expect(t.kept).toEqual(t.real)
+    expect(t.kept.count).toBe(2)
+  })
+
+  it('counts a household from before the totals existed once, then keeps them', async () => {
+    const { hid, secret, a } = await household()
+    const push = (records: unknown[]) => call('POST', `/v1/households/${hid}/push`, { secret, member: a, body: { records } })
+    await push([{ rid: newId(), ts: 1, data: blob() }, { rid: newId(), ts: 1, data: blob() }])
+    await inside(hid, (sql) => sql.exec(`DELETE FROM meta WHERE k IN ('rec_count', 'rec_bytes')`))
+    await push([{ rid: newId(), ts: 2, data: blob() }])
+    const t = await stored(hid)
+    expect(t.kept).toEqual(t.real)
+    expect(t.kept.count).toBe(3)
+  })
+
+  it('finds old tombstones through an index, not a table scan', async () => {
+    const { hid } = await household()
+    const plan = await inside(hid, (sql) =>
+      sql
+        .exec<{ detail: string }>(`EXPLAIN QUERY PLAN SELECT COUNT(*), SUM(size), MAX(v) FROM records WHERE tomb = 1 AND stored_at < ?`, 0)
+        .toArray()
+        .map((r) => r.detail)
+        .join(' '),
+    )
+    expect(plan).toContain('records_tomb')
   })
 })
 

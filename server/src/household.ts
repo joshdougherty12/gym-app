@@ -5,6 +5,7 @@ import {
   MAX_RECORDS_PER_HOUSEHOLD,
   PULL_MAX,
   RATE_CAPACITY,
+  PURGE_EVERY_MS,
   RATE_REFILL_PER_SEC,
   TOMBSTONE_TTL_MS,
 } from './limits'
@@ -33,6 +34,10 @@ const fail = (status: number, error: string): { ok: false; status: number; error
  * for the household, so the version counter is strictly increasing with no
  * cross-request races. It stores a hash of the household secret, the member
  * ids (random, not personal) and opaque ciphertext rows.
+ *
+ * Every row a query touches is billed, so no request scans the records table:
+ * the record count and byte total are kept in `meta`, and the tombstone purge
+ * runs at most once a day through its own index.
  */
 export class Household extends DurableObject<Env> {
   private sql: SqlStorage
@@ -48,6 +53,7 @@ export class Household extends DurableObject<Env> {
       `CREATE TABLE IF NOT EXISTS records (rid TEXT PRIMARY KEY, v INTEGER NOT NULL, ts INTEGER NOT NULL, tomb INTEGER NOT NULL, size INTEGER NOT NULL, data TEXT NOT NULL, stored_at INTEGER NOT NULL)`,
     )
     this.sql.exec(`CREATE INDEX IF NOT EXISTS records_v ON records (v)`)
+    this.sql.exec(`CREATE INDEX IF NOT EXISTS records_tomb ON records (tomb, stored_at)`)
   }
 
   private meta(k: string): string | undefined {
@@ -61,6 +67,20 @@ export class Household extends DurableObject<Env> {
 
   private version(): number {
     return Number(this.meta('version') ?? '0')
+  }
+
+  /** Records held and their total size. Households from before the counters existed are counted once, then kept up to date. */
+  private totals(): { count: number; bytes: number } {
+    const count = this.meta('rec_count')
+    const bytes = this.meta('rec_bytes')
+    if (count !== undefined && bytes !== undefined) return { count: Number(count), bytes: Number(bytes) }
+    const t = this.sql.exec<{ n: number; bytes: number | null }>(`SELECT COUNT(*) AS n, SUM(size) AS bytes FROM records`).one()
+    return { count: Number(t.n), bytes: Number(t.bytes ?? 0) }
+  }
+
+  private setTotals(t: { count: number; bytes: number }): void {
+    this.setMeta('rec_count', t.count)
+    this.setMeta('rec_bytes', t.bytes)
   }
 
   /** Token bucket shared by every request to this household. */
@@ -103,6 +123,7 @@ export class Household extends DurableObject<Env> {
       this.setMeta('created_at', Date.now())
       this.setMeta('version', 0)
       this.setMeta('purged_through', 0)
+      this.setTotals({ count: 0, bytes: 0 })
       this.sql.exec(`INSERT INTO members (id, joined_at) VALUES (?, ?)`, memberId, Date.now())
     })
     return { ok: true, value: { members: 1 } }
@@ -133,9 +154,7 @@ export class Household extends DurableObject<Env> {
     try {
     this.ctx.storage.transactionSync(() => {
       let version = this.version()
-      const totals = this.sql.exec<{ n: number; bytes: number | null }>(`SELECT COUNT(*) AS n, SUM(size) AS bytes FROM records`).one()
-      let count = Number(totals.n)
-      let bytes = Number(totals.bytes ?? 0)
+      let { count, bytes } = this.totals()
       const now = Date.now()
       for (const r of records) {
         const cur = this.sql.exec<{ ts: number; size: number }>(`SELECT ts, size FROM records WHERE rid = ?`, r.rid).toArray()[0]
@@ -165,6 +184,7 @@ export class Household extends DurableObject<Env> {
         accepted.push(r.rid)
       }
       this.setMeta('version', version)
+      this.setTotals({ count, bytes })
     })
     } catch (e) {
       if (e instanceof CapExceeded) return fail(413, 'household_full_of_data')
@@ -201,13 +221,23 @@ export class Household extends DurableObject<Env> {
     return { ok: true, value: null }
   }
 
+  /** Delete deletion markers older than the TTL, at most once per PURGE_EVERY_MS. Reads only the purged rows (records_tomb index). */
   private purgeTombstones(): void {
-    const cutoff = Date.now() - TOMBSTONE_TTL_MS
-    const top = this.sql.exec<{ v: number | null }>(`SELECT MAX(v) AS v FROM records WHERE tomb = 1 AND stored_at < ?`, cutoff).one().v
-    if (top === null || top === undefined) return
-    this.sql.exec(`DELETE FROM records WHERE tomb = 1 AND stored_at < ?`, cutoff)
-    const purged = Number(this.meta('purged_through') ?? '0')
-    if (Number(top) > purged) this.setMeta('purged_through', Number(top))
+    const now = Date.now()
+    if (now - Number(this.meta('purge_checked_at') ?? '0') < PURGE_EVERY_MS) return
+    const cutoff = now - TOMBSTONE_TTL_MS
+    this.ctx.storage.transactionSync(() => {
+      this.setMeta('purge_checked_at', now)
+      const old = this.sql
+        .exec<{ n: number; bytes: number | null; v: number | null }>(`SELECT COUNT(*) AS n, SUM(size) AS bytes, MAX(v) AS v FROM records WHERE tomb = 1 AND stored_at < ?`, cutoff)
+        .one()
+      if (!Number(old.n)) return
+      const t = this.totals()
+      this.sql.exec(`DELETE FROM records WHERE tomb = 1 AND stored_at < ?`, cutoff)
+      this.setTotals({ count: t.count - Number(old.n), bytes: t.bytes - Number(old.bytes ?? 0) })
+      const purged = Number(this.meta('purged_through') ?? '0')
+      if (Number(old.v) > purged) this.setMeta('purged_through', Number(old.v))
+    })
   }
 }
 

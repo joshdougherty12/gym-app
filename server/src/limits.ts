@@ -17,6 +17,8 @@ export const PULL_DEFAULT = 200
 export const PULL_MAX = 500
 /** Deleted-record markers older than this are purged; clients behind the purge resync from scratch. */
 export const TOMBSTONE_TTL_MS = 30 * 24 * 3600 * 1000
+/** How often a household checks for markers to purge (it runs on a push). */
+export const PURGE_EVERY_MS = 24 * 3600 * 1000
 
 /** Per-household request budget: a bucket of 120 that refills at 2 per second. */
 export const RATE_CAPACITY = 120
