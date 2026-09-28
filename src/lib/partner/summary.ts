@@ -24,7 +24,8 @@ export function workoutSummary(
   const best: WorkoutSummaryData['best'] = []
   for (const id of [...new Set(working.map((s) => s.exerciseId))]) {
     const e = exercises.get(id)
-    if (!e || e.type === 'timed' || e.type === 'cardio') continue
+    // Assisted sets are logged as help, not load: nothing to show without bodyweight.
+    if (!e || e.type === 'timed' || e.type === 'cardio' || e.loading === 'assisted') continue
     const sets = working.filter((s) => s.exerciseId === id && countedReps(s) > 0)
     let top = sets[0]
     for (const s of sets) if (top && epley(s.weightLb, countedReps(s)) > epley(top.weightLb, countedReps(top))) top = s

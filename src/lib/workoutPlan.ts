@@ -1,4 +1,4 @@
-import type { DraftSet, Exercise, ExerciseSlot, RirRange, SessionTemplate, SetLog, SlotOverride, WeekDefinition, WeekOverride, WorkoutLog } from '../types'
+import type { DraftSet, Exercise, ExerciseSlot, ExerciseType, RirRange, SessionTemplate, SetLog, SlotOverride, WeekDefinition, WeekOverride, WorkoutLog } from '../types'
 import { exerciseHistory } from './history'
 import { suggest, type PastSession, type Suggestion } from './progression'
 import { roundTo } from './units'
@@ -16,6 +16,26 @@ export interface SlotPlan {
   setReasons: string[]
 }
 
+/** Starting sets and range for a new slot: reps, seconds (timed) or minutes (cardio). */
+export function defaultRange(type: ExerciseType): Pick<ExerciseSlot, 'sets' | 'repMin' | 'repMax'> {
+  if (type === 'compound') return { sets: 3, repMin: 8, repMax: 10 }
+  if (type === 'timed') return { sets: 3, repMin: 30, repMax: 45 }
+  if (type === 'cardio') return { sets: 1, repMin: 10, repMax: 10 }
+  return { sets: 3, repMin: 10, repMax: 12 }
+}
+
+const rangeUnit = (t: ExerciseType) => (t === 'timed' ? 'seconds' : t === 'cardio' ? 'minutes' : 'reps')
+
+/**
+ * The range to use after swapping a slot to another exercise: kept when both
+ * count the same thing, otherwise the new type's default (8 reps are not 8 seconds).
+ */
+export function rangeAfterSwap(slot: Pick<ExerciseSlot, 'repMin' | 'repMax'>, from: ExerciseType | undefined, to: ExerciseType): Pick<ExerciseSlot, 'repMin' | 'repMax'> {
+  if (from === undefined || rangeUnit(from) === rangeUnit(to)) return { repMin: slot.repMin, repMax: slot.repMax }
+  const d = defaultRange(to)
+  return { repMin: d.repMin, repMax: d.repMax }
+}
+
 export function planWorkout(args: {
   session: SessionTemplate
   exercises: Map<string, Exercise>
@@ -31,9 +51,11 @@ export function planWorkout(args: {
     const o = args.slotOverrides[templateSlot.slotId] ?? {}
     const exercise = args.exercises.get(o.exerciseId ?? templateSlot.exerciseId)
     if (!exercise) continue
-    const slot = withCardioBump(templateSlot, exercise, args.week, args.weekOverride)
+    const swappedFrom = o.exerciseId ? args.exercises.get(templateSlot.exerciseId)?.type : undefined
+    const swapped = { ...templateSlot, ...rangeAfterSwap(templateSlot, swappedFrom, exercise.type) }
+    const slot = withCardioBump(swapped, exercise, args.week, args.weekOverride)
     const planned = plannedSets(slot, exercise, args.week, args.weekOverride)
-    if (slot !== templateSlot) planned.reasons.push('+5 min (cardio bump)')
+    if (slot !== swapped) planned.reasons.push('+5 min (cardio bump)')
     const workingSets = exercise.type === 'cardio' ? 1 : Math.max(1, planned.sets + (o.setDelta ?? 0))
     const history = exerciseHistory(args.workouts, exercise.id, args.activeWorkoutId)
     const targetRir = Array.from({ length: workingSets }, (_, i) => targetRirForSet(args.week, slot, i, workingSets))

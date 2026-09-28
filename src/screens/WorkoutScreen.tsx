@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router'
 import { BigStepper } from '../components/BigStepper'
 import { ExercisePicker } from '../components/ExercisePicker'
+import { HoldTimer } from '../components/HoldTimer'
 import { Icon } from '../components/Icon'
 import { RestTimerBar } from '../components/RestTimerBar'
 import { Badge, Button, Loading, Sheet } from '../components/ui'
@@ -164,8 +165,7 @@ export function WorkoutScreen() {
       sets={sets}
       drafts={active.drafts}
       settings={settings}
-      week8Best={week.phase === 'peak' && p.slot.isMainLift ? bestSetInWeek(workouts ?? [], p.exercise.id, 8) : undefined}
-      fmtW={fmtW}
+      week8Best={week.phase === 'peak' && p.slot.isMainLift && p.exercise.type !== 'timed' ? bestSetInWeek(workouts ?? [], p.exercise.id, 8) : undefined}
       note={active.workout.exerciseNotes?.[p.slot.slotId] ?? ''}
       onNote={(note) => update((a) => ({ ...a, workout: { ...a.workout, exerciseNotes: { ...a.workout.exerciseNotes, [p.slot.slotId]: note } } }))}
       onDraft={setDraft}
@@ -301,7 +301,6 @@ function SlotCard({
   drafts,
   settings,
   week8Best,
-  fmtW,
   note,
   onNote,
   onDraft,
@@ -318,7 +317,6 @@ function SlotCard({
   drafts: Record<string, DraftSet>
   settings: Settings
   week8Best: SetLog | undefined
-  fmtW: (lb: number) => string
   note: string
   onNote: (n: string) => void
   onDraft: (key: string, d: DraftSet) => void
@@ -344,6 +342,7 @@ function SlotCard({
   const unitLabel = timed ? 's' : ''
   const bwOnly = isBodyweightOnly(e)
   const bwPlus = e.loading === 'bodyweight-plus'
+  const assisted = e.loading === 'assisted'
   const howOpen = useHowTo((s) => s.open)
   const toggleHow = useHowTo((s) => s.toggle)
   const howId = useId()
@@ -357,11 +356,12 @@ function SlotCard({
     const shift = el.getBoundingClientRect().top - before
     if (shift) window.scrollBy(0, shift)
   }
-  /** "60", or "BW" / "BW+25" for bodyweight exercises. */
+  /** "60", or "BW" / "BW+25" for bodyweight exercises, "BW−40" with 40 of help on an assisted machine. */
   const load = (lb: number) => {
     const n = formatNumber(displayWeight(lb, settings.units))
     if (bwOnly) return 'BW'
     if (bwPlus) return lb > 0 ? `BW+${n}` : 'BW'
+    if (assisted) return lb > 0 ? `BW−${n}` : 'BW'
     return n
   }
 
@@ -408,7 +408,7 @@ function SlotCard({
         <div className="mt-3 rounded-xl bg-surface-2 p-3 text-sm">
           <p className="text-[11px] font-bold tracking-[0.14em] text-muted uppercase">Last time{last ? ` · ${last.date.slice(5).replace('-', '/')}` : ''}</p>
           <p className="num text-xl">
-            {last ? lastSets.map((s) => (timed ? `${s.durationSec ?? s.reps}s${s.weightLb ? ` +${formatNumber(displayWeight(s.weightLb, settings.units))}` : ''}` : `${load(s.weightLb)}×${s.reps}`)).join('  ') : '—'}
+            {last ? lastSets.map((s) => (timed ? `${s.durationSec ?? s.reps}s` : `${load(s.weightLb)}×${s.reps}`)).join('  ') : '—'}
           </p>
           {week8Best && (
             <p className="num text-lg text-warn">
@@ -444,7 +444,7 @@ function SlotCard({
                     {cardio
                       ? `${Math.round((logged.durationSec ?? 0) / 60)} min`
                       : timed
-                        ? `${logged.durationSec ?? 0}s${logged.weightLb ? ` +${fmtW(logged.weightLb)}` : ''}`
+                        ? `${logged.durationSec ?? 0}s`
                         : `${load(logged.weightLb)} × ${logged.repsLeft !== undefined ? `${logged.repsLeft}/${logged.repsRight}` : logged.reps}`}
                     {!cardio && !warmup && <span className="text-base text-muted"> @{logged.rir}</span>}
                   </span>
@@ -478,6 +478,16 @@ function SlotCard({
                 {!warmup && !cardio && rir && <span className={`text-sm font-bold ${rir.max <= 1 ? 'text-warn' : 'text-accent'}`}>Target {formatRir(rir)}</span>}
                 {warmup && <span className="text-xs text-muted">doesn't count</span>}
               </div>
+              {timed && (
+                <HoldTimer
+                  key={key}
+                  targetSec={target?.reps ?? slot.repMin}
+                  perSide={e.perSide}
+                  sound={settings.timerSound}
+                  vibrate={settings.timerVibrate}
+                  onResult={(sec) => set({ durationSec: sec, weightLb: 0 })}
+                />
+              )}
               <div className="flex gap-2">
                 {cardio ? (
                   <BigStepper label="minutes" value={Math.round((d.durationSec ?? 0) / 60)} step={1} min={0} max={180} onChange={(v) => set({ durationSec: v * 60 })} />
@@ -489,9 +499,9 @@ function SlotCard({
                         <span className="text-[11px] font-bold tracking-[0.12em] text-muted uppercase">bodyweight</span>
                       </div>
                     )}
-                    {!bwOnly && (!timed || e.timedProgression === 'add-weight') && (
+                    {!bwOnly && !timed && (
                       <BigStepper
-                        label={timed || bwPlus ? `added ${weightUnit(settings.units)}` : weightUnit(settings.units)}
+                        label={bwPlus ? `added ${weightUnit(settings.units)}` : assisted ? `help ${weightUnit(settings.units)}` : weightUnit(settings.units)}
                         value={displayWeight(d.weightLb, settings.units)}
                         step={wStep}
                         decimals
@@ -499,7 +509,7 @@ function SlotCard({
                       />
                     )}
                     {timed ? (
-                      <BigStepper label="seconds" value={d.durationSec ?? 0} step={5} max={600} onChange={(v) => set({ durationSec: v })} />
+                      <BigStepper label={e.perSide ? 'seconds (weaker side)' : 'seconds'} value={d.durationSec ?? 0} step={5} max={600} onChange={(v) => set({ durationSec: v })} />
                     ) : e.perSide ? (
                       <>
                         <BigStepper label="left" value={d.repsLeft ?? d.reps} step={1} max={100} onChange={(v) => set({ repsLeft: v, reps: Math.min(v, d.repsRight ?? v) })} />

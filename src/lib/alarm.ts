@@ -38,3 +38,36 @@ export function vibrate(): void {
     /* not supported */
   }
 }
+
+/** Hold-timer cues: a short tick for each countdown second, a rising "go", a bright "target" and a double "switch". */
+export function cueTone(kind: 'tick' | 'go' | 'target' | 'switch'): void {
+  if (!ctx) return
+  const notes: Record<typeof kind, [number, number][]> = {
+    tick: [[660, 0.08]],
+    go: [[880, 0.12], [1320, 0.22]],
+    target: [[1320, 0.14], [1320, 0.14], [1760, 0.3]],
+    switch: [[990, 0.12], [990, 0.12]],
+  }
+  let t = ctx.currentTime
+  for (const [freq, len] of notes[kind]) {
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.frequency.value = freq
+    osc.type = 'square'
+    gain.gain.setValueAtTime(0.0001, t)
+    gain.gain.exponentialRampToValueAtTime(0.22, t + 0.015)
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + len)
+    osc.connect(gain).connect(ctx.destination)
+    osc.start(t)
+    osc.stop(t + len + 0.02)
+    t += len + 0.06
+  }
+}
+
+export function buzz(pattern: number | number[]): void {
+  try {
+    navigator.vibrate?.(pattern)
+  } catch {
+    /* not supported */
+  }
+}

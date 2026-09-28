@@ -122,6 +122,16 @@ describe('program generator', () => {
     expect(main?.repMin).toBe(8)
   })
 
+  it('gives new lifters pulldowns or assisted pull-ups instead of unassisted pull-ups', () => {
+    for (const d of [2, 3, 4, 5, 6]) {
+      const picked = ids({ ...josh, daysPerWeek: d, experience: 'new' })
+      expect(picked).not.toContain('weighted-pull-up')
+      expect(picked).not.toContain('chin-up')
+    }
+    // Only a pull-up bar at home: the band-assisted version.
+    expect(ids({ ...josh, experience: 'new', daysPerWeek: 3, equipment: ['dumbbells', 'pullup-bar'] })).toContain('band-assisted-pull-up')
+  })
+
   it('every exercise it picks exists in the library', () => {
     for (const d of [2, 3, 4, 5, 6]) for (const id of ids({ ...josh, daysPerWeek: d, limitations: [] })) expect(lib.has(id), id).toBe(true)
   })

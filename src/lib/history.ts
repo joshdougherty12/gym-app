@@ -70,10 +70,10 @@ export function findPRs(
   for (const id of ids) {
     const e = exercises.get(id)
     if (!e || e.type === 'timed' || e.type === 'cardio') continue
-    const bwPlus = e.loading === 'bodyweight-plus'
+    // Assisted: the weight is help, so "heaviest" is no record; e1RM (bodyweight − help) still is.
     const best = (sets: SetLog[]) => ({
-      e1rm: Math.max(0, ...sets.map((s) => epley(effectiveLoad(s.weightLb, bwPlus, bodyweightLb), countedReps(s)))),
-      weight: Math.max(0, ...sets.map((s) => s.weightLb)),
+      e1rm: Math.max(0, ...sets.map((s) => epley(effectiveLoad(s.weightLb, e.loading, bodyweightLb), countedReps(s)))),
+      weight: e.loading === 'assisted' ? 0 : Math.max(0, ...sets.map((s) => s.weightLb)),
     })
     const prevSets = earlier
       .filter((w) => w.id !== workout.id && w.finishedAt !== undefined)

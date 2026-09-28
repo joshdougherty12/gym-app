@@ -91,6 +91,81 @@ function perSet(count: number, from: (i: number) => SetTarget): SetTarget[] {
   return Array.from({ length: Math.max(1, count) }, (_, i) => from(i))
 }
 
+/** Least assistance used in a session: the hardest set. */
+function leastHelp(s: PastSession): number {
+  return Math.min(...s.sets.map((x) => x.weightLb))
+}
+
+/**
+ * Double progression on an assisted machine, where the weight is help: at the
+ * top of the range the help goes DOWN by the increment; missing the bottom
+ * twice adds help back. At no help left, it's time for real pull-ups.
+ */
+function suggestAssisted(input: ProgressionInput, fmt: (lb: number) => string): Suggestion {
+  const { exercise, repMin, repMax, sets, history } = input
+  const last = history[0] as PastSession
+  const prev = history[1]
+  const inc = exercise.incrementLb > 0 ? exercise.incrementLb : 5
+  const help = leastHelp(last)
+  const did = repList(last.sets, false)
+  const lastSet = (i: number): PastSet => last.sets[Math.min(i, last.sets.length - 1)] as PastSet
+  const verdict = rirVerdict(mean(last.sets.map((s) => s.rir)), last.targetRir)
+  const allTop = last.sets.every((s) => s.reps >= repMax)
+
+  if (!allTop && missedBottom(last, repMin) && prev && missedBottom(prev, repMin) && leastHelp(prev) >= help - 1e-9) {
+    const w = help + inc
+    return {
+      kind: 'reduce',
+      sets: perSet(sets, () => ({ weightLb: w, reps: repMin })),
+      reason: `Below ${repMin} reps two sessions in a row (${did} last time), so add a little help: ${fmt(w)}, and build back up from ${repMin}.`,
+      flag: 'missed-bottom-twice',
+    }
+  }
+
+  if (allTop) {
+    if (verdict === 'much-lower') {
+      return {
+        kind: 'hold',
+        sets: perSet(sets, () => ({ weightLb: help, reps: repMax })),
+        reason: `Hit ${did} last time, but at ~${Math.round(mean(last.sets.map((s) => s.rir)))} RIR, harder than planned. Stay at ${fmt(help)} and own it.`,
+        flag: 'rir-too-low',
+      }
+    }
+    const big = verdict === 'much-higher'
+    const w = Math.max(0, help - inc * (big ? 2 : 1))
+    return {
+      kind: big ? 'big-increase' : 'increase',
+      sets: perSet(sets, () => ({ weightLb: w, reps: repMin })),
+      reason:
+        w === 0
+          ? `Hit ${did} last time with ${fmt(help)}. Try it with no help, or swap to real pull-ups.`
+          : `Hit ${did} last time, so take away some help: ${fmt(w)} for ${repMin} reps.`,
+    }
+  }
+
+  if (verdict === 'much-lower') {
+    return {
+      kind: 'hold',
+      sets: perSet(sets, (i) => ({ weightLb: lastSet(i).weightLb, reps: Math.min(repMax, lastSet(i).reps) })),
+      reason: `Got ${did} last time, but closer to failure than planned. Repeat ${fmt(help)} and hit the same reps with more in reserve.`,
+      flag: 'rir-too-low',
+    }
+  }
+
+  const below = missedBottom(last, repMin)
+  return {
+    kind: 'add-reps',
+    sets: perSet(sets, (i) => {
+      const s = lastSet(i)
+      return { weightLb: s.weightLb, reps: s.reps >= repMax ? repMax : s.reps + 1 }
+    }),
+    reason: below
+      ? `Got ${did} last time, under ${repMin}. Same ${fmt(help)}, aim for one more rep per set.`
+      : `Got ${did} last time. Same ${fmt(help)}, add a rep on sets under ${repMax}.`,
+    ...(below ? { flag: 'below-range' as const } : {}),
+  }
+}
+
 function missedBottom(s: PastSession, repMin: number): boolean {
   return s.sets.some((x) => x.reps < repMin)
 }
@@ -102,7 +177,9 @@ function topWeight(s: PastSession): number {
 
 export function suggest(input: ProgressionInput): Suggestion {
   const { exercise, repMin, repMax, sets, phase, todayRir, history } = input
-  const fmt = input.formatWeight ?? defaultFormat
+  const assisted = exercise.loading === 'assisted'
+  const baseFmt = input.formatWeight ?? defaultFormat
+  const fmt = assisted ? (lb: number) => `${baseFmt(lb)} of help` : baseFmt
   const timed = exercise.type === 'timed'
   const last = history[0]
 
@@ -116,6 +193,13 @@ export function suggest(input: ProgressionInput): Suggestion {
         kind: 'first-time',
         sets: perSet(sets, () => ({ weightLb: 0, reps: repMin })),
         reason: `First time: bodyweight only. Aim for ${repMin} reps with ${rirText} left in the tank.`,
+      }
+    }
+    if (assisted) {
+      return {
+        kind: 'first-time',
+        sets: perSet(sets, () => ({ weightLb: null, reps: repMin })),
+        reason: `First time: pick the assistance that lets you do ${repMin} reps with ${rirText} left in the tank. More assistance is easier; the app takes it away as you get stronger.`,
       }
     }
     if (exercise.loading === 'bodyweight-plus') {
@@ -145,34 +229,28 @@ export function suggest(input: ProgressionInput): Suggestion {
     }
   }
 
-  // Timed exercises: +5 s per set until the top of the range.
+  // Timed holds: +5 s per set until the top of the range, then a harder variation. Never added weight.
   if (timed) {
     const durations = last.sets.map((s) => s.durationSec ?? s.reps)
     const allTop = durations.every((d) => d >= repMax)
     if (allTop) {
-      if (exercise.timedProgression === 'harder-variation' || exercise.incrementLb <= 0) {
-        return {
-          kind: 'timed-harder-variation',
-          sets: perSet(sets, (i) => ({ weightLb: lastSet(i).weightLb, reps: repMax })),
-          reason: `Held ${did} last time, the top of the range. Time for a harder variation: swap the exercise.`,
-        }
-      }
-      const w = weight + exercise.incrementLb
       return {
-        kind: 'timed-add-weight',
-        sets: perSet(sets, () => ({ weightLb: w, reps: repMin })),
-        reason: `Held ${did} last time, the top of the range, so add weight: ${fmt(w)} for ${repMin}s.`,
+        kind: 'timed-harder-variation',
+        sets: perSet(sets, () => ({ weightLb: 0, reps: repMax })),
+        reason: `Held ${did} last time, the top of the range. Time for a harder variation: swap the exercise.`,
       }
     }
     return {
       kind: 'timed-add-seconds',
       sets: perSet(sets, (i) => ({
-        weightLb: lastSet(i).weightLb,
+        weightLb: 0,
         reps: Math.min(repMax, Math.max(repMin, (durations[Math.min(i, durations.length - 1)] ?? repMin) + 5)),
       })),
       reason: `Held ${did} last time, so add 5 seconds per set (top: ${repMax}s).`,
     }
   }
+
+  if (assisted) return suggestAssisted(input, fmt)
 
   const inc = exercise.incrementLb
   const verdict = rirVerdict(mean(last.sets.map((s) => s.rir)), last.targetRir)

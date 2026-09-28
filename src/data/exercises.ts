@@ -100,8 +100,13 @@ const defs: Def[] = [
   { id: 'incline-smith-press', name: 'Incline Smith machine press', type: 'compound', equipment: 'barbell', pattern: 'horizontal-press', primary: ['chest'], secondary: ['front-delts', 'triceps'] },
 
   // Vertical pull
-  { id: 'weighted-pull-up', name: 'Weighted pull-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'] },
-  { id: 'chin-up', name: 'Weighted chin-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'] },
+  // The ids keep "weighted" for stored logs; added weight is optional (0 = bodyweight).
+  { id: 'weighted-pull-up', name: 'Pull-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'] },
+  { id: 'chin-up', name: 'Chin-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'] },
+  // On the way to a first pull-up.
+  { id: 'assisted-pull-up', name: 'Assisted pull-up (machine)', type: 'compound', equipment: 'machine', loading: 'assisted', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'], incrementLb: 5 },
+  { id: 'band-assisted-pull-up', name: 'Band-assisted pull-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'], incrementLb: 0 },
+  { id: 'negative-pull-up', name: 'Negative pull-up (slow lower)', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'], incrementLb: 0 },
   { id: 'lat-pulldown', name: 'Lat pulldown', type: 'compound', equipment: 'cable', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'] },
   { id: 'neutral-grip-pulldown', name: 'Neutral-grip pulldown', type: 'compound', equipment: 'cable', pattern: 'vertical-pull', primary: ['back'], secondary: ['biceps'] },
 
@@ -182,8 +187,9 @@ const defs: Def[] = [
   { id: 'captains-chair-raise', name: "Captain's chair knee raise", type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], incrementLb: 0 },
   { id: 'ab-wheel', name: 'Ab wheel rollout', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], incrementLb: 0 },
   { id: 'decline-crunch', name: 'Weighted decline crunch', type: 'isolation', equipment: 'dumbbell', pattern: 'core', primary: ['core'] },
-  { id: 'plank', name: 'Plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'add-weight', incrementLb: 10 },
+  { id: 'plank', name: 'Plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'harder-variation', incrementLb: 0 },
   { id: 'rkc-plank', name: 'RKC plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'harder-variation', incrementLb: 0 },
+  { id: 'hollow-hold', name: 'Hollow body hold', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], timedProgression: 'harder-variation', incrementLb: 0 },
   // Bodyweight (home, no equipment)
   { id: 'push-up', name: 'Push-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'horizontal-press', primary: ['chest'], secondary: ['front-delts', 'triceps'], incrementLb: 0 },
   { id: 'pike-push-up', name: 'Pike push-up', type: 'compound', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'vertical-press', primary: ['front-delts'], secondary: ['triceps'], incrementLb: 0 },
@@ -193,7 +199,7 @@ const defs: Def[] = [
   { id: 'burpee-intervals', name: 'Burpee / jumping jack intervals (30s hard / 60s easy)', type: 'cardio', equipment: 'bodyweight', pattern: 'conditioning', primary: [] },
   { id: 'dead-bug', name: 'Dead bug', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], perSide: true, incrementLb: 0 },
   { id: 'bird-dog', name: 'Bird dog', type: 'isolation', equipment: 'bodyweight', loading: 'bodyweight-plus', pattern: 'core', primary: ['core'], perSide: true, incrementLb: 0 },
-  { id: 'side-plank', name: 'Side plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], perSide: true, timedProgression: 'add-weight', incrementLb: 5 },
+  { id: 'side-plank', name: 'Side plank', type: 'timed', equipment: 'bodyweight', pattern: 'core', primary: ['core'], perSide: true, timedProgression: 'harder-variation', incrementLb: 0 },
 
   // Conditioning
   { id: 'bike-intervals', name: 'Bike intervals (30s hard / 60s easy)', type: 'cardio', equipment: 'cardio', pattern: 'conditioning', primary: [] },

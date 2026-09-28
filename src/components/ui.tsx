@@ -97,17 +97,28 @@ export function Sheet({
 }) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+  /** Set while the parent closes the sheet, so that close isn't reported back as the user dismissing it. */
+  const closingFromProp = useRef(false)
   useEffect(() => {
     const d = ref.current
     if (!d) return
     if (open && !d.open) d.showModal()
-    if (!open && d.open) d.close()
+    if (!open && d.open) {
+      closingFromProp.current = true
+      d.close()
+    }
   }, [open])
   return (
     <dialog
       ref={ref}
       aria-labelledby={titleId}
-      onClose={onClose}
+      onClose={() => {
+        if (closingFromProp.current) {
+          closingFromProp.current = false
+          return
+        }
+        onClose()
+      }}
       onClick={(e) => {
         if (e.target === ref.current) onClose()
       }}

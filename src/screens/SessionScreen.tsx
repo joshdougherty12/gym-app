@@ -11,13 +11,11 @@ import { newId } from '../lib/id'
 import { formatRest, restFor } from '../lib/rest'
 import { formatNumber } from '../lib/units'
 import { formatRir, formatSlotTarget, plannedSets, targetRirForSet } from '../lib/weekPlan'
+import { defaultRange, rangeAfterSwap } from '../lib/workoutPlan'
 import type { Exercise, ExerciseSlot, SessionTemplate, WeekOverride } from '../types'
 
 function newSlot(e: Exercise): ExerciseSlot {
-  const slotId = newId('slot')
-  const [repMin, repMax, sets] =
-    e.type === 'compound' ? [8, 10, 3] : e.type === 'timed' ? [30, 45, 3] : e.type === 'cardio' ? [10, 10, 1] : [10, 12, 3]
-  return { slotId, exerciseId: e.id, sets, repMin, repMax, isMainLift: false }
+  return { slotId: newId('slot'), exerciseId: e.id, ...defaultRange(e.type), isMainLift: false }
 }
 
 export function SessionScreen() {
@@ -99,7 +97,7 @@ export function SessionScreen() {
                   <span className="mt-1 flex flex-wrap gap-1">
                     {s.isMainLift && <Badge tone="accent">Main lift</Badge>}
                     {e.type !== 'cardio' && <Badge>Rest {formatRest(restFor(s, e, settings))}</Badge>}
-                    {e.incrementLb > 0 && <Badge>+{formatNumber(e.incrementLb)} lb</Badge>}
+                    {e.incrementLb > 0 && e.type !== 'timed' && <Badge>{e.loading === 'assisted' ? '−' : '+'}{formatNumber(e.incrementLb)} lb</Badge>}
                     {s.isMainLift && def.mainLiftLastSetRir && <Badge tone="warn">Last set {formatRir(lastRir)}</Badge>}
                     {plan.reasons.map((r) => (
                       <Badge key={r} tone="good">
@@ -177,28 +175,22 @@ export function SessionScreen() {
             {slotEx.type !== 'cardio' && (
               <div className="space-y-2">
                 <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">Exercise (all sessions)</h3>
-                <Stepper
-                  label={slotEx.equipment === 'dumbbell' ? 'Increment (per dumbbell)' : 'Weight increment'}
-                  suffix="lb"
-                  value={slotEx.incrementLb}
-                  step={2.5}
-                  min={0}
-                  max={50}
-                  onChange={(v) => void saveExercise({ ...slotEx, incrementLb: v })}
-                />
+                {slotEx.type !== 'timed' && (
+                  <Stepper
+                    label={slotEx.equipment === 'dumbbell' ? 'Increment (per dumbbell)' : slotEx.loading === 'assisted' ? 'Assistance step' : 'Weight increment'}
+                    suffix="lb"
+                    value={slotEx.incrementLb}
+                    step={2.5}
+                    min={0}
+                    max={50}
+                    onChange={(v) => void saveExercise({ ...slotEx, incrementLb: v })}
+                  />
+                )}
                 <Toggle
                   label="Log each side separately"
                   checked={slotEx.perSide}
                   onChange={(v) => void saveExercise({ ...slotEx, perSide: v })}
                 />
-                {slotEx.type === 'timed' && (
-                  <Toggle
-                    label="At the top of the range, add weight"
-                    hint="Off: move to a harder variation instead."
-                    checked={slotEx.timedProgression !== 'harder-variation'}
-                    onChange={(v) => void saveExercise({ ...slotEx, timedProgression: v ? 'add-weight' : 'harder-variation' })}
-                  />
-                )}
               </div>
             )}
 
@@ -258,7 +250,7 @@ export function SessionScreen() {
             alternates={slotEx.alternates}
             excludeId={slotEx.id}
             onPick={(e) => {
-              updateSlot(slot.slotId, { exerciseId: e.id })
+              updateSlot(slot.slotId, { exerciseId: e.id, ...rangeAfterSwap(slot, slotEx.type, e.type) })
               setSwapping(false)
             }}
           />

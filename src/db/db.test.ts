@@ -98,6 +98,34 @@ describe('exercise descriptions', () => {
   })
 })
 
+describe('v8 exercise renames', () => {
+  it('renames untouched "weighted" pull-ups and drops added weight from timed holds', async () => {
+    const { default: Dexie } = await import('dexie')
+    const name = `upgrade-test-${n++}`
+    const old = new Dexie(name)
+    old.version(2).stores({ settings: 'id', exercises: 'id, pattern', sessions: 'id', workouts: 'id, date, weekNumber, sessionTemplateId, [sessionTemplateId+date]' })
+    const lib = (id: string) => structuredClone(EXERCISE_LIBRARY.find((e) => e.id === id)!)
+    await old.table('exercises').bulkPut([
+      { ...lib('weighted-pull-up'), name: 'Weighted pull-up', description: 'old text' },
+      { ...lib('chin-up'), name: 'My chins' }, // renamed by the user: kept
+      { ...lib('plank'), incrementLb: 10, timedProgression: 'add-weight' },
+    ])
+    old.close()
+
+    const d = new CutlineDB(name)
+    dbs.push(d)
+    await d.open()
+    const pull = await d.exercises.get('weighted-pull-up')
+    expect(pull?.name).toBe('Pull-up')
+    expect(pull?.description).toContain('Bodyweight is the goal')
+    expect((await d.exercises.get('chin-up'))?.name).toBe('My chins')
+    const plank = await d.exercises.get('plank')
+    expect(plank?.incrementLb).toBe(0)
+    expect(plank?.timedProgression).toBe('harder-variation')
+    expect(await d.exercises.get('assisted-pull-up')).toBeDefined()
+  })
+})
+
 describe('v3 joint-friendly program upgrade', () => {
   it('swaps untouched slots in a stored v2 program and leaves edited slots alone', async () => {
     const { default: Dexie } = await import('dexie')

@@ -8,10 +8,12 @@ export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweig
  * How load is expressed:
  * - external: the weight field is the load (barbell total, or per dumbbell).
  * - bodyweight-plus: the weight field is ADDED load; e1RM uses bodyweight + added.
+ * - assisted: the weight field is ASSISTANCE (an assisted pull-up machine's counterweight);
+ *   less is harder, progression lowers it, e1RM uses bodyweight − assistance.
  * - timed: progression is in seconds (repMin/repMax are seconds).
  * - cardio: repMin/repMax are minutes.
  */
-export type Loading = 'external' | 'bodyweight-plus' | 'timed' | 'cardio'
+export type Loading = 'external' | 'bodyweight-plus' | 'assisted' | 'timed' | 'cardio'
 
 export type MovementPattern =
   | 'horizontal-press'

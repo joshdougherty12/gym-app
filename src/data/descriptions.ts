@@ -14,8 +14,14 @@ export const EXERCISE_DESCRIPTIONS: Record<string, string> = {
 
   // Vertical pull
   'weighted-pull-up':
-    'Pull-up, palms facing away, with extra weight on a dip belt or between your feet. Start from a dead hang and pull until your chin clears the bar. Log only the added weight (0 = bodyweight).',
-  'chin-up': 'Pull-up with palms facing you, shoulder-width grip. More biceps than a pull-up. Log the added weight (0 = bodyweight).',
+    'Palms facing away, hands a little wider than your shoulders. Start from a dead hang and pull until your chin clears the bar. Bodyweight is the goal; once sets get easy, add weight on a dip belt. Log only the added weight (0 = bodyweight).',
+  'chin-up': 'Pull-up with palms facing you, shoulder-width grip. More biceps than a pull-up. Log only the added weight (0 = bodyweight).',
+  'assisted-pull-up':
+    'Assisted pull-up machine: kneel or stand on the platform and pick a counterweight that helps you up. Log the assistance. Less assistance is harder, so the app lowers it as you get stronger, until you can do real pull-ups.',
+  'band-assisted-pull-up':
+    'Loop a resistance band over the bar and put a knee or foot in it, then do a full pull-up. A thicker band helps more; move to a thinner one as reps get easy. Note the band color.',
+  'negative-pull-up':
+    'Jump or step up so your chin is over the bar, then lower yourself as slowly as you can (aim for 3-5 seconds) to a dead hang. Builds the strength for a first pull-up.',
   'lat-pulldown': 'Cable machine: sit under the pad, grab the wide bar, pull it to your upper chest by driving your elbows down. Control it back up.',
   'neutral-grip-pulldown': 'Pulldown with the close, palms-facing (V or parallel) handle. Pull to your upper chest, elbows down and back.',
 
@@ -120,6 +126,8 @@ export const EXERCISE_DESCRIPTIONS: Record<string, string> = {
   plank: 'Forearms and toes on the floor, body in a straight line from head to heels. Squeeze glutes and abs and hold. Timed.',
   'rkc-plank': 'A harder plank: elbows closer to your head, squeeze glutes, quads and abs as hard as you can. Much harder than a regular plank. Timed.',
   'side-plank': 'On one forearm and the side of your feet, body straight, hips up. Timed, per side.',
+  'hollow-hold':
+    'Lie on your back, press your low back into the floor, lift your shoulders and legs a few inches and reach your arms past your head. Bend your knees to make it easier. Timed.',
 
   // Conditioning
   'bike-intervals': 'On an exercise bike: 30 seconds hard (you can’t talk), 60 seconds easy, repeated for the full time.',

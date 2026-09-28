@@ -29,7 +29,7 @@ Your data is tied to this URL on this phone. Use **Settings → Download backup*
 | Tab | What it does |
 |---|---|
 | **Today** | Week, phase, target RIR; today's session with **Start workout**; daily check-in (weight, steps, calories, protein, fatigue 1-5); cardio log; week setup prompts; strength-drop warning; week-12 card |
-| **Workout** | One exercise at a time (or a list): last session's sets, today's suggested weight/reps **and why**; big steppers for weight/reps/RIR (tap a number to type); per-side reps; timed sets; rest timer (2:30 compound, 1:15 isolation) that beeps and vibrates; swap exercise, add/remove sets, warm-ups (don't count), notes; everything autosaved; finish summary with volume, PRs and next-time changes |
+| **Workout** | One exercise at a time (or a list): last session's sets, today's suggested weight/reps **and why**; big steppers for weight/reps/RIR (tap a number to type); per-side reps; a hold timer for planks and other timed sets; rest timer (2:30 compound, 1:15 isolation) that beeps and vibrates; swap exercise, add/remove sets, warm-ups (don't count), notes; everything autosaved; finish summary with volume, PRs and next-time changes |
 | **Program** | Weeks 0-12 with phases, each week's days and completion; week setup; edit sessions (swap, sets, reps, rest, increments, per-week extra sets); move sessions between days |
 | **Progress** | Green/yellow/red status with reasons; top set + Epley e1RM per lift; weekly sets per muscle vs 10; adherence (workouts, step goal); PR history |
 | **Body** | Weekly review (accept a calorie or step change); weight with 7-day moving average; waist; progress photos with side-by-side compare; nutrition vs targets; cardio |
@@ -47,7 +47,8 @@ Your data is tied to this URL on this phone. Use **Settings → Download backup*
 - **Double progression:** top of the range on every working set at the target RIR → +increment and reps
   back to the bottom; otherwise same weight and +1 rep on sets below the top. Below the range two sessions
   running → drop ~5-10% (flagged). Logged RIR ≥ 2 above target → bigger jump; ≥ 2 below → hold.
-  Timed sets add 5 s up to the top, then weight or a harder variation. Per-side sets progress on the weaker side.
+  Timed holds add 5 s up to the top, then a harder variation (never added weight). Assisted pull-ups take the help
+  away by the increment. Per-side sets progress on the weaker side.
 - **Weekly review:** 7-day average vs the previous 7 days; needs 5 weigh-ins in each. Losing > 1 lb/week →
   +100-150 kcal; < 0.5 lb over two weeks (or gaining) → −100-150 kcal or +2,000 steps (your choice);
   0.5-1 lb/week → no change.
@@ -124,6 +125,22 @@ both, and each keeps what is on their own phone.
   OSM's tile policy does not cover a commercial app: switch to a paid tile provider before selling it.
 - **Partner:** "Run, walk and ride summaries" in Settings → Partner → *What your partner sees* shares type, date,
   distance, moving time and pace as an `asum` record. Never the route or coordinates.
+
+### Holds and pull-up progressions (1.11)
+
+- **Hold timer:** timed exercises (plank, RKC plank, side plank, hollow body hold) show a big stopwatch ring in the open
+  set. Tap it (or **Start**): a 3-2-1 "get set", then it counts up and fills toward the target, chimes and turns green
+  at the target, and keeps counting until **Stop**, which fills in the seconds (still editable) for **Log set**. Side
+  planks run the left side, a 5-second switch, then the right, and log the weaker side. Sounds and buzzes follow the
+  rest-timer settings; the screen stays on while it runs. Logic in `src/lib/holdTimer.ts` (unit-tested).
+- **Pull-ups for every level:** "Weighted pull-up" and "Weighted chin-up" are now **Pull-up** and **Chin-up** (added
+  weight optional), plus **Assisted pull-up (machine)**, **Band-assisted pull-up** and **Negative pull-up**. The
+  assisted machine logs the help (shown as BW−40); less help is progress, so double progression lowers it, and
+  e1RM, records and the strength trend use bodyweight minus help. New lifters' generated programs get a pulldown or
+  an assisted version instead of unassisted pull-ups.
+- **Swapping** on the Program tab works again (the list was empty). A swap between reps and a timed hold resets the
+  range to that type's default, so 8 reps don't become 8 seconds.
+- Dexie v8 renames stored "Weighted" pull-ups the user hadn't renamed and takes the added-weight setting off timed holds.
 
 ### Demo mode
 

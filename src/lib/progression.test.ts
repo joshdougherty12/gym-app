@@ -143,7 +143,7 @@ describe('per-side exercises', () => {
 })
 
 describe('timed exercises', () => {
-  const plank = { type: 'timed', incrementLb: 10, perSide: false, loading: 'timed', timedProgression: 'add-weight' } as const
+  const plank = { type: 'timed', incrementLb: 0, perSide: false, loading: 'timed', timedProgression: 'harder-variation' } as const
   const timedSession = (secs: number[], weight = 0): PastSession => ({
     date: '2026-09-24',
     targetRir: base,
@@ -156,21 +156,73 @@ describe('timed exercises', () => {
     expect(s.sets.map((x) => x.reps)).toEqual([50, 55, 60])
   })
 
-  it('adds weight at the top when configured', () => {
-    const s = suggest(input({ exercise: plank, repMin: 45, repMax: 60, history: [timedSession([60, 60, 60])] }))
-    expect(s.kind).toBe('timed-add-weight')
-    expect(s.sets[0]).toEqual({ weightLb: 10, reps: 45 })
+  it('suggests a harder variation at the top, never added weight', () => {
+    // Older stored copies may still say "add-weight" with an increment, and old logs may carry weight.
+    const old = { ...plank, incrementLb: 10, timedProgression: 'add-weight' } as const
+    const s = suggest(input({ exercise: old, repMin: 45, repMax: 60, history: [timedSession([60, 61, 60], 10)] }))
+    expect(s.kind).toBe('timed-harder-variation')
+    expect(s.sets.every((x) => x.weightLb === 0)).toBe(true)
   })
 
-  it('suggests a harder variation at the top when configured', () => {
-    const s = suggest(input({ exercise: { ...plank, timedProgression: 'harder-variation' }, repMin: 45, repMax: 60, history: [timedSession([60, 61, 60])] }))
-    expect(s.kind).toBe('timed-harder-variation')
+  it('drops old added weight when adding seconds', () => {
+    const s = suggest(input({ exercise: plank, repMin: 45, repMax: 60, history: [timedSession([45, 45, 45], 10)] }))
+    expect(s.sets.every((x) => x.weightLb === 0)).toBe(true)
   })
 
   it('starts at the bottom of the range with no history', () => {
     const s = suggest(input({ exercise: plank, repMin: 45, repMax: 60 }))
     expect(s.sets[0]).toEqual({ weightLb: 0, reps: 45 })
     expect(s.reason).toContain('45s')
+  })
+})
+
+describe('assisted pull-ups (weight is help)', () => {
+  const machine = { type: 'compound', incrementLb: 5, perSide: false, loading: 'assisted' } as const
+  const at = (help: number, reps: number[], rir = 2) => session(help, reps, rir)
+
+  it('asks for a starting assistance the first time', () => {
+    const s = suggest(input({ exercise: machine }))
+    expect(s.kind).toBe('first-time')
+    expect(s.sets[0]?.weightLb).toBeNull()
+    expect(s.reason).toContain('assistance')
+  })
+
+  it('takes help away at the top of the range', () => {
+    const s = suggest(input({ exercise: machine, history: [at(50, [10, 10, 10])] }))
+    expect(s.kind).toBe('increase')
+    expect(s.sets[0]).toEqual({ weightLb: 45, reps: 8 })
+    expect(s.reason).toContain('45 lb of help')
+  })
+
+  it('takes twice as much away with lots left in the tank', () => {
+    const s = suggest(input({ exercise: machine, history: [at(50, [10, 10, 10], 5)] }))
+    expect(s.kind).toBe('big-increase')
+    expect(s.sets[0]?.weightLb).toBe(40)
+  })
+
+  it('goes by the least help used', () => {
+    const last: PastSession = { date: '2026-09-28', targetRir: base, sets: [50, 45, 45].map((w) => ({ weightLb: w, reps: 10, rir: 2 })) }
+    expect(suggest(input({ exercise: machine, history: [last] })).sets[0]?.weightLb).toBe(40)
+  })
+
+  it('never goes below zero help, and says to try real pull-ups', () => {
+    const s = suggest(input({ exercise: machine, history: [at(5, [10, 10, 10], 5)] }))
+    expect(s.sets[0]?.weightLb).toBe(0)
+    expect(s.reason).toContain('no help')
+  })
+
+  it('adds help after missing the bottom twice', () => {
+    const s = suggest(input({ exercise: machine, history: [at(40, [6, 5, 5]), at(40, [7, 6, 5])] }))
+    expect(s.kind).toBe('reduce')
+    expect(s.flag).toBe('missed-bottom-twice')
+    expect(s.sets[0]).toEqual({ weightLb: 45, reps: 8 })
+  })
+
+  it('adds reps at the same help inside the range', () => {
+    const s = suggest(input({ exercise: machine, history: [at(40, [9, 8, 8])] }))
+    expect(s.kind).toBe('add-reps')
+    expect(s.sets.map((x) => x.reps)).toEqual([10, 9, 9])
+    expect(s.sets.every((x) => x.weightLb === 40)).toBe(true)
   })
 })
 
@@ -209,8 +261,10 @@ describe('helpers', () => {
     expect(epley(100, 1)).toBe(100)
     expect(epley(100, 10)).toBeCloseTo(133.33, 2)
     expect(epley(100, 0)).toBe(0)
-    expect(effectiveLoad(25, true, 195)).toBe(220)
-    expect(effectiveLoad(25, false, 195)).toBe(25)
+    expect(effectiveLoad(25, 'bodyweight-plus', 195)).toBe(220)
+    expect(effectiveLoad(25, 'external', 195)).toBe(25)
+    expect(effectiveLoad(40, 'assisted', 150)).toBe(110)
+    expect(effectiveLoad(40, 'assisted')).toBe(0)
   })
 
   it('computes a trailing 7-day moving average that ignores missing days', () => {

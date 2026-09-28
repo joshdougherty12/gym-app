@@ -15,8 +15,10 @@ interface SlotSpec {
 
 const H_PRESS = ['incline-barbell-press', 'incline-db-press', 'flat-db-press', 'machine-chest-press', 'incline-smith-press', 'flat-barbell-bench', 'push-up']
 const H_PRESS_B = ['flat-db-press', 'machine-chest-press', 'incline-db-press', 'flat-barbell-bench', 'push-up']
-const V_PULL = ['weighted-pull-up', 'lat-pulldown', 'neutral-grip-pulldown', 'chin-up', 'inverted-row']
-const V_PULL_B = ['neutral-grip-pulldown', 'lat-pulldown', 'chin-up', 'weighted-pull-up', 'inverted-row']
+const V_PULL = ['weighted-pull-up', 'lat-pulldown', 'neutral-grip-pulldown', 'chin-up', 'assisted-pull-up', 'band-assisted-pull-up', 'inverted-row']
+const V_PULL_B = ['neutral-grip-pulldown', 'lat-pulldown', 'chin-up', 'weighted-pull-up', 'assisted-pull-up', 'band-assisted-pull-up', 'inverted-row']
+/** Unassisted pull-ups and chin-ups: new lifters get a pulldown or an assisted version first. */
+const HARD_PULLS = new Set(['weighted-pull-up', 'chin-up'])
 const V_PRESS = ['seated-db-ohp', 'machine-shoulder-press', 'standing-barbell-ohp', 'pike-push-up', 'machine-lateral-raise', 'db-lateral-raise', 'cable-lateral-raise']
 const H_PULL = ['chest-supported-row', 'incline-db-row', 'seated-cable-row', 'one-arm-db-row', 'barbell-row', 'inverted-row']
 const H_PULL_B = ['incline-db-row', 'seated-cable-row', 'chest-supported-row', 'one-arm-db-row', 'barbell-row', 'inverted-row']
@@ -96,6 +98,9 @@ const SPLITS: Record<number, { day: Weekday; session: string }[]> = {
 const NEEDS: Record<string, EquipmentItem[]> = {
   'weighted-pull-up': ['pullup-bar'],
   'chin-up': ['pullup-bar'],
+  'assisted-pull-up': ['machines'],
+  'band-assisted-pull-up': ['pullup-bar'],
+  'negative-pull-up': ['pullup-bar'],
   'hanging-leg-raise': ['pullup-bar'],
   'inverted-row': ['pullup-bar'],
   'captains-chair-raise': ['machines'],
@@ -161,7 +166,8 @@ export function generateProgram(p: Profile, library: Map<string, Exercise>): Gen
     const specSlots = spec.slots.filter((s) => s.role !== 'finisher').slice(0, maxSlots - (spec.slots.some((s) => s.role === 'finisher') ? 1 : 0))
     const finisher = spec.slots.find((s) => s.role === 'finisher')
     for (const s of finisher ? [...specSlots, finisher] : specSlots) {
-      const ok = s.pick.map((id) => library.get(id)).filter((e): e is Exercise => !!e && allowed(e, p.equipment, p.limitations) && !usedHere.has(e.id))
+      const picks = p.experience === 'new' ? [...s.pick.filter((id) => !HARD_PULLS.has(id)), ...s.pick.filter((id) => HARD_PULLS.has(id))] : s.pick
+      const ok = picks.map((id) => library.get(id)).filter((e): e is Exercise => !!e && allowed(e, p.equipment, p.limitations) && !usedHere.has(e.id))
       const e = ok.find((x) => !usedInProgram.has(x.id)) ?? ok[0]
       if (!e) continue
       usedHere.add(e.id)

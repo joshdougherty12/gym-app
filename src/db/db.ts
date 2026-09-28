@@ -154,6 +154,30 @@ export class CutlineDB extends Dexie {
       activityPoints: '++id, activityId',
     })
 
+    // v8: pull-ups and chin-ups are no longer "weighted" by name (added weight is
+    // optional), and timed holds never take added weight. Stored copies the user
+    // hasn't renamed get the library's name and how-to; data untouched.
+    this.version(8)
+      .stores({})
+      .upgrade(async (tx) => {
+        const renamed: Record<string, string> = { 'weighted-pull-up': 'Weighted pull-up', 'chin-up': 'Weighted chin-up' }
+        await tx
+          .table<Exercise, string>('exercises')
+          .toCollection()
+          .modify((e) => {
+            const lib = EXERCISE_LIBRARY.find((x) => x.id === e.id)
+            if (!lib) return
+            if (renamed[e.id] === e.name) {
+              e.name = lib.name
+              if (lib.description) e.description = lib.description
+            }
+            if (e.type === 'timed') {
+              e.incrementLb = 0
+              e.timedProgression = 'harder-variation'
+            }
+          })
+      })
+
     this.on('populate', (tx) => {
       void tx.table('settings').add({ id: 'app', ...defaultSettings() } satisfies SettingsRow)
       void tx.table('exercises').bulkAdd(structuredClone([...EXERCISE_LIBRARY]))

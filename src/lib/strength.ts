@@ -22,16 +22,17 @@ export function weeklyLiftSeries(
   bodyweightLb?: number,
 ): LiftPoint[] {
   const byWeek = new Map<number, LiftPoint>()
-  const bwPlus = exercise.loading === 'bodyweight-plus'
   for (const w of workouts) {
     if (w.finishedAt === undefined || effectiveWeek(w.weekNumber, w.deload).phase === 'deload') continue
     for (const s of w.sets) {
       if (s.exerciseId !== exercise.id || s.isWarmup || countedReps(s) <= 0) continue
-      const e1 = epley(effectiveLoad(s.weightLb, bwPlus, bodyweightLb), countedReps(s))
+      const e1 = epley(effectiveLoad(s.weightLb, exercise.loading, bodyweightLb), countedReps(s))
+      // Assisted: less help is more weight moved, so the top set is bodyweight − help.
+      const top = exercise.loading === 'assisted' ? effectiveLoad(s.weightLb, 'assisted', bodyweightLb) : s.weightLb
       const cur = byWeek.get(w.weekNumber)
-      if (!cur) byWeek.set(w.weekNumber, { week: w.weekNumber, date: w.date, topWeightLb: s.weightLb, e1rmLb: e1 })
+      if (!cur) byWeek.set(w.weekNumber, { week: w.weekNumber, date: w.date, topWeightLb: top, e1rmLb: e1 })
       else {
-        cur.topWeightLb = Math.max(cur.topWeightLb, s.weightLb)
+        cur.topWeightLb = Math.max(cur.topWeightLb, top)
         cur.e1rmLb = Math.max(cur.e1rmLb, e1)
         if (w.date < cur.date) cur.date = w.date
       }

@@ -39,7 +39,7 @@ describe('v7 activities upgrade', () => {
     const d = new CutlineDB(name)
     dbs.push(d)
     await d.open()
-    expect(d.verno).toBe(7)
+    expect(d.verno).toBeGreaterThanOrEqual(7)
     expect(await d.cardio.get('c1')).toEqual({ id: 'c1', date: '2026-09-20', kind: 'zone2', minutes: 30 })
     expect((await d.dailyLogs.get('2026-09-20'))?.weightLb).toBe(190)
     expect(await d.activities.count()).toBe(0)
