@@ -144,7 +144,9 @@ both, and each keeps what is on their own phone.
 
 ### Accent colors (1.12)
 
-- **Settings → Display → Accent color:** Orange (default), Barbie pink or Olive drab. Barbie pink also turns every
+- **Settings → Display → Accent color:** Orange (default), Barbie pink or Olive drab. Each is a full palette for light and dark
+  (phases, charts, status colors, neutrals and the status bar): pink with lavender, mint and coral; olive drab with brass,
+  ranger green, slate and coyote. Chart pairs are checked with the dataviz palette validator. Barbie pink also turns every
   checkmark into a heart and scatters faint little hearts over the background. Until one is picked, a linked
   couple's phones choose their own (`src/lib/accent.ts`): pink when this phone's name starts with "Soph" and the
   partner's with "Jo", olive drab the other way round, orange for everyone else.

@@ -122,15 +122,32 @@ body {
  * Accent colors (Settings -> Display, data-accent on <html>). Orange is the
  * default above. Barbie pink and olive drab also tint the neutrals a touch.
  */
+/*
+ * Barbie pink: hot pink with lavender, mint, peach and coral companions, on
+ * plum-tinted neutrals. Chart pairs validated (dataviz validator) on each surface.
+ */
 :root[data-accent='pink'] {
   --bg: #171216;
   --surface: #201a1f;
   --surface-2: #2b2229;
   --line: #3b2e38;
+  --ink: #f8eef4;
+  --ink-muted: #ab99a5;
   --accent: #ff4fae;
   --accent-ink: #1a0b14;
   --accent-soft: rgb(255 79 174 / 0.16);
-  --chart-1: #ff4fae;
+  --good: #5ad8b4;
+  --warn: #ffb56b;
+  --bad: #ff6b85;
+  --phase-intro: #9d8f99;
+  --phase-base: #b995ff;
+  --phase-push: #ff4fae;
+  --phase-deload: #5ad8b4;
+  --phase-peak: #ff8a66;
+  --chart-1: #e8399a;
+  --chart-2: #9b76f0;
+  --chart-grid: #2f2530;
+  --chart-axis: #9d8f99;
 }
 
 :root[data-theme='light'][data-accent='pink'] {
@@ -138,21 +155,53 @@ body {
   --surface: #ffffff;
   --surface-2: #f8e3ee;
   --line: #eed0df;
+  --ink: #2a1321;
+  --ink-muted: #6f5866;
   --accent: #d0187c;
   --accent-ink: #ffffff;
   --accent-soft: rgb(208 24 124 / 0.1);
+  --good: #0e8466;
+  --warn: #a35a06;
+  --bad: #c61d3c;
+  --phase-intro: #7d6f79;
+  --phase-base: #7446d4;
+  --phase-push: #d0187c;
+  --phase-deload: #0e8466;
+  --phase-peak: #d1461c;
   --chart-1: #d0187c;
+  --chart-2: #7446d4;
+  --chart-grid: #f1dde8;
+  --chart-axis: #7d6f79;
 }
 
+/*
+ * Army olive drab: OD green with brass, ranger green, slate and coyote
+ * companions, on field-tinted neutrals and bone-white text. Charts pair a
+ * stronger olive with steel blue (olive drab itself is too gray to chart);
+ * validated (dataviz validator) on each surface.
+ */
 :root[data-accent='olive'] {
   --bg: #121410;
   --surface: #1a1d17;
   --surface-2: #242820;
   --line: #33382c;
+  --ink: #eceadd;
+  --ink-muted: #a2a591;
   --accent: #a4ae5e;
   --accent-ink: #11130c;
   --accent-soft: rgb(164 174 94 / 0.16);
-  --chart-1: #a4ae5e;
+  --good: #8cc06b;
+  --warn: #e0b545;
+  --bad: #e0664f;
+  --phase-intro: #8d907c;
+  --phase-base: #8ea8bb;
+  --phase-push: #a4ae5e;
+  --phase-deload: #8cc06b;
+  --phase-peak: #d9813f;
+  --chart-1: #879632;
+  --chart-2: #5b98cc;
+  --chart-grid: #2a2e25;
+  --chart-axis: #8d907c;
 }
 
 :root[data-theme='light'][data-accent='olive'] {
@@ -160,10 +209,23 @@ body {
   --surface: #ffffff;
   --surface-2: #e9eadf;
   --line: #d6d8c6;
+  --ink: #1f2116;
+  --ink-muted: #5c5f4d;
   --accent: #4b5320;
   --accent-ink: #ffffff;
   --accent-soft: rgb(75 83 32 / 0.12);
-  --chart-1: #4b5320;
+  --good: #3c6a2c;
+  --warn: #86661a;
+  --bad: #b03a25;
+  --phase-intro: #6e715e;
+  --phase-base: #466178;
+  --phase-push: #4b5320;
+  --phase-deload: #3c6a2c;
+  --phase-peak: #a14e1b;
+  --chart-1: #6b7d1e;
+  --chart-2: #3a73a8;
+  --chart-grid: #e3e4d7;
+  --chart-axis: #6e715e;
 }
 
 /* Barbie pink: little hearts scattered over the background. */

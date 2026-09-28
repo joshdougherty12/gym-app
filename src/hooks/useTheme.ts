@@ -2,13 +2,17 @@ import { useEffect } from 'react'
 import { useAccentStore } from '../store/accent'
 import type { AccentPref, ThemePref } from '../types'
 
-const THEME_COLOR = { dark: '#121416', light: '#f6f4f0' } as const
+/** The browser and status bar color: the page background of the current theme and accent. */
+function syncThemeColor() {
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()
+  if (bg) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bg)
+}
 
 function apply(pref: ThemePref) {
   const dark = pref === 'dark' || (pref === 'system' && !window.matchMedia('(prefers-color-scheme: light)').matches)
   const mode = dark ? 'dark' : 'light'
   document.documentElement.dataset.theme = mode
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_COLOR[mode])
+  syncThemeColor()
 }
 
 /** Applies the accent color (data-accent on <html>; the CSS swaps the tokens). */
@@ -17,6 +21,7 @@ export function useAccent(accent: AccentPref | undefined) {
   useEffect(() => {
     if (!accent) return
     document.documentElement.dataset.accent = accent
+    syncThemeColor()
     setStore(accent)
     try {
       localStorage.setItem('cutline-accent', accent) // pre-paint hint only
