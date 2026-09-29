@@ -14,7 +14,8 @@ import { saveExercise, updateSettings, useExercises, useSessions, useSettings } 
 import { programWeek } from '../lib/calendar'
 import { newId } from '../lib/id'
 import { isIsoDate, mondayOf, nextMonday, shortDate, todayIso } from '../lib/dates'
-import { ACCENTS } from '../lib/accent'
+import { ACCENTS, accentChoices, accentPref, isSeason } from '../lib/accent'
+import { SEASON_LABEL } from '../lib/seasons'
 import { formatRest } from '../lib/rest'
 import { useAccentStore } from '../store/accent'
 import { displayWeight, formatNumber, inputWeightToLb, roundTo, weightUnit } from '../lib/units'
@@ -59,6 +60,7 @@ export function SettingsScreen() {
   const partnerSummary = usePartnerSummary()
   const stepsSummary = useStepsSummary(settings?.stepGoal)
   const accent = useAccentStore((s) => s.accent)
+  const role = useAccentStore((s) => s.role)
 
   if (!settings || !sessions || !exercises) return <Loading />
   const set = (patch: Partial<Settings>) => void updateSettings(patch)
@@ -69,7 +71,7 @@ export function SettingsScreen() {
   const u = settings.units
   const inc = (e: Equipment) => `+${formatNumber(roundTo(displayWeight(settings.incrementDefaults[e], u), 0.25))}`
   const summaries = {
-    display: `${u === 'imperial' ? 'lb / in' : 'kg / cm'} · ${settings.theme} theme · ${ACCENTS.find((a) => a.value === accent)?.label.toLowerCase() ?? accent} · ${settings.workoutView === 'single' ? 'one exercise at a time' : 'scroll list'}`,
+    display: `${u === 'imperial' ? 'lb / in' : 'kg / cm'} · ${settings.theme} theme · ${isSeason(accent) ? `seasonal (${SEASON_LABEL[accent].toLowerCase()})` : (ACCENTS.find((a) => a.value === accent)?.label.toLowerCase() ?? accent)} · ${settings.workoutView === 'single' ? 'one exercise at a time' : 'scroll list'}`,
     targets: `${settings.calorieTarget.toLocaleString()} kcal · ${settings.proteinTargetG} g protein · ${settings.stepGoal.toLocaleString()} steps`,
     mealai: hasKey ? 'Connected · Claude Sonnet 5' : 'Not connected: add your API key',
     rest: `${formatRest(settings.restCompoundSec)} compound · ${formatRest(settings.restIsolationSec)} isolation${settings.timerSound || settings.timerVibrate ? '' : ' · silent'}`,
@@ -136,7 +138,8 @@ export function SettingsScreen() {
         />
         <div>
           <p className="mb-1 text-sm font-medium">Accent color</p>
-          <Segmented label="Accent color" value={accent} onChange={(a) => set({ accent: a })} options={ACCENTS} />
+          <Segmented label="Accent color" value={accentPref(settings.accent, role)} onChange={(a) => set({ accent: a })} options={accentChoices(role)} columns={role === 'sophie' ? 2 : undefined} />
+          {isSeason(accent) && <p className="mt-1 text-xs text-muted">Now: {SEASON_LABEL[accent]}. Changes with the calendar and holidays.</p>}
         </div>
         <div>
           <p className="mb-1 text-sm font-medium">Workout screen</p>

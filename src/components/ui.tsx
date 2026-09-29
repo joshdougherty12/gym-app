@@ -7,23 +7,30 @@ export function Screen({
   subtitle,
   back,
   action,
+  top,
+  wrapAction,
   children,
 }: {
   title: string
   subtitle?: ReactNode
   back?: string
   action?: ReactNode
+  /** Above the header (Today's seasonal garland). */
+  top?: ReactNode
+  /** The action sits beside the title when it fits and wraps under it when it doesn't (Today's note). */
+  wrapAction?: boolean
   children: ReactNode
 }) {
   return (
     <div className="mx-auto max-w-xl px-4 pt-[max(1rem,var(--sat))] pb-28">
-      <header className="mb-4 flex items-end gap-2">
+      {top}
+      <header className={`mb-4 flex items-end ${wrapAction ? 'flex-wrap gap-x-2 gap-y-3' : 'gap-2'}`}>
         {back && (
           <Link to={back} aria-label="Back" className="-ml-2 grid size-11 place-items-center rounded-full text-muted">
             <Icon name="chevronLeft" />
           </Link>
         )}
-        <div className="min-w-0 flex-1">
+        <div className={wrapAction ? 'flex-none' : 'min-w-0 flex-1'}>
           <h1 className="num text-4xl leading-none font-bold tracking-tight uppercase">{title}</h1>
           {subtitle && <div className="mt-1 text-sm text-muted">{subtitle}</div>}
         </div>
@@ -204,14 +211,22 @@ export function Segmented<T extends string>({
   value,
   options,
   onChange,
+  columns,
 }: {
   label: string
   value: T
   options: { value: T; label: string }[]
   onChange: (v: T) => void
+  /** Lay the options out in a grid (for more than three). */
+  columns?: number
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex rounded-xl bg-surface-2 p-1">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className={`rounded-xl bg-surface-2 p-1 ${columns ? 'grid gap-1' : 'flex'}`}
+      style={columns ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}
+    >
       {options.map((o) => (
         <button
           key={o.value}

@@ -1,3 +1,5 @@
+import { isSeason } from '../lib/accent'
+import { MotifSvg, SEASON_ART } from '../lib/seasonArt'
 import { useAccentStore } from '../store/accent'
 const PATHS = {
   today: 'M12 3v2M12 19v2M5 12H3M21 12h-2M6.3 6.3 4.9 4.9M19.1 19.1l-1.4-1.4M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z',
@@ -37,6 +39,10 @@ const HEART = 'M12 21s-7.5-4.6-10-9.3C.3 8.4 2.1 4.5 5.8 4.1c2.1-.2 3.9.9 5 2.6 
 
 export function Icon({ name, className = 'size-6' }: { name: IconName; className?: string }) {
   const accent = useAccentStore((s) => s.accent)
+  // Seasonal themes: the checkmark is the season's glyph (a maple leaf, a jack-o-lantern, a snowflake…).
+  if (name === 'check' && isSeason(accent)) {
+    return <MotifSvg m={SEASON_ART[accent].glyph} colors={{ face: 'var(--surface)', vein: 'transparent' }} className={className} />
+  }
   // Barbie pink: every checkmark is a little heart.
   if (name === 'check' && accent === 'pink') {
     return (

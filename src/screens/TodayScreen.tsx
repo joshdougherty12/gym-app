@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router'
 import { CardioQuickLog } from '../components/CardioQuickLog'
 import { CheckIn } from '../components/CheckIn'
 import { DailyNote } from '../components/DailyNote'
+import { SeasonGarland } from '../components/SeasonGarland'
 import { StepsCard } from '../components/StepsCard'
 import { StrengthWarning } from '../components/StrengthWarning'
 import { WeekSetupCard } from '../components/WeekSetupCard'
@@ -21,6 +22,8 @@ import { useWorkouts } from '../hooks/useData'
 import { useActiveWorkout } from '../store/activeWorkout'
 import { ACTIVITY } from '../lib/activity/track'
 import { useAccentStore } from '../store/accent'
+import { isSeason } from '../lib/accent'
+import { SEASON_TAGLINE } from '../lib/seasons'
 
 export function TodayScreen() {
   const settings = useSettings()
@@ -32,6 +35,7 @@ export function TodayScreen() {
   const [cardioOpen, setCardioOpen] = useState(false)
   const workouts = useWorkouts()
   const role = useAccentStore((s) => s.role)
+  const look = useAccentStore((s) => s.accent)
   const today = todayIso()
   const doneToday = useLiveQuery(() => db.workouts.where('date').equals(today).toArray(), [today])
   const info = settings ? dayInfo(today, settings) : null
@@ -57,7 +61,13 @@ export function TodayScreen() {
   }
 
   return (
-    <Screen title={WEEKDAY_LONG[weekdayOf(today)]} subtitle={shortDate(today)} action={role === 'sophie' ? <DailyNote /> : undefined}>
+    <Screen
+      title={WEEKDAY_LONG[weekdayOf(today)]}
+      subtitle={isSeason(look) ? `${shortDate(today)} · ${SEASON_TAGLINE[look]}` : shortDate(today)}
+      action={role === 'sophie' ? <DailyNote /> : undefined}
+      top={<SeasonGarland />}
+      wrapAction
+    >
       {active && (
         <Link to="/workout" className="mb-3 flex min-h-16 items-center gap-3 rounded-2xl bg-accent px-4 text-accent-ink">
           <span className="flex-1">

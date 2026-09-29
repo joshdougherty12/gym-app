@@ -159,6 +159,20 @@ both, and each keeps what is on their own phone.
   `npx wrangler secret bulk ..\..\.private\love-notes-secret.json` from `server/`. Relinking makes a new household,
   so `LOVE_BEFORE` would need moving past it.
 
+### Seasonal themes (1.14, Sophie's phone only)
+
+- **Settings → Display → Accent color → Seasonal** is offered only on her phone (the same "Soph"/"Jo" partner-link
+  check) and is her default; every other phone keeps its accent (Joshua's stays olive drab) and never sees the option.
+- **Calendar** (`src/lib/seasons.ts`, local date, re-checked each minute): fall (Sept 22-30), Halloween (October),
+  Thanksgiving (November), Christmas (Dec 1-30), New Year's Eve (Dec 31), winter (Jan 1 to Mar 19), spring (Mar 20 to
+  June 13) with Easter taking over two weeks either side of Easter Sunday (computed each year), stars and stripes from
+  Flag Day (June 14) through July 4, summer (July 5 to Sept 21), and her birthday on May 21, which beats everything.
+- **Each theme** (`src/seasons.css`, `src/lib/seasonArt.tsx`): its own light and dark palette (chart pairs pass the
+  dataviz validator), a scattered background pattern, a swaying garland across the top of Today, drifting pieces
+  behind the content (falling leaves, rising sheet ghosts and bats, snow, fireworks, petals and butterflies,
+  bubbles, balloons and confetti), a themed checkmark (maple leaf, jack-o-lantern, acorn, tree, star, snowflake,
+  flower, egg, sun, balloon) and a tagline beside the date. Drifting pieces are hidden with reduced motion.
+
 ### Demo mode
 
 **Settings → Open demo mode** loads about ten weeks of generated history (the real progression engine

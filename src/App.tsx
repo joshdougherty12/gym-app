@@ -9,6 +9,8 @@ import { useReminderSync } from './hooks/useReminderSync'
 import { useAccent, useTheme } from './hooks/useTheme'
 import { coupleRole, resolveAccent } from './lib/accent'
 import { useAccentStore } from './store/accent'
+import { SeasonFx } from './components/SeasonFx'
+import { useToday } from './hooks/useToday'
 import { usePartner } from './partner/hooks'
 import { usePartnerSync } from './partner/useSync'
 import { useStepSync } from './hooks/useStepSync'
@@ -72,7 +74,8 @@ function Shell() {
   return (
     <>
       <AppBanners />
-      <main>
+      <SeasonFx />
+      <main className="relative z-[1]">
         <Routes>
           <Route path="/" element={<TodayScreen />} />
           <Route path="/welcome" element={<WelcomeScreen />} />
@@ -107,7 +110,8 @@ export default function App() {
   useTheme(settings?.theme)
   const role =
     settings && partner ? coupleRole(settings.partner.name.trim() || settings.profile?.name, partner.partner?.name, partner.link?.status === 'linked') : null
-  useAccent(settings && partner ? resolveAccent(settings.accent, role) : undefined)
+  const today = useToday()
+  useAccent(settings && partner ? resolveAccent(settings.accent, role, today) : undefined)
   const setRole = useAccentStore((s) => s.setRole)
   useEffect(() => setRole(role), [role, setRole])
 

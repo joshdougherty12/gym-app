@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { useAccentStore } from '../store/accent'
-import type { AccentPref, ThemePref } from '../types'
+import { isSeason, type ThemeId } from '../lib/accent'
+import { tileCss } from '../lib/seasonArt'
+import type { ThemePref } from '../types'
 
 /** The browser and status bar color: the page background of the current theme and accent. */
 function syncThemeColor() {
@@ -15,12 +17,26 @@ function apply(pref: ThemePref) {
   syncThemeColor()
 }
 
-/** Applies the accent color (data-accent on <html>; the CSS swaps the tokens). */
-export function useAccent(accent: AccentPref | undefined) {
+/**
+ * Applies the look (data-accent on <html>; the CSS swaps the tokens). A
+ * seasonal theme also gets data-season and its background patterns for both
+ * modes as CSS variables.
+ */
+export function useAccent(accent: ThemeId | undefined) {
   const setStore = useAccentStore((s) => s.set)
   useEffect(() => {
     if (!accent) return
-    document.documentElement.dataset.accent = accent
+    const root = document.documentElement
+    root.dataset.accent = accent
+    if (isSeason(accent)) {
+      root.dataset.season = accent
+      root.style.setProperty('--season-tile-dark', tileCss(accent, 'dark'))
+      root.style.setProperty('--season-tile-light', tileCss(accent, 'light'))
+    } else {
+      delete root.dataset.season
+      root.style.removeProperty('--season-tile-dark')
+      root.style.removeProperty('--season-tile-light')
+    }
     syncThemeColor()
     setStore(accent)
     try {

@@ -1,0 +1,556 @@
+/*
+ * Seasonal themes (lib/seasons.ts picks one by date; data-accent on <html>).
+ * Generated from a palette table; chart pairs pass the dataviz palette validator
+ * on each surface. The background patterns and drifting pieces are drawn in
+ * lib/seasonArt.ts; this file is only color.
+ */
+
+/* fall (dark): Pumpkin, maple red, mustard and plum on warm brown. */
+:root[data-accent='fall'] {
+  --bg: #16110d;
+  --surface: #1f1812;
+  --surface-2: #2a2019;
+  --line: #3a2d22;
+  --ink: #f6ece0;
+  --ink-muted: #b3a08c;
+  --accent: #e8762c;
+  --accent-ink: #1a0f06;
+  --accent-soft: rgb(232 118 44 / 0.16);
+  --good: #9bbf5a;
+  --warn: #e6b13e;
+  --bad: #e0573f;
+  --phase-intro: #a59584;
+  --phase-base: #d9a441;
+  --phase-push: #e8762c;
+  --phase-deload: #9bbf5a;
+  --phase-peak: #d0473a;
+  --chart-1: #db6b1c;
+  --chart-2: #ab77c1;
+  --chart-grid: #2c231b;
+  --chart-axis: #a59584;
+}
+
+/* fall (light) */
+:root[data-theme='light'][data-accent='fall'] {
+  --bg: #fbf4ea;
+  --surface: #ffffff;
+  --surface-2: #f3e6d4;
+  --line: #e6d3bb;
+  --ink: #2b1a0e;
+  --ink-muted: #6f5a45;
+  --accent: #b8520f;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(184 82 15 / 0.1);
+  --good: #4f6f1f;
+  --warn: #8f6a09;
+  --bad: #b3321f;
+  --phase-intro: #7a6a58;
+  --phase-base: #9b6f0e;
+  --phase-push: #b8520f;
+  --phase-deload: #4f6f1f;
+  --phase-peak: #a3271c;
+  --chart-1: #b8520f;
+  --chart-2: #7a4a9a;
+  --chart-grid: #f0e2d0;
+  --chart-axis: #7a6a58;
+}
+
+/* halloween (dark): Jack-o-lantern orange, witch purple and slime green on a haunted night. */
+:root[data-accent='halloween'] {
+  --bg: #0f0c14;
+  --surface: #18131f;
+  --surface-2: #221b2c;
+  --line: #30273f;
+  --ink: #f4f0ff;
+  --ink-muted: #a79bbd;
+  --accent: #ff7a1a;
+  --accent-ink: #140a02;
+  --accent-soft: rgb(255 122 26 / 0.16);
+  --good: #8ee05a;
+  --warn: #ffc23d;
+  --bad: #ff4d6d;
+  --phase-intro: #8f84a3;
+  --phase-base: #a77bff;
+  --phase-push: #ff7a1a;
+  --phase-deload: #8ee05a;
+  --phase-peak: #ff4d6d;
+  --chart-1: #df6707;
+  --chart-2: #9c70f3;
+  --chart-grid: #251d31;
+  --chart-axis: #8f84a3;
+}
+
+/* halloween (light) */
+:root[data-theme='light'][data-accent='halloween'] {
+  --bg: #f6f1fb;
+  --surface: #ffffff;
+  --surface-2: #ebe3f5;
+  --line: #d9cdea;
+  --ink: #1e1428;
+  --ink-muted: #5f5270;
+  --accent: #c2500a;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(194 80 10 / 0.1);
+  --good: #3f7d17;
+  --warn: #8a6300;
+  --bad: #b8203e;
+  --phase-intro: #6f6680;
+  --phase-base: #6a3fc4;
+  --phase-push: #c2500a;
+  --phase-deload: #3f7d17;
+  --phase-peak: #b8203e;
+  --chart-1: #c2500a;
+  --chart-2: #6a3fc4;
+  --chart-grid: #ece4f5;
+  --chart-axis: #6f6680;
+}
+
+/* thanksgiving (dark): Cranberry, harvest gold, sage and pumpkin pie. */
+:root[data-accent='thanksgiving'] {
+  --bg: #15100c;
+  --surface: #1e1712;
+  --surface-2: #29201a;
+  --line: #3a2e25;
+  --ink: #f5ebe0;
+  --ink-muted: #b09f8e;
+  --accent: #e05a6d;
+  --accent-ink: #1d080c;
+  --accent-soft: rgb(224 90 109 / 0.16);
+  --good: #8fb573;
+  --warn: #e0b04a;
+  --bad: #f06a4a;
+  --phase-intro: #a8988a;
+  --phase-base: #d6a03c;
+  --phase-push: #e05a6d;
+  --phase-deload: #8fb573;
+  --phase-peak: #c86b2e;
+  --chart-1: #e05a6d;
+  --chart-2: #4a90d9;
+  --chart-grid: #2b221c;
+  --chart-axis: #a8988a;
+}
+
+/* thanksgiving (light) */
+:root[data-theme='light'][data-accent='thanksgiving'] {
+  --bg: #faf5ee;
+  --surface: #ffffff;
+  --surface-2: #f1e7da;
+  --line: #e2d3c1;
+  --ink: #2a1b12;
+  --ink-muted: #6d5b4b;
+  --accent: #a8283d;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(168 40 61 / 0.1);
+  --good: #4b6e32;
+  --warn: #8a6408;
+  --bad: #b5401c;
+  --phase-intro: #786858;
+  --phase-base: #94680f;
+  --phase-push: #a8283d;
+  --phase-deload: #4b6e32;
+  --phase-peak: #a4531a;
+  --chart-1: #a8283d;
+  --chart-2: #1f6fa8;
+  --chart-grid: #efe4d6;
+  --chart-axis: #786858;
+}
+
+/* christmas (dark): Christmas red, holly green and gold on a deep pine night. */
+:root[data-accent='christmas'] {
+  --bg: #0d1410;
+  --surface: #142019;
+  --surface-2: #1c2b22;
+  --line: #2a3d31;
+  --ink: #f3f7f2;
+  --ink-muted: #9fb3a6;
+  --accent: #e5383b;
+  --accent-ink: #16070a;
+  --accent-soft: rgb(229 56 59 / 0.16);
+  --good: #4cc97a;
+  --warn: #f2c14e;
+  --bad: #ff7070;
+  --phase-intro: #93a79a;
+  --phase-base: #f2c14e;
+  --phase-push: #e5383b;
+  --phase-deload: #4cc97a;
+  --phase-peak: #d8e3ec;
+  --chart-1: #e5383b;
+  --chart-2: #4596d3;
+  --chart-grid: #1d2a22;
+  --chart-axis: #93a79a;
+}
+
+/* christmas (light) */
+:root[data-theme='light'][data-accent='christmas'] {
+  --bg: #f7f5ef;
+  --surface: #ffffff;
+  --surface-2: #ece8dc;
+  --line: #ddd6c4;
+  --ink: #14201a;
+  --ink-muted: #55645b;
+  --accent: #b3121f;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(179 18 31 / 0.1);
+  --good: #1c7a41;
+  --warn: #8a6500;
+  --bad: #9e1b32;
+  --phase-intro: #6b7a70;
+  --phase-base: #8a6500;
+  --phase-push: #b3121f;
+  --phase-deload: #1c7a41;
+  --phase-peak: #3c6e9e;
+  --chart-1: #b3121f;
+  --chart-2: #2f6fa6;
+  --chart-grid: #ebe7da;
+  --chart-axis: #6b7a70;
+}
+
+/* nye (dark): Champagne gold, silver and fireworks at midnight. */
+:root[data-accent='nye'] {
+  --bg: #0b0c14;
+  --surface: #141629;
+  --surface-2: #1d2038;
+  --line: #2c3050;
+  --ink: #f5f3ea;
+  --ink-muted: #a3a6bd;
+  --accent: #e8c15a;
+  --accent-ink: #16120a;
+  --accent-soft: rgb(232 193 90 / 0.16);
+  --good: #6ee0b5;
+  --warn: #f0a860;
+  --bad: #ff6b8b;
+  --phase-intro: #9295ad;
+  --phase-base: #9fb4ff;
+  --phase-push: #e8c15a;
+  --phase-deload: #6ee0b5;
+  --phase-peak: #ff6bcb;
+  --chart-1: #af8a12;
+  --chart-2: #7786e4;
+  --chart-grid: #1f2238;
+  --chart-axis: #9295ad;
+}
+
+/* nye (light) */
+:root[data-theme='light'][data-accent='nye'] {
+  --bg: #f6f5f0;
+  --surface: #ffffff;
+  --surface-2: #eceae0;
+  --line: #dcd9c9;
+  --ink: #15162a;
+  --ink-muted: #585b72;
+  --accent: #8f6b12;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(143 107 18 / 0.1);
+  --good: #1d7a5c;
+  --warn: #9a5a10;
+  --bad: #b0204e;
+  --phase-intro: #6c6f85;
+  --phase-base: #3a4fb5;
+  --phase-push: #8f6b12;
+  --phase-deload: #1d7a5c;
+  --phase-peak: #a3208a;
+  --chart-1: #8f6b12;
+  --chart-2: #3a4fb5;
+  --chart-grid: #ebe9df;
+  --chart-axis: #6c6f85;
+}
+
+/* winter (dark): Ice blue, snow white and winter rose. */
+:root[data-accent='winter'] {
+  --bg: #0e131a;
+  --surface: #151c26;
+  --surface-2: #1e2733;
+  --line: #2c3847;
+  --ink: #eef5fb;
+  --ink-muted: #9fb0c2;
+  --accent: #7cc4ff;
+  --accent-ink: #06121c;
+  --accent-soft: rgb(124 196 255 / 0.16);
+  --good: #6fd6c6;
+  --warn: #f0c878;
+  --bad: #ff7a8a;
+  --phase-intro: #93a3b5;
+  --phase-base: #b4a4ff;
+  --phase-push: #7cc4ff;
+  --phase-deload: #6fd6c6;
+  --phase-peak: #ff9fb8;
+  --chart-1: #4796d3;
+  --chart-2: #d46685;
+  --chart-grid: #1d2632;
+  --chart-axis: #93a3b5;
+}
+
+/* winter (light) */
+:root[data-theme='light'][data-accent='winter'] {
+  --bg: #f2f7fc;
+  --surface: #ffffff;
+  --surface-2: #e3edf7;
+  --line: #cfdeec;
+  --ink: #10202e;
+  --ink-muted: #52667a;
+  --accent: #1f6fb2;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(31 111 178 / 0.1);
+  --good: #137a6c;
+  --warn: #8a6408;
+  --bad: #b72a45;
+  --phase-intro: #66788a;
+  --phase-base: #5b48c2;
+  --phase-push: #1f6fb2;
+  --phase-deload: #137a6c;
+  --phase-peak: #b72a6e;
+  --chart-1: #1f6fb2;
+  --chart-2: #b8456a;
+  --chart-grid: #e4edf6;
+  --chart-axis: #66788a;
+}
+
+/* spring (dark): Fresh green, lilac, blossom pink and butter yellow. */
+:root[data-accent='spring'] {
+  --bg: #111511;
+  --surface: #181e19;
+  --surface-2: #212922;
+  --line: #303b31;
+  --ink: #f2f7ef;
+  --ink-muted: #a3b19f;
+  --accent: #7ed67a;
+  --accent-ink: #0b1a0a;
+  --accent-soft: rgb(126 214 122 / 0.16);
+  --good: #7ed67a;
+  --warn: #ffd166;
+  --bad: #ff7a90;
+  --phase-intro: #9aa897;
+  --phase-base: #c7a0ff;
+  --phase-push: #7ed67a;
+  --phase-deload: #7fd3e6;
+  --phase-peak: #ff8fb7;
+  --chart-1: #4fa64c;
+  --chart-2: #9f79d4;
+  --chart-grid: #212922;
+  --chart-axis: #9aa897;
+}
+
+/* spring (light) */
+:root[data-theme='light'][data-accent='spring'] {
+  --bg: #f5faf2;
+  --surface: #ffffff;
+  --surface-2: #e7f1e2;
+  --line: #d3e3cb;
+  --ink: #142012;
+  --ink-muted: #566653;
+  --accent: #2e7d32;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(46 125 50 / 0.1);
+  --good: #2e7d32;
+  --warn: #8a6400;
+  --bad: #b3264a;
+  --phase-intro: #687866;
+  --phase-base: #7445c2;
+  --phase-push: #2e7d32;
+  --phase-deload: #1d6f8a;
+  --phase-peak: #c2306f;
+  --chart-1: #2e7d32;
+  --chart-2: #7445c2;
+  --chart-grid: #e6f0e1;
+  --chart-axis: #687866;
+}
+
+/* easter (dark): Pastel lavender, mint, baby pink and butter yellow. */
+:root[data-accent='easter'] {
+  --bg: #141219;
+  --surface: #1c1922;
+  --surface-2: #26222e;
+  --line: #363044;
+  --ink: #f7f3fb;
+  --ink-muted: #aba3b8;
+  --accent: #c9a7ff;
+  --accent-ink: #150d22;
+  --accent-soft: rgb(201 167 255 / 0.16);
+  --good: #8fe3bd;
+  --warn: #ffe08a;
+  --bad: #ff8fa8;
+  --phase-intro: #a39cb0;
+  --phase-base: #8fd3ff;
+  --phase-push: #c9a7ff;
+  --phase-deload: #8fe3bd;
+  --phase-peak: #ffa6c9;
+  --chart-1: #9d7bd0;
+  --chart-2: #37a67a;
+  --chart-grid: #26222e;
+  --chart-axis: #a39cb0;
+}
+
+/* easter (light) */
+:root[data-theme='light'][data-accent='easter'] {
+  --bg: #fbf8fd;
+  --surface: #ffffff;
+  --surface-2: #f1eaf8;
+  --line: #e2d6ef;
+  --ink: #221a2c;
+  --ink-muted: #625873;
+  --accent: #7a4fc9;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(122 79 201 / 0.1);
+  --good: #1f7a5a;
+  --warn: #8a6700;
+  --bad: #b8325a;
+  --phase-intro: #6f6680;
+  --phase-base: #2a74b0;
+  --phase-push: #7a4fc9;
+  --phase-deload: #1f7a5a;
+  --phase-peak: #c23a82;
+  --chart-1: #7a4fc9;
+  --chart-2: #057c58;
+  --chart-grid: #efe8f6;
+  --chart-axis: #6f6680;
+}
+
+/* patriotic (dark): Old Glory red, white and blue. */
+:root[data-accent='patriotic'] {
+  --bg: #0b1020;
+  --surface: #121a30;
+  --surface-2: #1a2440;
+  --line: #2a3656;
+  --ink: #f5f7fb;
+  --ink-muted: #a3aec6;
+  --accent: #ff4d5e;
+  --accent-ink: #1a0508;
+  --accent-soft: rgb(255 77 94 / 0.16);
+  --good: #5fd08b;
+  --warn: #ffc857;
+  --bad: #ff8a5c;
+  --phase-intro: #95a0b8;
+  --phase-base: #6ea8ff;
+  --phase-push: #ff4d5e;
+  --phase-deload: #5fd08b;
+  --phase-peak: #e8ecf5;
+  --chart-1: #f64356;
+  --chart-2: #568fe4;
+  --chart-grid: #1b2440;
+  --chart-axis: #95a0b8;
+}
+
+/* patriotic (light) */
+:root[data-theme='light'][data-accent='patriotic'] {
+  --bg: #f6f8fc;
+  --surface: #ffffff;
+  --surface-2: #e6ebf5;
+  --line: #d0d9ea;
+  --ink: #0e1a36;
+  --ink-muted: #4f5d7a;
+  --accent: #b31b2c;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(179 27 44 / 0.1);
+  --good: #1b7a45;
+  --warn: #8a6300;
+  --bad: #a0301a;
+  --phase-intro: #637093;
+  --phase-base: #1d3f8f;
+  --phase-push: #b31b2c;
+  --phase-deload: #1b7a45;
+  --phase-peak: #6a3fa0;
+  --chart-1: #b31b2c;
+  --chart-2: #2b5fc4;
+  --chart-grid: #e5eaf4;
+  --chart-axis: #637093;
+}
+
+/* summer (dark): Ocean turquoise, sunshine yellow and coral on sand. */
+:root[data-accent='summer'] {
+  --bg: #0f1416;
+  --surface: #162023;
+  --surface-2: #1f2b2f;
+  --line: #2e3d42;
+  --ink: #f2f8f7;
+  --ink-muted: #9fb4b4;
+  --accent: #33d1c4;
+  --accent-ink: #04201e;
+  --accent-soft: rgb(51 209 196 / 0.16);
+  --good: #7be07b;
+  --warn: #ffc53d;
+  --bad: #ff6b6b;
+  --phase-intro: #93a8a8;
+  --phase-base: #ffc53d;
+  --phase-push: #33d1c4;
+  --phase-deload: #7be07b;
+  --phase-peak: #ff7f6a;
+  --chart-1: #0aa59a;
+  --chart-2: #e0634f;
+  --chart-grid: #1f2b2f;
+  --chart-axis: #93a8a8;
+}
+
+/* summer (light) */
+:root[data-theme='light'][data-accent='summer'] {
+  --bg: #fbf8f1;
+  --surface: #ffffff;
+  --surface-2: #f2ecdd;
+  --line: #e3d9c3;
+  --ink: #0f2226;
+  --ink-muted: #4f6468;
+  --accent: #0b7f78;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(11 127 120 / 0.1);
+  --good: #2f7a2f;
+  --warn: #8a6300;
+  --bad: #b8322a;
+  --phase-intro: #607377;
+  --phase-base: #9a6a00;
+  --phase-push: #0b7f78;
+  --phase-deload: #2f7a2f;
+  --phase-peak: #c2452d;
+  --chart-1: #0f6fb3;
+  --chart-2: #c2452d;
+  --chart-grid: #f1ebdc;
+  --chart-axis: #607377;
+}
+
+/* birthday (dark): Party pink, balloon blue, confetti gold. Happy birthday! */
+:root[data-accent='birthday'] {
+  --bg: #151021;
+  --surface: #1d1630;
+  --surface-2: #281f40;
+  --line: #3a2f58;
+  --ink: #fbf5ff;
+  --ink-muted: #b0a3c8;
+  --accent: #ff5cc6;
+  --accent-ink: #1d0716;
+  --accent-soft: rgb(255 92 198 / 0.16);
+  --good: #5fe0b0;
+  --warn: #ffd24d;
+  --bad: #ff6b7a;
+  --phase-intro: #a095b8;
+  --phase-base: #7aa8ff;
+  --phase-push: #ff5cc6;
+  --phase-deload: #5fe0b0;
+  --phase-peak: #ffd24d;
+  --chart-1: #e643af;
+  --chart-2: #618de2;
+  --chart-grid: #281f40;
+  --chart-axis: #a095b8;
+}
+
+/* birthday (light) */
+:root[data-theme='light'][data-accent='birthday'] {
+  --bg: #fdf6ff;
+  --surface: #ffffff;
+  --surface-2: #f3e6fa;
+  --line: #e4d0f0;
+  --ink: #25123a;
+  --ink-muted: #66557a;
+  --accent: #c2168f;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(194 22 143 / 0.1);
+  --good: #177a5a;
+  --warn: #8a6500;
+  --bad: #b3263e;
+  --phase-intro: #736a86;
+  --phase-base: #3558c4;
+  --phase-push: #c2168f;
+  --phase-deload: #177a5a;
+  --phase-peak: #a06a00;
+  --chart-1: #c2168f;
+  --chart-2: #3558c4;
+  --chart-grid: #f2e6f9;
+  --chart-axis: #736a86;
+}

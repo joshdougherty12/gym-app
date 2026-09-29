@@ -21,7 +21,7 @@ export function DailyNote() {
 
   if (!note || note.day !== day) return null
   return (
-    <figure className="daily-note relative mb-1 max-w-[62%] min-w-0 self-center rounded-2xl rounded-bl-md px-3 py-2">
+    <figure className="daily-note relative mb-1 min-w-[9.5rem] flex-1 self-center rounded-2xl rounded-bl-md px-3 py-2">
       <svg viewBox="0 0 24 24" className="daily-note-heart absolute -top-2 -right-1.5 size-5 rotate-12" aria-hidden="true">
         <path fill="currentColor" d={HEART} />
       </svg>

@@ -167,8 +167,11 @@ export interface ProgramPause {
 
 export type Units = 'imperial' | 'metric'
 export type ThemePref = 'system' | 'dark' | 'light'
-/** Accent color. Barbie pink also swaps checkmarks for hearts and scatters little hearts on the background. */
-export type AccentPref = 'orange' | 'pink' | 'olive'
+/**
+ * Accent color. Barbie pink also swaps checkmarks for hearts and scatters little
+ * hearts on the background; seasonal follows the calendar (lib/seasons.ts).
+ */
+export type AccentPref = 'seasonal' | 'orange' | 'pink' | 'olive'
 export type WorkoutView = 'single' | 'list'
 
 export interface Settings {
