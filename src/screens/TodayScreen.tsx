@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router'
 import { CardioQuickLog } from '../components/CardioQuickLog'
 import { CheckIn } from '../components/CheckIn'
 import { DailyNote } from '../components/DailyNote'
-import { SeasonGarland } from '../components/SeasonGarland'
+import { SeasonScene } from '../components/SeasonScene'
 import { StepsCard } from '../components/StepsCard'
 import { StrengthWarning } from '../components/StrengthWarning'
 import { WeekSetupCard } from '../components/WeekSetupCard'
@@ -23,7 +23,7 @@ import { useActiveWorkout } from '../store/activeWorkout'
 import { ACTIVITY } from '../lib/activity/track'
 import { useAccentStore } from '../store/accent'
 import { isSeason } from '../lib/accent'
-import { SEASON_TAGLINE } from '../lib/seasons'
+import { seasonTagline } from '../lib/seasons'
 
 export function TodayScreen() {
   const settings = useSettings()
@@ -63,9 +63,9 @@ export function TodayScreen() {
   return (
     <Screen
       title={WEEKDAY_LONG[weekdayOf(today)]}
-      subtitle={isSeason(look) ? `${shortDate(today)} · ${SEASON_TAGLINE[look]}` : shortDate(today)}
+      subtitle={isSeason(look) ? `${shortDate(today)} · ${seasonTagline(look, today)}` : shortDate(today)}
       action={role === 'sophie' ? <DailyNote /> : undefined}
-      top={<SeasonGarland />}
+      top={<SeasonScene />}
       wrapAction
     >
       {active && (

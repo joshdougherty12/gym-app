@@ -40,6 +40,11 @@ export const MOTIFS = {
     { d: 'M11.2 7c0-2.2.6-3.8 2.2-4.8l1.1 1.1c-1.1.8-1.5 2-1.5 3.7z', c: 'stem' },
     { d: 'M7.2 11.3l2.3 2.6H5.8zM16.8 11.3l1.4 2.6h-3.7zM6.8 15.8c1.6 1.9 3.4 2.6 5.2 2.6s3.6-.7 5.2-2.6l-1.9.5-.9 1-1.2-.9-1.2.9-1.2-.9-1.2.9-.9-1z', c: 'face' },
   ],
+  gourd: [
+    { d: 'M12 6.5c-1.7 0-2.8.4-3.8.9C5.2 7 3 9.6 3 13.6 3 17.8 5.6 21 8.6 21c1.2 0 2.2-.4 3.4-.4s2.2.4 3.4.4c3 0 5.6-3.2 5.6-7.4 0-4-2.2-6.6-5.2-6.2-1-.5-2.1-.9-3.8-.9z', c: 'pumpkin' },
+    { d: 'M9 8.5c-1.4 2.6-1.4 8.8 0 11.8M15 8.5c1.4 2.6 1.4 8.8 0 11.8', c: 'rib', stroke: 0.9 },
+    { d: 'M11.2 7c0-2.2.6-3.8 2.2-4.8l1.1 1.1c-1.1.8-1.5 2-1.5 3.7z', c: 'stem' },
+  ],
   bat: [{ d: 'M12 9.2c-.8 0-1.3-.9-1.3-.9l-.6 1.6C8.4 8.6 5.4 8 2 9.6c2.1.5 3.2 2 3.2 3.6 1-1 2.6-1.1 3.6-.1.6-1 2-1.6 3.2-.7 1.2-.9 2.6-.3 3.2.7 1-1 2.6-.9 3.6.1 0-1.6 1.1-3.1 3.2-3.6-3.4-1.6-6.4-1-8.1.3l-.6-1.6s-.5.9-1.3.9z', c: 'bat' }],
   pie: [
     { d: 'M4 17.5L12.5 5 21 17.5z', c: 'b' },
@@ -83,6 +88,19 @@ export const MOTIFS = {
     { d: 'M5.4 12.5l2.2-1.6 2.2 1.6 2.2-1.6 2.2 1.6 2.2-1.6 2.2 1.6v1.8l-2.2-1.6-2.2 1.6-2.2-1.6-2.2 1.6-2.2-1.6-2.2 1.6z', c: 'b' },
   ],
   bunny: [{ d: 'M8.2 2c-1.6 0-2.1 3.3-1 7.4A6 6 0 1 0 16.8 9.4c1.1-4.1.6-7.4-1-7.4S13.3 5 13.3 8.3h-2.6C10.7 5 9.8 2 8.2 2z', c: 'bunny' }],
+  cross: [{ d: 'M10.6 2h2.8v6.2H19v2.8h-5.6V22h-2.8V11H5V8.2h5.6z', c: 'gold' }],
+  lily: [
+    { d: 'M11.4 13.5h1.2V22h-1.2zM12 19c-2.5-.3-4.4-1.7-5-4 2.4.1 4.2 1.4 5 4z', c: 'stem' },
+    { d: 'M12 2.5c-1.2 3.4-4 5.8-7.5 6 1.6 1.8 3.8 2.9 6.2 3L11 14h2l.3-2.5c2.4-.1 4.6-1.2 6.2-3-3.5-.2-6.3-2.6-7.5-6z', c: 'white' },
+    { d: 'M11.6 9.5h.8v3h-.8z', c: 'gold' },
+  ],
+  dove: [
+    { d: 'M2.5 13.5c3.2.3 5.6-1.6 7.4-4.7 1.1-1.8 3.2-2.5 5-1.8L17 5l.4 2.4c1.7.8 2.8 2.4 3 4.2-2.1-.1-3.4.9-4.3 2.5-1.8 3.3-5.6 5.2-9.6 4.3l2.3-2c-3 .1-5.2-1.1-6.3-2.9z', c: 'white' },
+    { d: circle(16.2, 8.8, 0.6), c: 'face' },
+  ],
+  palm: [
+    { d: 'M4 21C9 16 13.5 10 19.5 3.5M8 16.8 4.6 15.9M8 16.8l.3 3.4M10.6 13.8 6.8 12.4M10.6 13.8l.9 3.7M13.2 10.7 9.6 8.6M13.2 10.7l1.4 3.4M15.8 7.7 12.6 5.3M15.8 7.7l1.8 3M18 5.1 15.4 2.9M18 5.1l2.2 2.3', c: 'green', stroke: 1.5 },
+  ],
   sun: [
     { d: circle(12, 12, 5), c: 'gold' },
     { d: 'M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1', c: 'gold', stroke: 1.6 },
@@ -114,9 +132,11 @@ export const MOTIFS = {
 } satisfies Record<string, Part[]>
 
 export type Motif = keyof typeof MOTIFS
+export type { Colors }
 
 /** Colors for a motif's parts, in dark and light mode. `a`, `b`… are the season's own. */
 type Colors = Record<string, string>
+
 
 /** One placed motif: in the 200×200 background tile, or a drifting piece. */
 interface Placed {
@@ -143,7 +163,9 @@ interface SeasonArt {
 export type FxAnim = 'fall' | 'snow' | 'drift' | 'twinkle' | 'burst' | 'rise' | 'flutter'
 
 const WHITE_DARK = { ghost: '#f4f1fb', face: '#1a1424', snow: '#e8f3ff', white: '#f5f7fb', silver: '#cfd6e6', string: '#cfc6dd', vein: '#00000033', stem: '#4e7a2a', bunny: '#f6f1f8' }
-const WHITE_LIGHT = { ghost: '#ffffff', face: '#2a2238', snow: '#8fbde3', white: '#ffffff', silver: '#9aa3b5', string: '#8f86a0', vein: '#00000026', stem: '#4e7a2a', bunny: '#e7ddee' }
+// Light mode outlines white pieces (ghosts, lilies, doves, bunnies) so they don't vanish on a light background.
+const WHITE_LIGHT = { ghost: '#ffffff', face: '#2a2238', snow: '#8fbde3', white: '#ffffff', silver: '#9aa3b5', string: '#8f86a0', vein: '#00000026', stem: '#4e7a2a', bunny: '#ffffff', outline: '#8f84a3' }
+const OUTLINED = new Set(['white', 'ghost', 'bunny'])
 
 export const SEASON_ART: Record<Season, SeasonArt> = {
   fall: {
@@ -290,21 +312,24 @@ export const SEASON_ART: Record<Season, SeasonArt> = {
   },
   easter: {
     colors: {
-      dark: { ...WHITE_DARK, a: '#c9a7ff', b: '#fff1a8', center: '#ffe08a', d: '#3f5f36' },
-      light: { ...WHITE_LIGHT, a: '#a987e6', b: '#fff6c2', center: '#e0b43c', d: '#3f5f36' },
+      dark: { ...WHITE_DARK, a: '#c9a7ff', b: '#fff1a8', center: '#ffe08a', d: '#3f5f36', gold: '#e8c15a', green: '#6fae54', face: '#3a3040' },
+      light: { ...WHITE_LIGHT, a: '#a987e6', b: '#fff6c2', center: '#e0b43c', d: '#3f5f36', gold: '#b08a1c', green: '#4f8a3a', white: '#fbf7ff', face: '#6a6078' },
     },
-    alpha: [0.2, 0.3],
+    alpha: [0.22, 0.32],
+    // Eggs and bunnies, with the cross, Easter lilies, a dove and a palm frond (Palm Sunday).
     tile: [
-      { m: 'egg', x: 14, y: 12, r: -12, s: 1.2 },
-      { m: 'bunny', x: 110, y: 16, r: 0, s: 1.2 },
-      { m: 'egg', x: 66, y: 86, r: 14, s: 0.9, c: { a: '#8fe3bd', b: '#ffffff' } },
-      { m: 'flower', x: 150, y: 100, r: 10, s: 0.9, c: { a: '#ffb3cf' } },
-      { m: 'egg', x: 28, y: 146, r: 6, s: 0.9, c: { a: '#ffb3cf', b: '#8fd3ff' } },
-      { m: 'egg', x: 110, y: 150, r: -8, s: 0.8, c: { a: '#8fd3ff', b: '#fff1a8' } },
+      { m: 'cross', x: 14, y: 10, r: 0, s: 1.25 },
+      { m: 'egg', x: 108, y: 12, r: -12, s: 1.1 },
+      { m: 'lily', x: 62, y: 70, r: -8, s: 1.2 },
+      { m: 'bunny', x: 152, y: 88, r: 0, s: 1 },
+      { m: 'dove', x: 14, y: 132, r: -6, s: 1.1 },
+      { m: 'egg', x: 104, y: 148, r: 10, s: 0.9, c: { a: '#8fe3bd', b: '#ffffff' } },
+      { m: 'palm', x: 164, y: 158, r: 0, s: 0.9 },
     ],
     fx: [
-      { motifs: [{ m: 'flower', c: { a: '#ffd1e0', center: '#ffe08a' } }, { m: 'flower', c: { a: '#e3d4ff', center: '#ffe08a' } }], anim: 'fall', count: 9, size: [10, 18] },
-      { motifs: [{ m: 'butterfly', c: { b: '#c9a7ff' } }, { m: 'butterfly', c: { b: '#8fe3bd' } }, { m: 'butterfly', c: { b: '#ffb3cf' } }], anim: 'flutter', count: 3, size: [22, 28] },
+      { motifs: [{ m: 'dove' }], anim: 'flutter', count: 3, size: [26, 34] },
+      { motifs: [{ m: 'flower', c: { a: '#ffd1e0', center: '#ffe08a' } }, { m: 'flower', c: { a: '#e3d4ff', center: '#ffe08a' } }], anim: 'fall', count: 8, size: [10, 18] },
+      { motifs: [{ m: 'butterfly', c: { b: '#c9a7ff' } }, { m: 'butterfly', c: { b: '#8fe3bd' } }], anim: 'flutter', count: 2, size: [22, 28] },
     ],
     glyph: 'egg',
   },
@@ -376,11 +401,11 @@ export const SEASON_ART: Record<Season, SeasonArt> = {
 /** SVG markup for one motif, colored. */
 export function motifSvg(m: Motif, colors: Colors): string {
   return (MOTIFS[m] as Part[])
-    .map((p) =>
-      p.stroke
-        ? `<path d="${p.d}" fill="none" stroke="${colors[p.c] ?? '#888'}" stroke-width="${p.stroke}" stroke-linecap="round" stroke-linejoin="round"/>`
-        : `<path d="${p.d}" fill="${colors[p.c] ?? '#888'}"/>`,
-    )
+    .map((p) => {
+      if (p.stroke) return `<path d="${p.d}" fill="none" stroke="${colors[p.c] ?? '#888'}" stroke-width="${p.stroke}" stroke-linecap="round" stroke-linejoin="round"/>`
+      const outline = colors.outline && OUTLINED.has(p.c) ? ` stroke="${colors.outline}" stroke-width="0.9"` : ''
+      return `<path d="${p.d}" fill="${colors[p.c] ?? '#888'}"${outline}/>`
+    })
     .join('')
 }
 
@@ -396,18 +421,42 @@ export function useSeasonMode(): 'dark' | 'light' {
   return mode
 }
 
-/** One motif as an inline SVG element (drifting pieces and checkmarks). */
-export function MotifSvg({ m, colors, className }: { m: Motif; colors: Colors; className?: string }) {
+function MotifPaths({ m, colors }: { m: Motif; colors: Colors }) {
   return (
-    <svg viewBox="0 0 24 24" width="100%" height="100%" className={className} aria-hidden="true">
+    <>
       {(MOTIFS[m] as Part[]).map((p, i) =>
         p.stroke ? (
           <path key={i} d={p.d} fill="none" stroke={colors[p.c] ?? 'currentColor'} strokeWidth={p.stroke} strokeLinecap="round" strokeLinejoin="round" />
+        ) : colors.outline && OUTLINED.has(p.c) ? (
+          <path key={i} d={p.d} fill={colors[p.c] ?? 'currentColor'} stroke={colors.outline} strokeWidth={0.9} />
         ) : (
           <path key={i} d={p.d} fill={colors[p.c] ?? 'currentColor'} />
         ),
       )}
+    </>
+  )
+}
+
+/** One motif as an inline SVG element (drifting pieces and checkmarks). */
+export function MotifSvg({ m, colors, className }: { m: Motif; colors: Colors; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="100%" height="100%" className={className} aria-hidden="true">
+      <MotifPaths m={m} colors={colors} />
     </svg>
+  )
+}
+
+/**
+ * A motif placed inside a larger SVG scene: `x`, `y` its top-left, `s` its
+ * scale from 24 units. `className` animates it around its own center.
+ */
+export function Piece({ m, colors, x, y, s = 1, r = 0, className }: { m: Motif; colors: Colors; x: number; y: number; s?: number; r?: number; className?: string }) {
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${r} ${12 * s} ${12 * s}) scale(${s})`}>
+      <g className={className}>
+        <MotifPaths m={m} colors={colors} />
+      </g>
+    </g>
   )
 }
 

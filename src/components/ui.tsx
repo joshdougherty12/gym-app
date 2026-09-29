@@ -15,7 +15,7 @@ export function Screen({
   subtitle?: ReactNode
   back?: string
   action?: ReactNode
-  /** Above the header (Today's seasonal garland). */
+  /** Above the header (Today's seasonal scene). */
   top?: ReactNode
   /** The action sits beside the title when it fits and wraps under it when it doesn't (Today's note). */
   wrapAction?: boolean

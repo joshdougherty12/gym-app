@@ -6,7 +6,7 @@
  *   Thanksgiving November
  *   Christmas  December 1-30
  *   NYE        December 31
- *   Easter     two weeks either side of Easter Sunday
+ *   Easter     the two weeks before Easter Sunday through the week after
  *   Patriotic  Flag Day (June 14) through the 4th of July
  *   Winter     January 1 to the first day of spring (March 20)
  *   Spring     March 20 to June 13
@@ -52,7 +52,7 @@ export const SEASON_TAGLINE: Record<Season, string> = {
   nye: 'Last lifts of the year',
   winter: 'Stay cozy',
   spring: 'Fresh start',
-  easter: 'Hoppy spring',
+  easter: 'He is risen! Alleluia',
   patriotic: 'Land of the free',
   summer: 'Sun’s out',
   birthday: 'Happy birthday, Sophie!',
@@ -84,6 +84,19 @@ function dayNum(iso: string): number {
   return Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1) / 86_400_000
 }
 
+/**
+ * The line beside the date on Today. Easter follows the liturgical calendar:
+ * "Easter is coming", then "Holy Week" from Palm Sunday, then "He is risen!"
+ * from Easter Sunday.
+ */
+export function seasonTagline(season: Season, date: string): string {
+  if (season !== 'easter') return SEASON_TAGLINE[season]
+  const fromEaster = dayNum(date) - dayNum(easterSunday(Number(date.slice(0, 4))))
+  if (fromEaster < -7) return 'Easter is coming'
+  if (fromEaster < 0) return 'Holy Week'
+  return SEASON_TAGLINE.easter
+}
+
 /** The theme for a local date. `withBirthday`: Sophie's phone. */
 export function seasonFor(date: string, withBirthday = false): Season {
   const md = date.slice(5)
@@ -92,7 +105,8 @@ export function seasonFor(date: string, withBirthday = false): Season {
   if (month === 10) return 'halloween'
   if (month === 11) return 'thanksgiving'
   if (month === 12) return md === '12-31' ? 'nye' : 'christmas'
-  if (Math.abs(dayNum(date) - dayNum(easterSunday(Number(date.slice(0, 4))))) <= 14) return 'easter'
+  const fromEaster = dayNum(date) - dayNum(easterSunday(Number(date.slice(0, 4))))
+  if (fromEaster >= -14 && fromEaster <= 7) return 'easter'
   if (md >= '06-14' && md <= '07-04') return 'patriotic'
   if (md < '03-20') return 'winter'
   if (md < '06-14') return 'spring'

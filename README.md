@@ -165,13 +165,18 @@ both, and each keeps what is on their own phone.
   check) and is her default; every other phone keeps its accent (Joshua's stays olive drab) and never sees the option.
 - **Calendar** (`src/lib/seasons.ts`, local date, re-checked each minute): fall (Sept 22-30), Halloween (October),
   Thanksgiving (November), Christmas (Dec 1-30), New Year's Eve (Dec 31), winter (Jan 1 to Mar 19), spring (Mar 20 to
-  June 13) with Easter taking over two weeks either side of Easter Sunday (computed each year), stars and stripes from
+  June 13) with Easter taking over from two weeks before Easter Sunday through the week after (computed each year), stars and stripes from
   Flag Day (June 14) through July 4, summer (July 5 to Sept 21), and her birthday on May 21, which beats everything.
-- **Each theme** (`src/seasons.css`, `src/lib/seasonArt.tsx`): its own light and dark palette (chart pairs pass the
-  dataviz validator), a scattered background pattern, a swaying garland across the top of Today, drifting pieces
+- **Each theme** (`src/seasons.css`, `src/lib/seasonArt.tsx`, `src/components/SeasonScene.tsx`): its own light and
+  dark palette (chart pairs pass the dataviz validator), a scattered background pattern, its own animated scene
+  across the top of Today (a leafy branch and pumpkins; a cobweb with a dangling spider, glowing jack-o-lanterns and
+  a bat; a turkey and wheat; twinkling lights and a wreath; the ball drop and fireworks; icicles and a snowman; a
+  rainbow and flowers; a cross on a hill at sunrise with bunny ears peeking out of the grass; a waving flag; a sun in
+  sunglasses over the waves; balloons and cake), drifting pieces
   behind the content (falling leaves, rising sheet ghosts and bats, snow, fireworks, petals and butterflies,
   bubbles, balloons and confetti), a themed checkmark (maple leaf, jack-o-lantern, acorn, tree, star, snowflake,
-  flower, egg, sun, balloon) and a tagline beside the date. Drifting pieces are hidden with reduced motion.
+  flower, egg, sun, balloon) and a tagline beside the date. Easter adds a cross, lilies, doves and palm fronds, and its
+  tagline follows Holy Week: "Easter is coming", "Holy Week" from Palm Sunday, then "He is risen! Alleluia". Drifting pieces are hidden with reduced motion.
 
 ### Demo mode
 

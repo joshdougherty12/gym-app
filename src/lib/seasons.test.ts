@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { easterSunday, seasonFor } from './seasons'
+import { easterSunday, seasonFor, seasonTagline } from './seasons'
 
 describe('seasonal themes', () => {
   it('knows Easter', () => {
@@ -27,12 +27,21 @@ describe('seasonal themes', () => {
     expect(seasonFor('2027-09-21')).toBe('summer')
   })
 
-  it('gives Easter the two weeks either side', () => {
-    // Easter 2027 is March 28: March 14 to April 11.
+  it('gives Easter the two weeks before and the week after', () => {
+    // Easter 2027 is March 28: March 14 to April 4.
     expect(seasonFor('2027-03-13')).toBe('winter')
     expect(seasonFor('2027-03-14')).toBe('easter')
-    expect(seasonFor('2027-04-11')).toBe('easter')
-    expect(seasonFor('2027-04-12')).toBe('spring')
+    expect(seasonFor('2027-04-04')).toBe('easter')
+    expect(seasonFor('2027-04-05')).toBe('spring')
+  })
+
+  it('follows the liturgical calendar in the Easter tagline', () => {
+    expect(seasonTagline('easter', '2027-03-14')).toBe('Easter is coming')
+    expect(seasonTagline('easter', '2027-03-21')).toBe('Holy Week') // Palm Sunday
+    expect(seasonTagline('easter', '2027-03-27')).toBe('Holy Week')
+    expect(seasonTagline('easter', '2027-03-28')).toBe('He is risen! Alleluia')
+    expect(seasonTagline('easter', '2027-04-04')).toBe('He is risen! Alleluia')
+    expect(seasonTagline('fall', '2026-09-29')).toBe('Sweater weather')
   })
 
   it('has a birthday on May 21, only on Sophie’s phone', () => {
