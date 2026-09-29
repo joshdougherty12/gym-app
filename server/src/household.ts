@@ -145,6 +145,13 @@ export class Household extends DurableObject<Env> {
     return { ok: true, value: { members: this.memberCount(), version: this.version() } }
   }
 
+  /** Member count and creation time, for the daily-note check. */
+  async about(secretHash: ArrayBuffer, memberId: string): Promise<Result<{ members: number; createdAt: number }>> {
+    const a = await this.auth(secretHash, memberId)
+    if (!a.ok) return a
+    return { ok: true, value: { members: this.memberCount(), createdAt: Number(this.meta('created_at') ?? '0') } }
+  }
+
   async push(secretHash: ArrayBuffer, memberId: string, records: PushRecord[]): Promise<Result<{ accepted: string[]; stale: string[]; version: number }>> {
     const a = await this.auth(secretHash, memberId)
     if (!a.ok) return a

@@ -150,7 +150,14 @@ both, and each keeps what is on their own phone.
   checkmark into a heart and scatters faint little hearts over the background. Until one is picked, a linked
   couple's phones choose their own (`src/lib/accent.ts`): pink when this phone's name starts with "Soph" and the
   partner's with "Jo", olive drab the other way round, orange for everyone else.
-- On that same "Soph" phone, a full-screen note from "Hubband" opens with the app once a day (`LoveNote.tsx`).
+- **Daily note (1.13):** on that same "Soph" phone, Today shows a note from Joshua in a speech bubble beside the
+  weekday (`DailyNote.tsx`). The notes are never in the app or this repo: they are the `LOVE_NOTES` secret on the sync
+  worker, which answers `GET /v1/households/:hid/note` only for a two-person household created before `LOVE_BEFORE`,
+  and only with today's note (the caller's local date from Cloudflare's IP time zone), so future notes can't be
+  peeked at. Order: a shuffled cycle through all of them, no repeats, reshuffled each cycle (`server/src/love.ts`).
+  The secret file is `..\.private\love-notes-secret.json`; update it with
+  `npx wrangler secret bulk ..\..\.private\love-notes-secret.json` from `server/`. Relinking makes a new household,
+  so `LOVE_BEFORE` would need moving past it.
 
 ### Demo mode
 

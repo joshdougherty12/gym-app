@@ -1,4 +1,5 @@
 import type { PushRecord, Result } from './household'
+import { localDate, noteEligible, parseNotes, pickNote } from './love'
 import { DATA_RE, ID_RE, MAX_BODY_BYTES, MAX_RECORD_CHARS, MAX_RECORDS_PER_PUSH, PULL_DEFAULT, REGISTER_PER_MINUTE, SECRET_RE } from './limits'
 
 export { Household } from './household'
@@ -11,10 +12,12 @@ export { Household } from './household'
 //   POST   /v1/households/:hid/push      { records: [{ rid, ts, tomb, data }] }
 //   GET    /v1/households/:hid/changes?since=N&limit=M
 //   DELETE /v1/households/:hid           unlink: delete everything for this household
+//   GET    /v1/households/:hid/note      today's note { date, text } for the one household
+//                                        allowed (see love.ts); 404 no_note for everyone else
 //
 // Nothing here logs request bodies, secrets or ciphertext.
 
-const ROUTE = /^\/v1\/households\/([A-Za-z0-9_-]{22})(?:\/(join|push|changes))?$/
+const ROUTE = /^\/v1\/households\/([A-Za-z0-9_-]{22})(?:\/(join|push|changes|note))?$/
 
 function allowedOrigins(env: Env): string[] {
   return (env.ALLOWED_ORIGINS ?? '')
@@ -169,6 +172,14 @@ export default {
         const limit = Number(url.searchParams.get('limit') ?? String(PULL_DEFAULT))
         if (!Number.isSafeInteger(since) || since < 0 || !Number.isSafeInteger(limit) || limit < 1) throw new HttpError(400, 'bad_cursor')
         r = await stub.changes(secretHash, needMember(), since, limit)
+      } else if (action === 'note' && req.method === 'GET') {
+        const about = await stub.about(secretHash, needMember())
+        if (!about.ok) return json({ error: about.error }, about.status, cors)
+        const notes = parseNotes(env.LOVE_NOTES)
+        if (!notes.length || !noteEligible(about.value.members, about.value.createdAt, env.LOVE_BEFORE)) return json({ error: 'no_note' }, 404, cors)
+        const tz = req.cf?.timezone
+        const date = localDate(new Date(), typeof tz === 'string' ? tz : undefined)
+        return json({ date, text: pickNote(notes, date) }, 200, cors)
       } else {
         return json({ error: 'method_not_allowed' }, 405, cors)
       }

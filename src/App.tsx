@@ -2,13 +2,13 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router'
 import { AppBanners } from './components/AppBanners'
-import { LoveNote } from './components/LoveNote'
 import { BottomNav } from './components/BottomNav'
 import { db } from './db/db'
 import { useSessions, useSettings } from './db/repo'
 import { useReminderSync } from './hooks/useReminderSync'
 import { useAccent, useTheme } from './hooks/useTheme'
 import { coupleRole, resolveAccent } from './lib/accent'
+import { useAccentStore } from './store/accent'
 import { usePartner } from './partner/hooks'
 import { usePartnerSync } from './partner/useSync'
 import { useStepSync } from './hooks/useStepSync'
@@ -72,7 +72,6 @@ function Shell() {
   return (
     <>
       <AppBanners />
-      <LoveNote />
       <main>
         <Routes>
           <Route path="/" element={<TodayScreen />} />
@@ -109,6 +108,8 @@ export default function App() {
   const role =
     settings && partner ? coupleRole(settings.partner.name.trim() || settings.profile?.name, partner.partner?.name, partner.link?.status === 'linked') : null
   useAccent(settings && partner ? resolveAccent(settings.accent, role) : undefined)
+  const setRole = useAccentStore((s) => s.setRole)
+  useEffect(() => setRole(role), [role, setRole])
 
   // Ask the browser not to evict this app's data under storage pressure.
   useEffect(() => {

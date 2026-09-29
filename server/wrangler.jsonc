@@ -14,6 +14,9 @@
   "vars": {
     // Comma-separated browser origins allowed to call the API: the web app,
     // and the Android app's WebView (https://localhost; capacitor://localhost for iOS WebViews).
-    "ALLOWED_ORIGINS": "https://joshdougherty12.github.io,https://localhost,capacitor://localhost"
+    "ALLOWED_ORIGINS": "https://joshdougherty12.github.io,https://localhost,capacitor://localhost",
+    // Daily notes (love.ts) go only to a two-person household created before this.
+    // The notes themselves are the LOVE_NOTES secret, never in this file.
+    "LOVE_BEFORE": "2026-09-29T00:00:00Z"
   }
 }
