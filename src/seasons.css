@@ -305,6 +305,56 @@
   --chart-axis: #66788a;
 }
 
+/* stpatricks (dark): Shamrock green and Irish gold, with a violet chart companion. */
+:root[data-accent='stpatricks'] {
+  --bg: #0d140f;
+  --surface: #141f17;
+  --surface-2: #1c2a20;
+  --line: #2a3d2f;
+  --ink: #f1f7ef;
+  --ink-muted: #9fb3a2;
+  --accent: #2fbf5b;
+  --accent-ink: #06140a;
+  --accent-soft: rgb(47 191 91 / 0.16);
+  --good: #7bd88f;
+  --warn: #f2c14e;
+  --bad: #ff6b6b;
+  --phase-intro: #93a796;
+  --phase-base: #f2c14e;
+  --phase-push: #2fbf5b;
+  --phase-deload: #7fd3c0;
+  --phase-peak: #ff9a3c;
+  --chart-1: #02ac49;
+  --chart-2: #8a6fe0;
+  --chart-grid: #1c2a20;
+  --chart-axis: #93a796;
+}
+
+/* stpatricks (light) */
+:root[data-theme='light'][data-accent='stpatricks'] {
+  --bg: #f3f8f1;
+  --surface: #ffffff;
+  --surface-2: #e4f0e0;
+  --line: #cfe2c9;
+  --ink: #10200f;
+  --ink-muted: #536652;
+  --accent: #1c7a3a;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(28 122 58 / 0.1);
+  --good: #1c7a3a;
+  --warn: #8a6500;
+  --bad: #b3263e;
+  --phase-intro: #677866;
+  --phase-base: #8a6500;
+  --phase-push: #1c7a3a;
+  --phase-deload: #1d6f6a;
+  --phase-peak: #b35a0f;
+  --chart-1: #1c7a3a;
+  --chart-2: #6a4fc4;
+  --chart-grid: #e5f0e1;
+  --chart-axis: #677866;
+}
+
 /* spring (dark): Fresh green, lilac, blossom pink and butter yellow. */
 :root[data-accent='spring'] {
   --bg: #111511;

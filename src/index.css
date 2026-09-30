@@ -419,6 +419,18 @@ body {
 .sc-flag { transform-origin: left center; animation: sc-flag 1.6s ease-in-out infinite alternate; }
 @keyframes sc-flag { from { transform: skewY(-3deg) scaleX(0.97); } to { transform: skewY(3deg) scaleX(1); } }
 
+.sc-wind { animation: sc-wind 10s linear infinite; transform-box: view-box; transform-origin: 0 0; }
+@keyframes sc-wind {
+  0% { transform: translate(140px, 30px) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translate(220px, 6px) rotate(200deg); }
+  90% { opacity: 1; }
+  100% { transform: translate(300px, 26px) rotate(400deg); opacity: 0; }
+}
+
+.sc-tip { transform-origin: bottom center; animation: sc-tip 3s ease-in-out infinite alternate; }
+@keyframes sc-tip { from { transform: rotate(-5deg); } to { transform: rotate(7deg); } }
+
 .sc-spin { animation: sc-spin 22s linear infinite; }
 @keyframes sc-spin { to { transform: rotate(360deg); } }
 

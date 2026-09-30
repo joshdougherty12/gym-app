@@ -164,7 +164,9 @@ both, and each keeps what is on their own phone.
 - **Settings → Display → Accent color → Seasonal** is offered only on her phone (the same "Soph"/"Jo" partner-link
   check) and is her default; every other phone keeps its accent (Joshua's stays olive drab) and never sees the option.
 - **Calendar** (`src/lib/seasons.ts`, local date, re-checked each minute): fall (Sept 22-30), Halloween (October),
-  Thanksgiving (November), Christmas (Dec 1-30), New Year's Eve (Dec 31), winter (Jan 1 to Mar 19), spring (Mar 20 to
+  Thanksgiving (November), Christmas (Dec 1-30), New Year's Eve (Dec 31), winter (Jan 1 to Mar 19), St. Patrick's
+  (Mar 11-17; an early Easter keeps the lead-up days, the 17th is always St. Patrick's: rainbow into a pot of gold,
+  leprechaun hat, horseshoe, tumbling shamrocks), spring (Mar 20 to
   June 13) with Easter taking over from two weeks before Easter Sunday through the week after (computed each year), stars and stripes from
   Flag Day (June 14) through July 4, summer (July 5 to Sept 21), and her birthday on May 21, which beats everything.
 - **Each theme** (`src/seasons.css`, `src/lib/seasonArt.tsx`, `src/components/SeasonScene.tsx`): its own light and

@@ -29,7 +29,7 @@ describe('seasonal themes', () => {
 
   it('gives Easter the two weeks before and the week after', () => {
     // Easter 2027 is March 28: March 14 to April 4.
-    expect(seasonFor('2027-03-13')).toBe('winter')
+    expect(seasonFor('2027-03-10')).toBe('winter')
     expect(seasonFor('2027-03-14')).toBe('easter')
     expect(seasonFor('2027-04-04')).toBe('easter')
     expect(seasonFor('2027-04-05')).toBe('spring')
@@ -42,6 +42,19 @@ describe('seasonal themes', () => {
     expect(seasonTagline('easter', '2027-03-28')).toBe('He is risen! Alleluia')
     expect(seasonTagline('easter', '2027-04-04')).toBe('He is risen! Alleluia')
     expect(seasonTagline('fall', '2026-09-29')).toBe('Sweater weather')
+  })
+
+  it('has St. Patrick’s Day, sharing with an early Easter', () => {
+    // Easter 2026 is April 5 (window from March 22): the whole week is St. Patrick's.
+    expect(seasonFor('2026-03-10')).toBe('winter')
+    expect(seasonFor('2026-03-11')).toBe('stpatricks')
+    expect(seasonFor('2026-03-17')).toBe('stpatricks')
+    expect(seasonFor('2026-03-18')).toBe('winter')
+    // Easter 2027 is March 28 (window from March 14): Easter keeps the 14th-16th, the 17th is St. Patrick's.
+    expect(seasonFor('2027-03-13')).toBe('stpatricks')
+    expect(seasonFor('2027-03-15')).toBe('easter')
+    expect(seasonFor('2027-03-17')).toBe('stpatricks')
+    expect(seasonFor('2027-03-18')).toBe('easter')
   })
 
   it('has a birthday on May 21, only on Sophie’s phone', () => {

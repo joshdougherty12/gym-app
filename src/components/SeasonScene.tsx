@@ -234,6 +234,38 @@ function Winter() {
   )
 }
 
+function StPatricks({ c }: { c: Colors }) {
+  const bands = ['#ff8f9e', '#ffc37a', '#ffe98a', '#8fe3a0', '#8fc8ff', '#c7a0ff']
+  return (
+    <>
+      {/* A rainbow ending in a pot of gold, coins glinting as they spill */}
+      {bands.map((col, i) => (
+        <path key={i} d={`M${-8 + i * 5} 26Q${56 + i * 2} ${-10 + i * 5} ${104 - i * 3} ${50 - i * 1}`} fill="none" stroke={col} strokeWidth="5" opacity="0.85" />
+      ))}
+      <Piece m="pot" colors={c} x={80} y={36} s={1.7} />
+      {[
+        [96, 30],
+        [112, 26],
+        [124, 34],
+      ].map(([x, y], i) => (
+        <Piece key={i} m="coin" colors={c} x={x!} y={y!} s={0.45} className={`sc-twinkle sc-d${i}`} />
+      ))}
+      {/* Shamrocks tumbling across on the wind */}
+      <Piece m="shamrock" colors={c} x={0} y={0} s={0.9} className="sc-wind" />
+      <Piece m="shamrock" colors={{ ...c, a: '#7bd88f' }} x={0} y={16} s={0.7} className="sc-wind sc-d1" />
+      <Piece m="clover" colors={c} x={0} y={6} s={0.8} className="sc-wind sc-d2" />
+      {/* Lucky horseshoe and a leprechaun hat, tipping */}
+      <Piece m="horseshoe" colors={c} x={226} y={40} s={1.3} r={180} />
+      <Piece m="hat" colors={c} x={280} y={4} s={2.6} className="sc-tip" />
+      {/* Clover patch */}
+      <path d={`M150 76Q250 62 ${W} 72V76z`} fill="#2f9e4f" />
+      {[164, 190, 262, 346].map((x, i) => (
+        <Piece key={x} m="shamrock" colors={{ ...c, a: i % 2 ? '#3fcf6b' : '#27a84f' }} x={x} y={56} s={0.8} className={`sc-rustle sc-d${i % 3}`} />
+      ))}
+    </>
+  )
+}
+
 function Spring({ c }: { c: Colors }) {
   const bands = ['#ff8f9e', '#ffc37a', '#ffe98a', '#8fe3a0', '#8fc8ff', '#c7a0ff']
   const flowers = [
@@ -386,6 +418,7 @@ const SCENES: Record<Season, (p: { c: Colors }) => ReactNode> = {
   christmas: Christmas,
   nye: Nye,
   winter: Winter,
+  stpatricks: StPatricks,
   spring: Spring,
   easter: Easter,
   patriotic: Patriotic,

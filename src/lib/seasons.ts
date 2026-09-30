@@ -6,6 +6,7 @@
  *   Thanksgiving November
  *   Christmas  December 1-30
  *   NYE        December 31
+ *   St. Patrick's  March 11-17 (Easter keeps the lead-up days if they overlap; the 17th is always St. Patrick's)
  *   Easter     the two weeks before Easter Sunday through the week after
  *   Patriotic  Flag Day (June 14) through the 4th of July
  *   Winter     January 1 to the first day of spring (March 20)
@@ -21,13 +22,14 @@ export type Season =
   | 'christmas'
   | 'nye'
   | 'winter'
+  | 'stpatricks'
   | 'spring'
   | 'easter'
   | 'patriotic'
   | 'summer'
   | 'birthday'
 
-export const SEASONS: readonly Season[] = ['fall', 'halloween', 'thanksgiving', 'christmas', 'nye', 'winter', 'spring', 'easter', 'patriotic', 'summer', 'birthday']
+export const SEASONS: readonly Season[] = ['fall', 'halloween', 'thanksgiving', 'christmas', 'nye', 'winter', 'stpatricks', 'spring', 'easter', 'patriotic', 'summer', 'birthday']
 
 export const SEASON_LABEL: Record<Season, string> = {
   fall: 'Fall',
@@ -36,6 +38,7 @@ export const SEASON_LABEL: Record<Season, string> = {
   christmas: 'Christmas',
   nye: 'New Year’s Eve',
   winter: 'Winter',
+  stpatricks: 'St. Patrick’s Day',
   spring: 'Spring',
   easter: 'Easter',
   patriotic: 'Stars & stripes',
@@ -51,6 +54,7 @@ export const SEASON_TAGLINE: Record<Season, string> = {
   christmas: 'Merry & bright',
   nye: 'Last lifts of the year',
   winter: 'Stay cozy',
+  stpatricks: 'Lucky to have you',
   spring: 'Fresh start',
   easter: 'He is risen! Alleluia',
   patriotic: 'Land of the free',
@@ -105,8 +109,10 @@ export function seasonFor(date: string, withBirthday = false): Season {
   if (month === 10) return 'halloween'
   if (month === 11) return 'thanksgiving'
   if (month === 12) return md === '12-31' ? 'nye' : 'christmas'
+  if (md === '03-17') return 'stpatricks'
   const fromEaster = dayNum(date) - dayNum(easterSunday(Number(date.slice(0, 4))))
   if (fromEaster >= -14 && fromEaster <= 7) return 'easter'
+  if (md >= '03-11' && md <= '03-17') return 'stpatricks'
   if (md >= '06-14' && md <= '07-04') return 'patriotic'
   if (md < '03-20') return 'winter'
   if (md < '06-14') return 'spring'
